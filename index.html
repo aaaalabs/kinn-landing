@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KINN - KI Treff Innsbruck</title>
+  <meta name="description" content="Monatlicher KI-Austausch in Innsbruck. Für Entwickler, Forscher & Enthusiasten.">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #fff;
+      color: #000;
+      line-height: 1.618; /* Golden ratio */
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+    }
+
+    .container {
+      max-width: 960px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .logo {
+      width: 280px;
+      max-width: 70%;
+      margin: 0 auto 3rem;
+      display: block;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      margin-bottom: 1rem;
+      color: #333;
+      letter-spacing: 0.02em;
+      line-height: 1.3;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: #999;
+      margin-bottom: 3rem;
+      font-weight: 300;
+      letter-spacing: 0.01em;
+    }
+
+    .cta-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.625rem 0.75rem;
+      padding-right: 0.625rem;
+      background: #E0EEE9;
+      color: #000;
+      text-decoration: none;
+      border-radius: 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 0;
+    }
+
+    .cta-button:hover {
+      background: #d5e3de;
+    }
+
+    .cta-button:active {
+      background: #cad8d3;
+    }
+
+    .shortcut-key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.25rem;
+      height: 1.25rem;
+      padding: 0 0.25rem;
+      background: rgba(255, 255, 255, 0.3);
+      color: rgba(0, 0, 0, 0.7);
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 1000;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #e8e9ea;
+      padding: 0;
+      border-radius: 1rem;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 1.5rem;
+      background: #e8e9ea;
+      border-bottom: 1px solid #d1d5db;
+    }
+
+    .modal-header h2 {
+      font-size: 1rem;
+      font-weight: 500;
+      margin: 0;
+      color: #000;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #9ca3af;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .close-btn:hover {
+      color: #6b7280;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+      background: #e8e9ea;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+
+    .form-row label {
+      font-size: 0.875rem;
+      color: #6b7280;
+      text-align: left;
+      font-weight: 400;
+    }
+
+    .form-row input {
+      padding: 0.5rem;
+      border: none;
+      background: transparent;
+      font-size: 0.875rem;
+      color: #000;
+      outline: none;
+    }
+
+    .form-row input:disabled {
+      color: #6b7280;
+    }
+
+    .form-row input::placeholder {
+      color: #9ca3af;
+    }
+
+    /* Typing cursor animation */
+    .form-row input.typing {
+      position: relative;
+    }
+
+    .form-row input.typing::after {
+      content: '|';
+      animation: blink 0.7s infinite;
+    }
+
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    .modal-footer {
+      padding: 1.5rem;
+      background: #e8e9ea;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-send {
+      background: #000;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1.5rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-send:hover {
+      background: #333;
+    }
+
+    .footer {
+      margin-top: 8rem;
+      font-size: 0.75rem;
+      color: #ccc;
+      font-weight: 300;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 1024px) {
+      body {
+        padding: 3rem 2rem;
+      }
+
+      .logo {
+        width: 240px;
+        margin-bottom: 2.5rem;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+      }
+
+      .subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .footer {
+        margin-top: 6rem;
+        font-size: 0.7rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 2rem 1.5rem;
+      }
+
+      .logo {
+        width: 200px;
+        margin-bottom: 2rem;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+      }
+
+      .cta-button {
+        padding: 0.65rem 1.25rem;
+        font-size: 0.8rem;
+      }
+
+      .footer {
+        margin-top: 4rem;
+        font-size: 0.65rem;
+      }
+
+      /* Modal Mobile */
+      .modal-content {
+        max-width: 95%;
+      }
+
+      .form-row {
+        grid-template-columns: 50px 1fr;
+        gap: 0.5rem;
+      }
+
+      .form-row label {
+        font-size: 0.8rem;
+      }
+
+      .form-row input {
+        font-size: 0.8rem;
+      }
+
+      .modal-header {
+        padding: 1rem;
+      }
+
+      .modal-body {
+        padding: 1rem;
+      }
+
+      .modal-footer {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Logo (inline SVG) -->
+    <svg class="logo" viewBox="0 0 931.35 308.55" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="495.04 20.27 569.04 153.27 569.04 20.27 654.04 20.27 654.04 288.27 572.54 288.27 498.04 159.27 498.04 288.27 416.04 288.27 416.04 20.27 495.04 20.27"/>
+      <path d="M682.04,20.27l78.89.11,73.11,133.89V20.27h81v268h-80l-72-130v130h-78.5c-.61,0-1.53-.8-2.5,0V20.27Z"/>
+      <polygon points="100.04 20.27 100.04 136.27 160.54 20.27 256.04 20.27 182.26 145.61 262.04 288.27 166.54 288.27 100.04 159.27 100.04 288.27 21.04 288.27 21.04 20.27 100.04 20.27"/>
+      <path d="M359.04,20.27v265.5c0,.31,1.37,1.42,1,2.5h-82V20.27h81Z"/>
+    </svg>
+
+    <h1>KI Treff Innsbruck</h1>
+    <p class="subtitle">Monatlicher Austausch</p>
+
+    <button class="cta-button" onclick="openModal()">
+      Eintragen <kbd class="shortcut-key">I</kbd>
+    </button>
+
+    <p class="footer">
+      KINN – Wo Tiroler KI Profil bekommt
+    </p>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="modal" onclick="closeModalOnBackdrop(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Eintragen für KI Treff</h2>
+        <button class="close-btn" onclick="closeModal()" type="button">×</button>
+      </div>
+      <form onsubmit="handleSubmit(event)">
+        <div class="modal-body">
+          <div class="form-row">
+            <label for="from">Von</label>
+            <input
+              type="email"
+              id="from"
+              name="from"
+              placeholder="deine@email.com"
+              required
+              autofocus
+            >
+          </div>
+          <div class="form-row">
+            <label for="to">An</label>
+            <input
+              type="email"
+              id="to"
+              name="to"
+              value="treff@inbound.kinn.at"
+              disabled
+            >
+          </div>
+          <div class="form-row">
+            <label for="subject">Betreff</label>
+            <input
+              type="text"
+              id="subject"
+              name="subject"
+              value="Eintragen in KI Treff Verteiler"
+              disabled
+            >
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn-send">
+            Abschicken
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openModal() {
+      document.getElementById('modal').classList.add('open')
+      setTimeout(() => {
+        document.getElementById('from').focus()
+      }, 100)
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('open')
+      document.getElementById('from').value = ''
+    }
+
+    function closeModalOnBackdrop(e) {
+      if (e.target === e.currentTarget) {
+        closeModal()
+      }
+    }
+
+    // Typing animation function
+    async function typeText(element, text, speed = 30) {
+      const originalValue = element.value
+      element.value = ''
+      element.classList.add('typing')
+
+      for (let i = 0; i < text.length; i++) {
+        element.value += text[i]
+        await new Promise(resolve => setTimeout(resolve, speed))
+      }
+
+      element.classList.remove('typing')
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault()
+      const email = document.getElementById('from').value
+      const submitBtn = e.target.querySelector('.btn-send')
+
+      // Disable submit button during animation
+      submitBtn.disabled = true
+      submitBtn.textContent = 'Sende...'
+
+      // Clear all fields first
+      const fromInput = document.getElementById('from')
+      const toInput = document.getElementById('to')
+      const subjectInput = document.getElementById('subject')
+
+      // Temporarily enable disabled fields for animation
+      toInput.disabled = false
+      subjectInput.disabled = false
+
+      // Clear fields
+      fromInput.value = ''
+      toInput.value = ''
+      subjectInput.value = ''
+
+      // Type each field with delay
+      await typeText(fromInput, email, 25)
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      await typeText(toInput, 'treff@inbound.kinn.at', 25)
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      await typeText(subjectInput, 'Eintragen in KI Treff Verteiler', 25)
+      await new Promise(resolve => setTimeout(resolve, 300))
+
+      // Re-disable fields
+      toInput.disabled = true
+      subjectInput.disabled = true
+
+      // Open mailto with user's email in body
+      window.location.href = `mailto:treff@inbound.kinn.at?subject=${encodeURIComponent('Eintragen in KI Treff Verteiler')}&body=${encodeURIComponent('Meine Email: ' + email)}`
+
+      // Reset button and close modal
+      submitBtn.disabled = false
+      submitBtn.textContent = 'Abschicken'
+      setTimeout(closeModal, 500)
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Escape closes modal
+      if (e.key === 'Escape') {
+        closeModal()
+      }
+
+      // "I" key opens modal (if not already typing in input)
+      if (e.key === 'i' || e.key === 'I') {
+        const modal = document.getElementById('modal')
+        const isModalOpen = modal.classList.contains('open')
+        const isTyping = document.activeElement.tagName === 'INPUT' ||
+                        document.activeElement.tagName === 'TEXTAREA'
+
+        if (!isModalOpen && !isTyping) {
+          e.preventDefault()
+          openModal()
+        }
+      }
+    })
+  </script>
+</body>
+</html>
