@@ -11,8 +11,8 @@
   - ~3 seconds total animation time
 
 ### Changed
-- ✅ **Email updated**: treff@kinn.at → treff@inbound.kinn.at
-- ✅ **mailto: updated**: Now uses treff@inbound.kinn.at
+- ✅ **Email updated**: treff@kinn.at → treff@in.kinn.at
+- ✅ **mailto: updated**: Now uses treff@in.kinn.at
 
 ### Technical Details
 ```javascript

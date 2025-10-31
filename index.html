@@ -380,7 +380,7 @@
               type="email"
               id="to"
               name="to"
-              value="treff@inbound.kinn.at"
+              value="treff@in.kinn.at"
               disabled
             >
           </div>
@@ -464,7 +464,7 @@
       await typeText(fromInput, email, 25)
       await new Promise(resolve => setTimeout(resolve, 100))
 
-      await typeText(toInput, 'treff@inbound.kinn.at', 25)
+      await typeText(toInput, 'treff@in.kinn.at', 25)
       await new Promise(resolve => setTimeout(resolve, 100))
 
       await typeText(subjectInput, 'Eintragen in KI Treff Verteiler', 25)
@@ -475,7 +475,7 @@
       subjectInput.disabled = true
 
       // Open mailto with user's email in body
-      window.location.href = `mailto:treff@inbound.kinn.at?subject=${encodeURIComponent('Eintragen in KI Treff Verteiler')}&body=${encodeURIComponent('Meine Email: ' + email)}`
+      window.location.href = `mailto:treff@in.kinn.at?subject=${encodeURIComponent('Eintragen in KI Treff Verteiler')}&body=${encodeURIComponent('Meine Email: ' + email)}`
 
       // Reset button and close modal
       submitBtn.disabled = false

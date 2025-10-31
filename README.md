@@ -70,7 +70,7 @@ open http://localhost:8000
 ### When user signs up:
 
 1. **User Action**: Fills email → Clicks "Abschicken"
-2. **System**: Opens mail client with pre-filled email to treff@inbound.kinn.at
+2. **System**: Opens mail client with pre-filled email to treff@in.kinn.at
 3. **Email lands in your inbox**
 4. **Your Action** (2 minutes):
    - Copy email to Google Sheets
@@ -201,7 +201,7 @@ When ready to automate:
 - Can test: "KINN Stammtisch Anmeldung" or "KI Treff Innsbruck: [NAME]"
 
 **Spam prevention:**
-- Create contact: treff@inbound.kinn.at in your contacts
+- Create contact: treff@in.kinn.at in your contacts
 - SPF/DKIM if using custom domain
 
 **Response templates:**
