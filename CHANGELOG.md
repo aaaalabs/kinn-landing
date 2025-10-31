@@ -1,5 +1,70 @@
 # KINN MVP - Changelog
 
+## 2025-10-31 - Resend API Integration
+
+### Added
+- ✅ **Vercel Serverless Function**: `/api/signup.js` handles email submissions
+- ✅ **Resend SDK Integration**: Emails sent via Resend API to `treff@in.kinn.at`
+- ✅ **Server-side Validation**: Email format validation, type checking
+- ✅ **Error Handling**: Graceful error display in terminal + toast
+- ✅ **Enhanced Toast**: Success/error styling with auto-dismiss
+- ✅ **Environment Variables**: `.env` for local, Vercel dashboard for production
+
+### Changed
+- ✅ **mailto: → API**: Form now POSTs to `/api/signup` instead of opening mailto: link
+- ✅ **Terminal Line 1**: "Sending signup request to server..." (dynamic based on API response)
+- ✅ **Terminal Line 2**: Success: "Email sent successfully!" / Error: "ERROR - [message]"
+- ✅ **Toast Duration**: 3s → 4s for better readability
+
+### Technical Details
+```javascript
+// API Endpoint
+POST /api/signup
+Content-Type: application/json
+Body: { "email": "user@example.com" }
+
+// Response (Success)
+{ "success": true, "message": "...", "emailId": "..." }
+
+// Response (Error)
+{ "error": "...", "message": "..." }
+```
+
+### API Function Features
+- **[CP01] KISS**: Simple request/response pattern (~100 lines)
+- **[SC02] Input Validation**: Email regex, type checking, null checks
+- **[EH01] Contextual Logging**: Domain logging (no sensitive data)
+- **[EH02] User-Friendly Errors**: Clear German error messages
+- **NO FALLBACKS**: Fails fast per CLAUDE.md requirements
+
+### Dependencies
+- `resend@^4.0.0` - Resend SDK for email delivery
+- `vercel@^37.0.0` (dev) - Local development server
+
+### Environment Variables
+```bash
+RESEND_API_KEY=re_R2rBKDqY_H5QWbFJLBS9PRxYgZMdvWH7g
+RECIPIENT_EMAIL=treff@in.kinn.at
+SENDER_EMAIL=KINN <noreply@in.kinn.at>
+```
+
+### Cost Analysis
+- **Resend Free Tier**: 3,000 emails/month ($0)
+- **Vercel Hobby**: 100 GB-Hrs/month ($0)
+- **MVP Cost**: $0/month
+
+### User Experience Flow
+1. User fills email → clicks "Abschicken"
+2. Form fades out → Terminal shows
+3. "01: Sending signup request to server..." types
+4. API call happens (~1-2s)
+5. Success: "02: Email sent successfully!" / Error: "02: ERROR - [message]"
+6. "03: Press R to add another, or ESC to close."
+7. Toast notification slides up (success/error)
+8. Toast auto-dismisses after 4s
+
+---
+
 ## 2025-10-31 - Terminal Animation with Seamless Morph
 
 ### Added

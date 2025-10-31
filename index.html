@@ -605,34 +605,46 @@
 
       await new Promise(resolve => setTimeout(resolve, 100))
 
-      // Step 4: Type terminal lines sequentially
-      const lines = [
-        '01: Receiving webhook from team@inbound.resend.app...',
-        '02: Check your inbox for a confirmation email.',
-        '03: Press R to add another email, or ESC to close.'
-      ]
+      // Step 4: Type first line - "Sending request..."
+      await typeTerminalLine(1, '01: Sending signup request to server...', 30)
+      await new Promise(resolve => setTimeout(resolve, 200))
 
-      for (let i = 0; i < lines.length; i++) {
-        await typeTerminalLine(i + 1, lines[i], 30)
+      try {
+        // Step 5: Call API endpoint
+        const response = await fetch('/api/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email })
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          // Handle API error
+          throw new Error(data.message || 'Email delivery failed')
+        }
+
+        // Step 6: Success - type remaining lines
+        await typeTerminalLine(2, '02: Email sent successfully! Check your inbox.', 30)
         await new Promise(resolve => setTimeout(resolve, 200))
+        await typeTerminalLine(3, '03: Press R to add another email, or ESC to close.', 30)
+
+        // Step 7: Show success toast
+        showToast('Message Sent', 'success')
+
+      } catch (error) {
+        // [EH02] User-friendly error display in terminal
+        console.error('[FRONTEND] Signup error:', error)
+
+        await typeTerminalLine(2, `02: ERROR - ${error.message}`, 30)
+        await new Promise(resolve => setTimeout(resolve, 200))
+        await typeTerminalLine(3, '03: Press R to try again, or ESC to close.', 30)
+
+        // Show error toast
+        showToast('Error: ' + error.message, 'error')
       }
-
-      // Step 5: Show toast notification
-      const toast = document.querySelector('.toast')
-      toast.style.display = 'flex'
-
-      // Step 6: Auto-hide toast after 3 seconds
-      setTimeout(() => {
-        toast.style.animation = 'toast-slide-up 0.3s ease-out reverse'
-        setTimeout(() => {
-          toast.style.display = 'none'
-          toast.style.animation = ''
-        }, 300)
-      }, 3000)
-
-      // Note: Actual mailto: link (keeping for MVP)
-      // In production, this would be an API call
-      window.location.href = `mailto:treff@in.kinn.at?subject=${encodeURIComponent('Eintragen in KI Treff Verteiler')}&body=${encodeURIComponent('Meine Email: ' + email)}`
     }
 
     // Reset modal to initial state
@@ -674,6 +686,37 @@
         toast.style.display = 'none'
         toast.style.animation = ''
       }, 300)
+    }
+
+    // Enhanced toast notification with type support
+    function showToast(message, type = 'success') {
+      const toast = document.querySelector('.toast')
+      const toastText = toast.querySelector('span')
+
+      toastText.textContent = message
+
+      // Apply type-specific styling
+      if (type === 'error') {
+        toast.style.background = '#fee'
+        toast.style.color = '#c33'
+      } else {
+        toast.style.background = '#fff'
+        toast.style.color = '#000'
+      }
+
+      toast.style.display = 'flex'
+
+      // Auto-hide after 4 seconds
+      setTimeout(() => {
+        toast.style.animation = 'toast-slide-up 0.3s ease-out reverse'
+        setTimeout(() => {
+          toast.style.display = 'none'
+          toast.style.animation = ''
+          // Reset styling
+          toast.style.background = '#fff'
+          toast.style.color = '#000'
+        }, 300)
+      }, 4000)
     }
 
     // Keyboard shortcuts
