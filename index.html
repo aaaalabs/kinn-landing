@@ -330,6 +330,130 @@
         padding: 1rem;
       }
     }
+
+    /* Terminal View */
+    .terminal-view {
+      background: #1a1a1a;
+      border-radius: 1rem;
+      padding: 0;
+      color: #e0e0e0;
+      font-family: 'Monaco', 'Courier New', Courier, monospace;
+      font-size: 0.875rem;
+      animation: expand-upward 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: center bottom;
+    }
+
+    @keyframes expand-upward {
+      from {
+        transform: scaleY(0.8);
+        opacity: 0;
+      }
+      to {
+        transform: scaleY(1);
+        opacity: 1;
+      }
+    }
+
+    .terminal-header {
+      padding: 0.75rem;
+      background: #2a2a2a;
+      border-radius: 1rem 1rem 0 0;
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .terminal-dots span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #666;
+    }
+
+    .terminal-dots span:nth-child(1) { background: #ff5f56; }
+    .terminal-dots span:nth-child(2) { background: #ffbd2e; }
+    .terminal-dots span:nth-child(3) { background: #27c93f; }
+
+    .terminal-body {
+      padding: 1.5rem;
+      min-height: 120px;
+    }
+
+    .terminal-line {
+      line-height: 1.8;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .terminal-line.typing::after {
+      content: '█';
+      animation: blink-cursor 0.7s infinite;
+    }
+
+    @keyframes blink-cursor {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    /* Modal morph animation */
+    .modal-content.morphing-to-terminal {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal-content.terminal-mode {
+      background: #1a1a1a;
+    }
+
+    .modal-content.terminal-mode .modal-header {
+      display: none;
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      color: #000;
+      padding: 1rem 1.5rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      z-index: 2000;
+      animation: toast-slide-up 0.3s ease-out;
+    }
+
+    @keyframes toast-slide-up {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(1rem);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    .toast-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: #999;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .toast-close:hover {
+      color: #666;
+    }
   </style>
 </head>
 <body>
@@ -401,7 +525,27 @@
           </button>
         </div>
       </form>
+
+      <!-- Terminal View (hidden by default) -->
+      <div class="terminal-view" style="display: none;">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+        <div class="terminal-body">
+          <div class="terminal-line" data-line="1"></div>
+          <div class="terminal-line" data-line="2"></div>
+          <div class="terminal-line" data-line="3"></div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" style="display: none;">
+    <span>Message Sent</span>
+    <button class="toast-close" onclick="closeToast()">×</button>
   </div>
 
   <script>
@@ -423,84 +567,143 @@
       }
     }
 
-    // Typing animation function
-    async function typeText(element, text, speed = 30) {
-      const originalValue = element.value
-      element.value = ''
-      element.classList.add('typing')
+    // Terminal typing animation
+    async function typeTerminalLine(lineNum, text, speed = 30) {
+      const line = document.querySelector(`.terminal-line[data-line="${lineNum}"]`)
+      line.style.opacity = '1'
+      line.classList.add('typing')
+      line.textContent = ''
 
       for (let i = 0; i < text.length; i++) {
-        element.value += text[i]
+        line.textContent += text[i]
         await new Promise(resolve => setTimeout(resolve, speed))
       }
 
-      element.classList.remove('typing')
+      line.classList.remove('typing')
     }
 
     async function handleSubmit(e) {
       e.preventDefault()
       const email = document.getElementById('from').value
-      const submitBtn = e.target.querySelector('.btn-send')
 
-      // Disable submit button during animation
-      submitBtn.disabled = true
-      submitBtn.textContent = 'Sende...'
+      // Step 1: Fade out form content
+      const modalContent = document.querySelector('.modal-content')
+      const formView = document.querySelector('form')
+      const terminalView = document.querySelector('.terminal-view')
 
-      // Clear all fields first
-      const fromInput = document.getElementById('from')
-      const toInput = document.getElementById('to')
-      const subjectInput = document.getElementById('subject')
+      formView.style.transition = 'opacity 0.3s ease'
+      formView.style.opacity = '0'
 
-      // Temporarily enable disabled fields for animation
-      toInput.disabled = false
-      subjectInput.disabled = false
-
-      // Clear fields
-      fromInput.value = ''
-      toInput.value = ''
-      subjectInput.value = ''
-
-      // Type each field with delay
-      await typeText(fromInput, email, 25)
-      await new Promise(resolve => setTimeout(resolve, 100))
-
-      await typeText(toInput, 'treff@in.kinn.at', 25)
-      await new Promise(resolve => setTimeout(resolve, 100))
-
-      await typeText(subjectInput, 'Eintragen in KI Treff Verteiler', 25)
       await new Promise(resolve => setTimeout(resolve, 300))
 
-      // Re-disable fields
-      toInput.disabled = true
-      subjectInput.disabled = true
+      // Step 2: Hide form, show terminal
+      formView.style.display = 'none'
+      terminalView.style.display = 'block'
 
-      // Open mailto with user's email in body
+      // Step 3: Morph modal to terminal appearance
+      modalContent.classList.add('morphing-to-terminal', 'terminal-mode')
+
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      // Step 4: Type terminal lines sequentially
+      const lines = [
+        '01: Receiving webhook from team@inbound.resend.app...',
+        '02: Check your inbox for a confirmation email.',
+        '03: Press R to add another email, or ESC to close.'
+      ]
+
+      for (let i = 0; i < lines.length; i++) {
+        await typeTerminalLine(i + 1, lines[i], 30)
+        await new Promise(resolve => setTimeout(resolve, 200))
+      }
+
+      // Step 5: Show toast notification
+      const toast = document.querySelector('.toast')
+      toast.style.display = 'flex'
+
+      // Step 6: Auto-hide toast after 3 seconds
+      setTimeout(() => {
+        toast.style.animation = 'toast-slide-up 0.3s ease-out reverse'
+        setTimeout(() => {
+          toast.style.display = 'none'
+          toast.style.animation = ''
+        }, 300)
+      }, 3000)
+
+      // Note: Actual mailto: link (keeping for MVP)
+      // In production, this would be an API call
       window.location.href = `mailto:treff@in.kinn.at?subject=${encodeURIComponent('Eintragen in KI Treff Verteiler')}&body=${encodeURIComponent('Meine Email: ' + email)}`
+    }
 
-      // Reset button and close modal
-      submitBtn.disabled = false
-      submitBtn.textContent = 'Abschicken'
-      setTimeout(closeModal, 500)
+    // Reset modal to initial state
+    function resetModal() {
+      const modalContent = document.querySelector('.modal-content')
+      const formView = document.querySelector('form')
+      const terminalView = document.querySelector('.terminal-view')
+      const toast = document.querySelector('.toast')
+
+      // Reset visibility
+      terminalView.style.display = 'none'
+      formView.style.display = 'block'
+      formView.style.opacity = '1'
+      toast.style.display = 'none'
+      toast.style.animation = ''
+
+      // Reset classes
+      modalContent.classList.remove('morphing-to-terminal', 'terminal-mode')
+
+      // Clear terminal lines
+      document.querySelectorAll('.terminal-line').forEach(line => {
+        line.textContent = ''
+        line.style.opacity = '0'
+      })
+
+      // Reset form
+      document.getElementById('from').value = ''
+
+      // Re-enable disabled fields if they were disabled
+      document.getElementById('to').disabled = true
+      document.getElementById('subject').disabled = true
+    }
+
+    // Close toast notification
+    function closeToast() {
+      const toast = document.querySelector('.toast')
+      toast.style.animation = 'toast-slide-up 0.3s ease-out reverse'
+      setTimeout(() => {
+        toast.style.display = 'none'
+        toast.style.animation = ''
+      }, 300)
     }
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
-      // Escape closes modal
-      if (e.key === 'Escape') {
+      const modal = document.getElementById('modal')
+      const isModalOpen = modal.classList.contains('open')
+      const terminalView = document.querySelector('.terminal-view')
+      const isTerminalVisible = terminalView && terminalView.style.display === 'block'
+      const isTyping = document.activeElement.tagName === 'INPUT' ||
+                      document.activeElement.tagName === 'TEXTAREA'
+
+      // Escape closes modal/terminal
+      if (e.key === 'Escape' && isModalOpen) {
+        resetModal()
         closeModal()
       }
 
-      // "I" key opens modal (if not already typing in input)
-      if (e.key === 'i' || e.key === 'I') {
-        const modal = document.getElementById('modal')
-        const isModalOpen = modal.classList.contains('open')
-        const isTyping = document.activeElement.tagName === 'INPUT' ||
-                        document.activeElement.tagName === 'TEXTAREA'
+      // "R" key resets to form when terminal is visible
+      if ((e.key === 'r' || e.key === 'R') && isTerminalVisible && !isTyping) {
+        e.preventDefault()
+        resetModal()
+        setTimeout(() => {
+          document.getElementById('from').focus()
+        }, 100)
+      }
 
-        if (!isModalOpen && !isTyping) {
-          e.preventDefault()
-          openModal()
-        }
+      // "I" key opens modal (if not already open and not typing)
+      if ((e.key === 'i' || e.key === 'I') && !isModalOpen && !isTyping) {
+        e.preventDefault()
+        openModal()
       }
     })
   </script>

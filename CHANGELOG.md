@@ -1,6 +1,56 @@
 # KINN MVP - Changelog
 
-## 2025-10-31 - Typing Animation & Email Update
+## 2025-10-31 - Terminal Animation with Seamless Morph
+
+### Added
+- ✅ **Terminal View**: Dark terminal window with macOS-style dots (red, yellow, green)
+- ✅ **Seamless Modal → Terminal Morph**: Form fades out, terminal expands upward
+- ✅ **Sequential Terminal Typing**: 3 lines type out one by one:
+  - "01: Receiving webhook from team@inbound.resend.app..."
+  - "02: Check your inbox for a confirmation email."
+  - "03: Press R to add another email, or ESC to close."
+- ✅ **Toast Notification**: "Message Sent" slides up after terminal animation
+- ✅ **Enhanced Keyboard Shortcuts**:
+  - **I**: Open modal
+  - **ESC**: Close modal/terminal
+  - **R**: Reset from terminal back to form (NEW)
+- ✅ **Reset Function**: cleanly returns from terminal to form state
+
+### Changed
+- ✅ **Animation moved**: From in-modal field typing → terminal window typing
+- ✅ **Modal header**: Hidden in terminal mode
+- ✅ **Background**: Modal morphs from #e8e9ea → #1a1a1a (terminal dark)
+
+### Animation Sequence (Total ~3.5 seconds)
+```
+0ms:   Form fade out (300ms)
+300ms: Terminal shown, expand-upward animation (400ms)
+500ms: Line 1 types (~1500ms)
+2000ms: Line 2 types (~800ms)
+3000ms: Line 3 types (~900ms)
+3400ms: Toast "Message Sent" slides up
+6400ms: Toast auto-dismisses
+```
+
+### Technical Implementation
+- **Zero dependencies**: Pure vanilla JS + CSS animations
+- **GPU-accelerated**: CSS transforms for smooth performance
+- **Monaco font**: Terminal uses 'Monaco', 'Courier New', monospace
+- **Cubic-bezier timing**: cubic-bezier(0.4, 0, 0.2, 1) for professional feel
+- **File size**: 509 → ~710 lines (+~200 lines, still extremely lean)
+
+### User Experience Flow
+1. User fills email → clicks "Abschicken"
+2. Form fades out smoothly
+3. Terminal view expands upward with dark theme
+4. Terminal lines type sequentially (code-editor style)
+5. Toast notification confirms "Message Sent"
+6. Press **R** to add another, or **ESC** to close
+7. mailto: opens in background
+
+---
+
+## 2025-10-31 - Typing Animation & Email Update (DEPRECATED)
 
 ### Added
 - ✅ **Typing Animation**: Code-editor-style typing effect beim Abschicken
