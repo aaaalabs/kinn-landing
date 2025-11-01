@@ -1,22 +1,44 @@
 {
+  "id": "/",
   "name": "KINN KI Treff Innsbruck",
   "short_name": "KINN",
   "description": "Wo Tiroler KI Profil bekommt",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
+  "dir": "ltr",
+  "lang": "de",
   "background_color": "#ffffff",
   "theme_color": "#E0EEE9",
-  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/public/android-chrome-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/public/android-chrome-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/public/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "KINN Landing Page - Desktop"
+    },
+    {
+      "src": "/public/screenshot-narrow.png",
+      "sizes": "1080x1440",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "KINN Landing Page - Mobile"
     }
   ]
 }
