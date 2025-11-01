@@ -90,7 +90,7 @@ export default async function handler(req, res) {
     // Send reply via Resend
     try {
       const replyEmail = await resend.emails.send({
-        from: process.env.INBOUND_EMAIL || 'KINN <ki@in.kinn.at>',
+        from: (process.env.INBOUND_EMAIL || 'KINN <ki@in.kinn.at>').trim(),
         to: from,
         subject: `Re: ${subject}`,
         text: replyText,
