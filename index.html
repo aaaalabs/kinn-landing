@@ -296,6 +296,27 @@
       text-transform: uppercase;
     }
 
+    .footer-links {
+      display: block;
+      margin-top: 0.5rem;
+      font-size: 0.65rem;
+      color: #999;
+      text-transform: none;
+      letter-spacing: normal;
+      font-weight: 300;
+    }
+
+    .footer-links a {
+      color: #999;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .footer-links a:hover {
+      color: #ccc;
+      text-decoration: underline;
+    }
+
     @media (max-width: 1024px) {
       body {
         padding: 3rem 2rem;
@@ -526,6 +547,9 @@
 
     <p class="footer">
       KINN – Wo Tiroler KI Profil bekommt
+      <span class="footer-links">
+        <a href="/pages/privacy.html">Datenschutz</a> · <a href="/pages/agb.html">AGB</a>
+      </span>
     </p>
   </div>
 
