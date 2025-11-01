@@ -154,12 +154,21 @@
         '<div class="message-box">' +
           '<p><strong>Nächster Schritt: Kalender abonnieren</strong></p>' +
           '<p>Abonniere den KINN Event-Kalender und verpasse keinen KI Treff mehr.</p>' +
+          '<p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">Funktioniert mit: Google Calendar, Apple Kalender, Outlook</p>' +
         '</div>' +
-        '<div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">' +
-          '<a href="https://calendar.google.com/calendar/u/0/r/settings/addbyurl?url=https://kinn.at/api/calendar.ics" target="_blank" class="cta-button">📅 Zu Google Calendar hinzufügen</a>' +
-          '<a href="webcal://kinn.at/api/calendar.ics" class="cta-button" style="background: #f5f5f5;">📱 Andere Kalender (Apple, Outlook, etc.)</a>' +
-        '</div>' +
-        '<a href="/" class="cta-button" style="background: transparent; box-shadow: none; margin-top: 1rem;">Später</a>';
+        '<a href="webcal://kinn.at/api/calendar.ics" class="cta-button" style="margin-top: 1rem;">📅 Kalender abonnieren</a>' +
+        '<details style="margin-top: 1.5rem; padding: 1rem; background: #f9f9f9; border-radius: 8px;">' +
+          '<summary style="cursor: pointer; font-weight: 500; color: #666;">📋 Manuelle Anleitung (falls Button nicht funktioniert)</summary>' +
+          '<p style="margin-top: 1rem; font-size: 0.9rem; color: #666; line-height: 1.6;">' +
+            '<strong>1.</strong> Kopiere diese URL:<br>' +
+            '<code style="background: #fff; padding: 6px 10px; border-radius: 4px; display: inline-block; margin: 8px 0; font-size: 0.85rem;">https://kinn.at/api/calendar.ics</code><br><br>' +
+            '<strong>2.</strong> Öffne deine Kalender-App<br><br>' +
+            '<strong>3.</strong> Suche nach "Kalender hinzufügen" oder "Add calendar"<br><br>' +
+            '<strong>4.</strong> Wähle "Per URL" oder "From URL"<br><br>' +
+            '<strong>5.</strong> Füge die URL ein und bestätige' +
+          '</p>' +
+        '</details>' +
+        '<a href="/" class="cta-button" style="background: transparent; box-shadow: none; margin-top: 1.5rem;">Später</a>';
     } else {
       // Fallback
       content.innerHTML =

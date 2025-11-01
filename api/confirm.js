@@ -11,8 +11,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  */
 function generateWelcomeEmail() {
   const baseUrl = process.env.BASE_URL || 'https://kinn.at';
-  const googleCalUrl = `https://calendar.google.com/calendar/u/0/r/settings/addbyurl?url=${baseUrl}/api/calendar.ics`;
-  const webcalUrl = `webcal://${baseUrl.replace('https://', '').replace('http://', '')}/api/calendar.ics`;
+  const domain = baseUrl.replace('https://', '').replace('http://', '');
+  const webcalUrl = `webcal://${domain}/api/calendar.ics`;
+  const httpsUrl = `${baseUrl}/api/calendar.ics`;
 
   return `
 <!DOCTYPE html>
@@ -38,19 +39,23 @@ function generateWelcomeEmail() {
         <table width="100%" cellpadding="0" cellspacing="0" style="margin: 32px 0;">
           <tr>
             <td style="padding-bottom: 12px;">
-              <a href="${googleCalUrl}" style="background-color: #E0EEE9; border-radius: 12px; color: #000; font-size: 14px; font-weight: 600; text-decoration: none; text-align: center; display: block; padding: 14px 24px;">
-                📅 Zu Google Calendar hinzufügen
-              </a>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <a href="${webcalUrl}" style="background-color: #f5f5f5; border-radius: 12px; color: #000; font-size: 14px; font-weight: 600; text-decoration: none; text-align: center; display: block; padding: 14px 24px;">
-                📱 Andere Kalender (Apple, Outlook, etc.)
+              <a href="${webcalUrl}" style="background-color: #E0EEE9; border-radius: 12px; color: #000; font-size: 14px; font-weight: 600; text-decoration: none; text-align: center; display: block; padding: 14px 24px;">
+                📅 Kalender abonnieren
               </a>
             </td>
           </tr>
         </table>
+
+        <p style="font-size: 13px; line-height: 1.618; color: #666; margin-bottom: 8px; text-align: center;">
+          <strong>Funktioniert mit allen Kalender-Apps:</strong><br>
+          Google Calendar, Apple Kalender, Outlook
+        </p>
+
+        <p style="font-size: 12px; line-height: 1.618; color: #999; margin-bottom: 16px; text-align: center;">
+          Falls der Button nicht funktioniert, kopiere diese URL:<br>
+          <code style="background: #f5f5f5; padding: 4px 8px; border-radius: 4px; font-size: 11px;">${httpsUrl}</code><br>
+          <span style="font-size: 11px;">und füge sie in deiner Kalender-App unter "Kalender hinzufügen → Per URL" ein.</span>
+        </p>
 
         <p style="font-size: 14px; line-height: 1.618; color: #666; margin-bottom: 16px;">
           <strong>Was ist eine Kalender-Subscription?</strong><br>
