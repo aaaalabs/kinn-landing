@@ -120,3 +120,82 @@ export async function updateEventsConfig(config) {
     throw new Error(`Database error: ${error.message}`);
   }
 }
+
+// ===== User Preferences Management =====
+
+/**
+ * Gets user preferences from Redis
+ * @param {string} email - User email address
+ * @returns {Promise<Object|null>} User preferences object or null if not found
+ */
+export async function getUserPreferences(email) {
+  try {
+    const key = `user:preferences:${email.toLowerCase()}`;
+    const preferences = await redis.get(key);
+    return preferences;
+  } catch (error) {
+    console.error('[REDIS] Failed to get user preferences:', error.message);
+    throw new Error(`Database error: ${error.message}`);
+  }
+}
+
+/**
+ * Updates user preferences in Redis
+ * @param {string} email - User email address
+ * @param {Object} preferences - Preferences object to store
+ * @returns {Promise<void>}
+ */
+export async function updateUserPreferences(email, preferences) {
+  try {
+    const key = `user:preferences:${email.toLowerCase()}`;
+    await redis.set(key, {
+      ...preferences,
+      email: email.toLowerCase(),
+      updatedAt: new Date().toISOString()
+    });
+    console.log('[REDIS] User preferences updated:', email.toLowerCase());
+  } catch (error) {
+    console.error('[REDIS] Failed to update user preferences:', error.message);
+    throw new Error(`Database error: ${error.message}`);
+  }
+}
+
+/**
+ * Deletes user preferences from Redis (used during unsubscribe)
+ * @param {string} email - User email address
+ * @returns {Promise<boolean>} True if deleted, false if didn't exist
+ */
+export async function deleteUserPreferences(email) {
+  try {
+    const key = `user:preferences:${email.toLowerCase()}`;
+    const result = await redis.del(key);
+    console.log('[REDIS] User preferences deleted:', email.toLowerCase());
+    return result === 1;
+  } catch (error) {
+    console.error('[REDIS] Failed to delete user preferences:', error.message);
+    throw new Error(`Database error: ${error.message}`);
+  }
+}
+
+/**
+ * Removes a subscriber completely (from both subscribers set and preferences)
+ * @param {string} email - User email address
+ * @returns {Promise<boolean>} True if removed, false if wasn't subscribed
+ */
+export async function removeSubscriber(email) {
+  try {
+    const normalizedEmail = email.toLowerCase();
+
+    // Remove from subscribers set
+    const removedFromSet = await redis.srem(SUBSCRIBERS_KEY, normalizedEmail);
+
+    // Delete preferences
+    await deleteUserPreferences(normalizedEmail);
+
+    console.log('[REDIS] Subscriber completely removed:', normalizedEmail);
+    return removedFromSet === 1;
+  } catch (error) {
+    console.error('[REDIS] Failed to remove subscriber:', error.message);
+    throw new Error(`Database error: ${error.message}`);
+  }
+}

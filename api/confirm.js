@@ -1,5 +1,5 @@
-import { verifyConfirmToken } from './utils/tokens.js';
-import { addSubscriber, isSubscribed } from './utils/redis.js';
+import { verifyConfirmToken, generateProfileToken } from './utils/tokens.js';
+import { addSubscriber, isSubscribed, updateUserPreferences } from './utils/redis.js';
 import { generateBrandedError, ErrorTemplates } from './utils/branded-error.js';
 import { Resend } from 'resend';
 
@@ -9,10 +9,12 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 /**
  * Generate Welcome Email - Simple, spam-safe version
  * Links to website instead of direct webcal:// links
+ * @param {string} profileToken - JWT token for profile management
  */
-function generateWelcomeEmail() {
+function generateWelcomeEmail(profileToken) {
   const baseUrl = process.env.BASE_URL || 'https://kinn.at';
   const calendarPageUrl = `${baseUrl}/pages/success.html?status=confirmed`;
+  const profilePageUrl = `${baseUrl}/pages/profil.html?token=${profileToken}`;
 
   return `
 <!DOCTYPE html>
@@ -60,6 +62,15 @@ function generateWelcomeEmail() {
 
         <!-- Divider -->
         <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 32px 0;">
+
+        <!-- Profile Link -->
+        <p style="font-size: 13px; line-height: 1.6; color: #6B6B6B; text-align: center; margin-bottom: 16px;">
+          <a href="${profilePageUrl}" style="color: #5ED9A6; text-decoration: none; font-weight: 500;">Profil verwalten</a> •
+          Email-Benachrichtigungen anpassen oder abmelden
+        </p>
+
+        <!-- Divider -->
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;">
 
         <!-- Footer -->
         <p style="font-size: 12px; line-height: 1.5; color: #999; text-align: center; margin-bottom: 8px;">
@@ -140,15 +151,28 @@ export default async function handler(req, res) {
       return res.redirect(`/pages/success.html?status=already-subscribed&email=${encodeURIComponent(email)}`);
     }
 
+    // Generate profile token for user preference management
+    const profileToken = generateProfileToken(email);
+
+    // Create initial user preferences in Redis
+    await updateUserPreferences(email, {
+      email,
+      profileToken,
+      notifications: {
+        enabled: true // Default: notifications enabled
+      },
+      subscribedAt: new Date().toISOString()
+    });
+
     // [EH01] Log success
-    console.log(`[CONFIRM] New subscriber confirmed: ${email}`);
+    console.log(`[CONFIRM] New subscriber confirmed with profile: ${email}`);
 
     // Send welcome email in background (don't block redirect)
     resend.emails.send({
       from: (process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>').trim(),
       to: email.trim(),
       subject: 'Willkommen beim KINN – Kalender-Abonnement',
-      html: generateWelcomeEmail(),
+      html: generateWelcomeEmail(profileToken),
     }).then(result => {
       console.log(`[CONFIRM] Welcome email sent: ${result.id}`);
     }).catch(error => {
