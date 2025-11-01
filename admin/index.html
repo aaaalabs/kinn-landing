@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KINN Admin - Event & Teilnehmer Verwaltung</title>
+
+  <!-- Typography: Work Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
     * {
       margin: 0;
@@ -12,11 +18,28 @@
     }
 
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #ffffff;
-      color: #000;
+      font-family: 'Work Sans', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(180deg, #ffffff 0%, #fafcfb 100%);
+      color: #3A3A3A;
       padding: 20px;
       line-height: 1.618;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Subtle neural network background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(94,217,166,0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(94,217,166,0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
     }
 
     .container {
@@ -24,24 +47,24 @@
       margin: 0 auto;
     }
 
+    /* Logo */
     .logo {
+      width: 280px;
+      max-width: 70%;
+      height: auto;
+      margin: 0 auto 2rem;
+      display: block;
+      filter: drop-shadow(0 4px 16px rgba(0,0,0,0.06));
+    }
+
+    .subtitle {
       text-align: center;
-      margin-bottom: 3rem;
-    }
-
-    .logo h1 {
-      font-size: 3rem;
-      font-weight: 300;
-      letter-spacing: -0.03em;
-      color: #000;
-    }
-
-    .logo p {
-      font-size: 0.75rem;
-      color: #999;
+      font-size: 0.875rem;
+      color: #6B6B6B;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-top: 0.5rem;
+      letter-spacing: 0.1em;
+      font-weight: 500;
+      margin-bottom: 3rem;
     }
 
     /* Login Screen */
@@ -63,28 +86,34 @@
 
     #login-screen input:focus {
       outline: none;
-      border-color: #E0EEE9;
+      border-color: #5ED9A6;
     }
 
     .btn {
       display: inline-block;
       padding: 14px 32px;
-      background: #E0EEE9;
+      background: #5ED9A6;
       color: #000;
       text-decoration: none;
       border: none;
       border-radius: 12px;
       font-size: 1.125rem;
-      font-weight: 500;
-      letter-spacing: 0.02em;
+      font-weight: 600;
+      letter-spacing: 0.01em;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
       font-family: inherit;
     }
 
     .btn:hover {
-      background: #d0ddd4;
-      transform: translateY(-1px);
+      background: #4EC995;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(94, 217, 166, 0.3);
+    }
+
+    .btn:active {
+      background: #3EB885;
+      transform: translateY(0);
     }
 
     .btn-secondary {
@@ -280,11 +309,14 @@
 </head>
 <body>
   <div class="container">
-    <!-- Logo -->
-    <div class="logo">
-      <h1>KINN</h1>
-      <p>Admin Dashboard</p>
-    </div>
+    <!-- KINN Logo -->
+    <svg class="logo" viewBox="0 0 931.35 308.55" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="495.04 20.27 569.04 153.27 569.04 20.27 654.04 20.27 654.04 288.27 572.54 288.27 498.04 159.27 498.04 288.27 416.04 288.27 416.04 20.27 495.04 20.27"/>
+      <path d="M682.04,20.27l78.89.11,73.11,133.89V20.27h81v268h-80l-72-130v130h-78.5c-.61,0-1.53-.8-2.5,0V20.27Z"/>
+      <polygon points="100.04 20.27 100.04 136.27 160.54 20.27 256.04 20.27 182.26 145.61 262.04 288.27 166.54 288.27 100.04 159.27 100.04 288.27 21.04 288.27 21.04 20.27 100.04 20.27"/>
+      <path d="M359.04,20.27v265.5c0,.31,1.37,1.42,1,2.5h-82V20.27h81Z"/>
+    </svg>
+    <p class="subtitle">Admin Dashboard</p>
 
     <!-- Login Screen -->
     <div id="login-screen">
@@ -300,9 +332,9 @@
     <div id="admin-dashboard" class="hidden">
       <!-- Tabs -->
       <div class="tabs">
-        <button class="tab active" onclick="switchTab('events')">📅 Events</button>
-        <button class="tab" onclick="switchTab('subscribers')">👥 Teilnehmer</button>
-        <button class="tab" onclick="logout()" style="margin-left: auto;">🚪 Logout</button>
+        <button class="tab active" onclick="switchTab('events')">Events</button>
+        <button class="tab" onclick="switchTab('subscribers')">Teilnehmer</button>
+        <button class="tab" onclick="logout()" style="margin-left: auto;">Logout</button>
       </div>
 
       <!-- Messages -->
@@ -543,11 +575,11 @@
         <div class="event-card">
           <h3>${event.title}</h3>
           <div class="event-meta">
-            📅 ${formatDate(event.date)} • 🕐 ${event.startTime} - ${event.endTime}
+            ${formatDate(event.date)} • ${event.startTime} - ${event.endTime}
           </div>
-          <div class="event-meta">📍 ${event.location}</div>
-          <div class="event-meta">ℹ️ ${event.description}</div>
-          ${event.url ? `<div class="event-meta">🔗 <a href="${event.url}" target="_blank">${event.url}</a></div>` : ''}
+          <div class="event-meta">${event.location}</div>
+          <div class="event-meta">${event.description}</div>
+          ${event.url ? `<div class="event-meta"><a href="${event.url}" target="_blank" style="color: #5ED9A6;">${event.url}</a></div>` : ''}
           <div class="event-meta">Status: ${getStatusLabel(event.status)}</div>
           <div class="event-actions">
             <button class="btn btn-small btn-secondary" onclick="editEvent(${index})">Bearbeiten</button>
@@ -569,9 +601,9 @@
 
     function getStatusLabel(status) {
       const labels = {
-        confirmed: '✅ Bestätigt',
-        tentative: '⏳ Vorläufig',
-        cancelled: '❌ Abgesagt'
+        confirmed: 'Bestätigt',
+        tentative: 'Vorläufig',
+        cancelled: 'Abgesagt'
       };
       return labels[status] || status;
     }
