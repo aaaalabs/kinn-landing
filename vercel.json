@@ -6,9 +6,6 @@
     "api/signup.js": {
       "maxDuration": 10
     },
-    "api/events/create.js": {
-      "maxDuration": 30
-    },
     "api/inbound.js": {
       "maxDuration": 15
     }
