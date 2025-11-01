@@ -906,7 +906,7 @@
     // Check for confirmed events and show location notice if none exist
     async function checkEventsAndShowNotice() {
       try {
-        const response = await fetch('/api/admin/events')
+        const response = await fetch('/api/events')
 
         if (!response.ok) {
           // If API fails, show notice (fail-safe)
@@ -917,12 +917,15 @@
         const data = await response.json()
         const events = data.data?.events || []
 
-        // Show notice only if no events are confirmed
+        // Show notice only if no upcoming events exist
         if (events.length === 0) {
           document.getElementById('locationNotice').style.display = 'block'
+          console.log('[FRONTEND] No upcoming events, showing location notice')
+        } else {
+          console.log('[FRONTEND] Found', events.length, 'upcoming events')
         }
       } catch (error) {
-        console.log('[FRONTEND] Could not load events, showing location notice')
+        console.log('[FRONTEND] Could not load events, showing location notice:', error)
         // If fetch fails, show notice (fail-safe)
         document.getElementById('locationNotice').style.display = 'block'
       }
