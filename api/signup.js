@@ -1,10 +1,58 @@
 import { Resend } from 'resend';
-import { render } from '@react-email/render';
-import OptInEmail from '../emails/opt-in.jsx';
 import { generateConfirmToken } from './utils/tokens.js';
 
 // Initialize Resend client
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Opt-In Email Template (plain HTML for reliability)
+function generateOptInEmail(confirmUrl) {
+  return `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; background-color: #ffffff;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; margin: 0 auto; padding: 20px 0 48px;">
+    <tr>
+      <td style="padding: 40px;">
+        <h1 style="font-size: 24px; line-height: 1.3; font-weight: 300; color: #333; margin-bottom: 20px;">Servus! 👋</h1>
+
+        <p style="font-size: 16px; line-height: 1.618; color: #000; margin-bottom: 16px;">
+          Du hast dich für den <strong>KINN KI Treff Innsbruck</strong> eingetragen.
+        </p>
+
+        <p style="font-size: 16px; line-height: 1.618; color: #000; margin-bottom: 16px;">
+          Ein Klick, und du bekommst alle KI-Events direkt in deinen Google Kalender – <strong>kein Newsletter, keine Spam-Mails</strong>.
+        </p>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="text-align: center; margin: 32px 0;">
+          <tr>
+            <td>
+              <a href="${confirmUrl}" style="background-color: #E0EEE9; border-radius: 12px; color: #000; font-size: 14px; font-weight: 600; text-decoration: none; text-align: center; display: inline-block; padding: 12px 24px;">
+                Ja, ich bin dabei! 🧠
+              </a>
+            </td>
+          </tr>
+        </table>
+
+        <p style="font-size: 12px; line-height: 1.5; color: #666; text-align: center;">
+          Dieser Link ist 48 Stunden gültig.
+        </p>
+
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 32px 0;">
+
+        <p style="font-size: 12px; line-height: 1.5; color: #ccc; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">
+          KINN – Wo Tiroler KI Profil bekommt
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+}
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -66,8 +114,8 @@ export default async function handler(req, res) {
     const confirmToken = generateConfirmToken(email);
     const confirmUrl = `${process.env.BASE_URL || 'https://kinn.at'}/api/confirm?token=${confirmToken}`;
 
-    // Render React Email template to HTML
-    const optInHtml = render(OptInEmail({ confirmUrl }));
+    // Generate HTML email
+    const optInHtml = generateOptInEmail(confirmUrl);
 
     // Send TWO emails in parallel for speed
     const [adminEmail, userEmail] = await Promise.all([
