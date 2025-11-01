@@ -1,12 +1,12 @@
-# Resend Inbound Setup für ki@kinn.at
+# Resend Inbound Setup für ki@in.kinn.at
 
-Schritt-für-Schritt Anleitung für die Konfiguration von AI-powered Auto-Replies auf `ki@kinn.at`.
+Schritt-für-Schritt Anleitung für die Konfiguration von AI-powered Auto-Replies auf `ki@in.kinn.at`.
 
 ## Übersicht
 
 **Flow:**
 ```
-Email → ki@kinn.at (Resend Inbound)
+Email → ki@in.kinn.at (Resend Inbound)
   ↓
   Webhook → https://kinn.at/api/inbound
   ↓
@@ -14,43 +14,32 @@ Email → ki@kinn.at (Resend Inbound)
   ↓
   Generate AI Reply (GROQ Llama 4 Scout)
   ↓
-  Send Reply (Resend)
+  Send Reply from ki@in.kinn.at (Resend)
 ```
 
 ## Schritt 1: DNS Konfiguration
 
-### Option A: Direkt auf ki@kinn.at (Empfohlen)
+### DNS Setup für in.kinn.at (Receiving Domain)
 
-Füge den MX Record für `kinn.at` hinzu:
+Die Receiving Domain ist `in.kinn.at` - füge den MX Record hinzu:
 
 ```
 Type: MX
-Name: @
+Name: in (oder "in.kinn.at" je nach DNS Provider)
 Value: [MX Record von Resend Dashboard]
 Priority: 10
 ```
 
-⚠️ **Wichtig**: Wenn bereits andere MX Records existieren (z.B. Google Workspace), gehe zu Option B.
+Email-Adresse: `ki@in.kinn.at`
 
-### Option B: Subdomain inbound.kinn.at
-
-Falls bereits MX Records existieren, verwende eine Subdomain:
-
-```
-Type: MX
-Name: inbound
-Value: [MX Record von Resend Dashboard]
-Priority: 10
-```
-
-Dann Email-Adresse wird: `ki@inbound.kinn.at`
+⚠️ **Wichtig**: Die Haupt-Domain `kinn.at` kann separate MX Records haben (z.B. für Google Workspace). Die Receiving Domain `in.kinn.at` ist davon unabhängig.
 
 ### MX Record finden
 
 1. Gehe zu Resend Dashboard: https://resend.com/domains
-2. Wähle Domain `kinn.at` (oder erstelle sie)
-3. Aktiviere "Receiving" Toggle
-4. Kopiere den MX Record Wert
+2. Wähle Domain `in.kinn.at` (sollte bereits existieren)
+3. "Receiving" sollte bereits aktiviert sein
+4. MX Record sollte bereits konfiguriert sein
 
 ## Schritt 2: Webhook in Resend Dashboard konfigurieren
 
@@ -80,10 +69,10 @@ if (!isValid) {
 ## Schritt 3: Email-Routing testen
 
 ### Test 1: Email senden
-Sende eine Test-Email an `ki@kinn.at`:
+Sende eine Test-Email an `ki@in.kinn.at`:
 
 ```
-To: ki@kinn.at
+To: ki@in.kinn.at
 Subject: Test Email
 Body: Hallo! Ich teste den Auto-Reply.
 ```
@@ -104,7 +93,7 @@ Erwartete Logs:
 
 ### Test 3: Reply empfangen
 
-Prüfe deine Inbox für die Auto-Reply von `ki@kinn.at` mit:
+Prüfe deine Inbox für die Auto-Reply von `ki@in.kinn.at` mit:
 - Tiroler Ton ("Servus!", "Griaß di!")
 - KINN Branding
 - Relevante Info basierend auf deiner Frage
@@ -130,7 +119,9 @@ Prüfe deine Inbox für die Auto-Reply von `ki@kinn.at` mit:
 RESEND_API_KEY            - Resend API key
 GROQ_API_KEY              - GROQ API key
 GROQ_MODEL                - meta-llama/llama-4-scout-17b-16e-instruct
-SENDER_EMAIL              - KINN <ki@kinn.at>
+SENDER_EMAIL              - KINN <noreply@in.kinn.at> (für Opt-In Emails)
+INBOUND_EMAIL             - KINN <ki@in.kinn.at> (für Auto-Replies)
+RESEND_WEBHOOK_SECRET     - whsec_... (für Webhook Verification)
 ```
 
 ## Auto-Reply Regeln
@@ -178,7 +169,7 @@ Du bist der KI-Assistent für KINN (Künstliche Intelligenz Netzwerk Innsbruck).
 
 **Check 1**: DNS Records propagiert?
 ```bash
-dig MX kinn.at
+dig MX in.kinn.at
 # Sollte Resend MX record zeigen
 ```
 

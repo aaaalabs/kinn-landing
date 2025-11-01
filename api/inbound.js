@@ -90,12 +90,12 @@ export default async function handler(req, res) {
     // Send reply via Resend
     try {
       const replyEmail = await resend.emails.send({
-        from: process.env.SENDER_EMAIL || 'KINN <ki@kinn.at>',
+        from: process.env.INBOUND_EMAIL || 'KINN <ki@in.kinn.at>',
         to: from,
         subject: `Re: ${subject}`,
         text: replyText,
         // Set reply_to in case user replies again
-        reply_to: 'ki@kinn.at',
+        reply_to: 'ki@in.kinn.at',
       });
 
       console.log('[INBOUND] Reply sent successfully:', {
