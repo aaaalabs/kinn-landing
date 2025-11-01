@@ -388,7 +388,7 @@
       `;
 
     } else if (status === 'already-subscribed') {
-      // Already subscribed
+      // Already subscribed (likely due to browser/email prefetch)
       content.innerHTML = `
         <div class="status-indicator">
           <svg viewBox="0 0 24 24">
@@ -396,8 +396,8 @@
           </svg>
         </div>
 
-        <h1>Bereits eingetragen</h1>
-        <p class="subtitle">Diese Email-Adresse ist bereits für den KI Treff registriert.</p>
+        <h1>Bestätigung erfolgreich</h1>
+        <p class="subtitle">Du bist bereits für den KI Treff eingetragen. Perfekt!</p>
 
         <div class="card">
           <h2>Kalender abonnieren</h2>

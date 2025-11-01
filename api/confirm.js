@@ -146,8 +146,13 @@ export default async function handler(req, res) {
       );
     }
 
-    // [EH01] Log for debugging
-    console.log('[CONFIRM] Verifying token...');
+    // [EH01] Log for debugging with User-Agent to detect prefetch
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    const timestamp = new Date().toISOString();
+    console.log('[CONFIRM] Verifying token...', {
+      timestamp,
+      userAgent: userAgent.substring(0, 100)
+    });
 
     // Verify token and extract email
     const email = verifyConfirmToken(token);
@@ -166,7 +171,7 @@ export default async function handler(req, res) {
     const alreadySubscribed = await isSubscribed(email);
 
     if (alreadySubscribed) {
-      console.log(`[CONFIRM] Email already subscribed: ${email}`);
+      console.log(`[CONFIRM] Email already subscribed: ${email} (User-Agent: ${userAgent.substring(0, 60)})`);
       return res.redirect(`/pages/success.html?status=already-subscribed&email=${encodeURIComponent(email)}`);
     }
 
@@ -192,8 +197,11 @@ export default async function handler(req, res) {
       subscribedAt: new Date().toISOString()
     });
 
-    // [EH01] Log success
-    console.log(`[CONFIRM] New subscriber confirmed with profile: ${email}`);
+    // [EH01] Log success with timestamp to detect duplicate requests
+    console.log(`[CONFIRM] New subscriber confirmed with profile: ${email}`, {
+      timestamp: new Date().toISOString(),
+      userAgent: userAgent.substring(0, 60)
+    });
 
     // Send welcome email in background (don't block redirect)
     resend.emails.send({
