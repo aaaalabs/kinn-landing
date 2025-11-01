@@ -185,8 +185,9 @@
     <h1>Event Creator</h1>
     <p class="subtitle">Erstelle KI Treff Events für alle verbundenen Kalender</p>
 
-    <!-- API Key Section -->
-    <div class="form-section">
+    <!-- Event Form -->
+    <form id="eventForm" class="form-section">
+      <!-- API Key Section (inside form to fix DOM warning) -->
       <div class="form-group">
         <label for="apiKey">Admin API Key *</label>
         <input
@@ -197,10 +198,10 @@
           required
         >
       </div>
-    </div>
 
-    <!-- Event Form -->
-    <form id="eventForm" class="form-section">
+      <hr style="margin: 2rem 0; border: none; border-top: 1px solid #e0e0e0;">
+
+      <!-- Event Details -->
       <div class="form-group">
         <label for="summary">Event Titel *</label>
         <input
