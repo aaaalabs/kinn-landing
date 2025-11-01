@@ -23,14 +23,65 @@ KINN (KI Treff Innsbruck) landing page for event subscriptions with iCal feed in
 
 **IMPORTANT:** All UI components must follow the KINN Brand Styleguide.
 
-See: `KINN_BRAND_STYLEGUIDE.md` for comprehensive design system including:
-- No emojis policy
-- KINN SVG logo usage
-- Work Sans typography
-- Bold Mint (#5ED9A6) color palette
-- Button styles, spacing, shadows
-- Email design best practices
-- Accessibility guidelines
+### Design & Visual Identity
+
+See: **`KINN_BRAND_STYLEGUIDE.md`** for comprehensive design system:
+
+**Core Identity:**
+- No emojis policy (timeless, professional)
+- KINN SVG logo (with don'ts and variations)
+- Work Sans typography (weights 300-900)
+- Bold Mint (#5ED9A6) primary color
+- Minimal, elegant, Jony Ive aesthetic
+
+**Components:**
+- Button styles (primary, secondary, danger)
+- Cards, forms, shadows, spacing
+- Email design (spam-safe)
+- Accessibility (WCAG 2.1 AA)
+
+**Photography:**
+- Event photo guidelines (natural, candid)
+- GDPR consent protocols
+- Image treatments and filters
+
+**Application Templates:**
+- Email signatures (KINN Core Team)
+- Social media profiles (LinkedIn, Twitter)
+- Presentation templates
+- Business cards
+
+### Marketing & Messaging
+
+See: **`MARKETING.md`** for complete marketing strategy:
+
+**Brand Voice:**
+- Community naming: KINN'der, KINN'sider, KINN Core
+- Taglines: "KINN'der an die Macht", "In KINN'derschuhen"
+- Tone: Direct, bodenständig, self-aware witzig
+
+**Elevator Pitches:**
+- 10s: "Monatlicher AI Austausch in Innsbruck"
+- 30s: + Supply/Demand matching
+- 2min: Full story with problem/solution/vision
+
+**Key Messages:**
+- Primary: "Community-owned AI network in Tirol"
+- Secondary: "From networking to actual collaboration"
+- Tertiary: "Local identity, global relevance"
+
+**Growth Strategy:**
+- Target audiences (AI Devs, Tech Professionals, Students, B2B)
+- Content pillars (Technical Excellence, Local Heroes, Job Intel)
+- Channels (Owned/Earned/Paid)
+- Viral loops & partnerships
+- Monetization tiers
+
+**What We Offer:**
+- Monthly KINN Treffs
+- Supply/Demand Matching (✅ implemented)
+- Calendar Integration (✅ implemented)
+- Future: Job Board, Learning Paths, Academy
 
 ## API Endpoints
 

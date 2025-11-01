@@ -75,6 +75,65 @@
 - Minimum 2rem margin-bottom
 - Never place text or other elements too close
 
+### Logo Don'ts
+
+**❌ NEVER:**
+
+1. **Don't Distort**
+   - Never stretch or squash the logo
+   - Maintain aspect ratio at all times
+   - Wrong: `transform: scaleX(1.5)` ❌
+   - Correct: `transform: scale(1.5)` ✅
+
+2. **Don't Rotate**
+   - Logo must always be horizontal
+   - Never tilted or at angles
+   - Exception: Subtle hover animations (±2°) acceptable
+
+3. **Don't Change Colors**
+   - Only use brand-approved colors:
+     - ✅ Black (#000) on light backgrounds
+     - ✅ White (#FFF) on dark backgrounds
+     - ✅ Primary text color (#2C3E50)
+   - Never:
+     - ❌ Gradients inside logo
+     - ❌ Neon/bright colors
+     - ❌ Low-contrast combinations
+
+4. **Don't Use on Busy Backgrounds**
+   - Logo needs breathing room
+   - Minimum contrast ratio: 4.5:1
+   - Use solid color backdrop if background is busy
+
+5. **Don't Recreate or Modify**
+   - Never redraw or trace the logo
+   - Never add effects (glow, stroke, 3D)
+   - Never change letter spacing
+   - Use official SVG file only
+
+6. **Don't Use at Tiny Sizes**
+   - Minimum width: 120px digital, 40mm print
+   - Below minimum: Use icon/mark variant (if created)
+
+### Logo Variations
+
+**Primary (Black):**
+- Default for light backgrounds
+- Use on: Landing page, admin, success pages
+
+**Inverted (White):**
+```css
+.logo-white {
+  filter: brightness(0) invert(1);
+}
+```
+- Use on dark backgrounds only
+- Ensure sufficient contrast
+
+**Monochrome:**
+- Same SVG, single color
+- Adapt to text color if needed: `fill: currentColor`
+
 ---
 
 ## Typography
@@ -767,6 +826,223 @@ text-align: center;
   typography.css
   components.css
 ```
+
+---
+
+## Photography & Imagery
+
+### Event Photography Style
+
+**Aesthetic:**
+- Natural, candid moments over posed shots
+- Warm, authentic lighting (avoid harsh flash)
+- Focus on genuine interactions and engagement
+- Show diversity of attendees (age, gender, background)
+
+**Technical Specs:**
+- Resolution: Minimum 1920x1080px
+- Format: JPEG (web), PNG (print)
+- File naming: `kinn-event-YYYYMMDD-001.jpg`
+
+### Photo Guidelines
+
+**✅ DO:**
+- Capture genuine moments (laughter, concentration, collaboration)
+- Natural lighting whenever possible
+- Show venue atmosphere (Die Bäckerei, etc.)
+- Wide shots (group context) + close-ups (interactions)
+- Include KINN branding subtly (laptop stickers, banners)
+- Get consent before posting faces (GDPR!)
+
+**❌ DON'T:**
+- Awkward posed "networking handshake" stock photo style
+- Over-filtered or over-saturated images
+- Photos that make tech look intimidating
+- Unflattering angles or catch people mid-chew
+- Post photos without consent forms
+
+### Image Treatments
+
+**Filters:**
+- Minimal processing - authentic > polished
+- Slight warmth (+10% orange/yellow tones)
+- Preserve natural skin tones
+- No B&W unless artistic intent
+
+**Overlays (if needed):**
+- Brand watermark: Bottom right, 20% opacity
+- Text overlays: Work Sans 600, white with subtle shadow
+- Event info: Use card/badge design, don't cover faces
+
+### Privacy & Consent
+
+**Event Photo Protocol:**
+1. Announce at event start: "Photos will be taken for social media"
+2. Opt-out stickers/badges available ("No photos please")
+3. Group photos: Ask for raised hands consent
+4. Individual close-ups: Ask permission first
+5. Delete upon request within 48h
+
+**GDPR Compliance:**
+- Photo consent form at registration
+- Right to deletion honored immediately
+- No photos of minors without parent consent
+- Store originals securely, delete after 12 months
+
+### Stock Photos (if needed)
+
+**Acceptable:**
+- Abstract tech backgrounds (neural networks, code)
+- Innsbruck cityscape/mountains
+- Generic workspace setups (keyboards, monitors)
+
+**Avoid:**
+- Generic "diverse business team" stock photos
+- Fake "startup culture" imagery
+- Overused tech clichés (robots, circuit boards)
+
+**Sources (if needed):**
+- Unsplash (free, high quality)
+- Pexels (free, good variety)
+- Custom photography preferred
+
+---
+
+## Application Templates
+
+### Email Signature
+
+**KINN Core Team:**
+```
+Thomas Muster
+KINN Core Team
+thomas@kinn.at
+
+kinn.at
+Wo Tiroler KI Profil bekommt
+```
+
+**Formatting:**
+- Font: Arial or system default (compatibility)
+- Size: 10-11pt
+- Color: #3A3A3A for text, #5ED9A6 for link
+- No images in signature (deliverability)
+- No social icons (clean & simple)
+
+**HTML Version:**
+```html
+<div style="font-family: Arial, sans-serif; font-size: 11px; color: #3A3A3A;">
+  <strong>Thomas Muster</strong><br>
+  KINN Core Team<br>
+  <a href="mailto:thomas@kinn.at" style="color: #5ED9A6;">thomas@kinn.at</a><br>
+  <br>
+  <a href="https://kinn.at" style="color: #5ED9A6; text-decoration: none;">kinn.at</a><br>
+  <span style="color: #6B6B6B; font-size: 10px;">Wo Tiroler KI Profil bekommt</span>
+</div>
+```
+
+### Social Media Profiles
+
+**LinkedIn Company Page:**
+```
+Name: KINN - KI Innsbruck Network
+Tagline: Wo Tiroler KI Profil bekommt
+About: Monatlicher AI Austausch in Innsbruck.
+       Community für AI/ML Devs, Researchers & Enthusiasts.
+
+       🔹 Monatliche KINN Treffs
+       🔹 Supply/Demand Matching
+       🔹 Job Board (coming soon)
+
+       KINN'der an die Macht!
+
+Industry: Technology, Information and Internet
+Website: kinn.at
+Location: Innsbruck, Tyrol, Austria
+```
+
+**Profile Picture:**
+- KINN logo (square crop, black on white)
+- Size: 400x400px minimum
+- Format: PNG with transparency
+
+**Cover Image:**
+- Innsbruck landscape with KINN branding
+- Size: 1128x191px (LinkedIn)
+- Text overlay: "Wo Tiroler KI Profil bekommt"
+
+**Twitter/X:**
+```
+Name: KINN
+Handle: @kinn_innsbruck
+Bio: Monatlicher AI Austausch in Innsbruck 🏔️
+     KINN'der an die Macht!
+     kinn.at
+
+Location: Innsbruck, Austria
+```
+
+**Profile Picture:**
+- KINN logo (square)
+- 400x400px PNG
+
+**Header Image:**
+- 1500x500px
+- Event photo or Innsbruck landscape
+
+### Presentation Template
+
+**Title Slide:**
+```
+[KINN Logo - centered, large]
+
+KINN Treff [Month YYYY]
+[Event Title/Topic]
+
+kinn.at
+```
+
+**Content Slides:**
+- Background: White or subtle gradient (#ffffff → #fafcfb)
+- Font: Work Sans 400 (body), 600 (headings)
+- Accent: Bold Mint #5ED9A6 for emphasis
+- Footer: "KINN - kinn.at" in gray
+
+**Thank You Slide:**
+```
+Danke!
+
+Fragen? Diskussion?
+
+---
+Join us: kinn.at
+Email: thomas@kinn.at
+LinkedIn: KINN - KI Innsbruck Network
+```
+
+### Business Cards (if needed)
+
+**Front:**
+```
+[KINN Logo]
+
+Thomas Muster
+KINN Core Team
+```
+
+**Back:**
+```
+thomas@kinn.at
+kinn.at
+
+Wo Tiroler KI Profil bekommt
+```
+
+**Specs:**
+- Size: 85x55mm (standard EU)
+- Paper: 350gsm, matte finish
+- Colors: Black + Bold Mint accent
+- Minimal design, no clutter
 
 ---
 

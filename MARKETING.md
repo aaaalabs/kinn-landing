@@ -108,6 +108,119 @@
 
 ---
 
+## Messaging Framework
+
+### Elevator Pitches
+
+**10 Sekunden (Teaser):**
+> "KINN - Monatlicher AI Austausch in Innsbruck für Devs, die wirklich bauen statt nur reden."
+
+**30 Sekunden (Networking):**
+> "KINN ist die AI Community in Innsbruck. Wir treffen uns monatlich zum Austausch über RAG, LLMs, Agent Systems - alles was praktisch relevant ist. Plus: Supply/Demand Matching, damit du die richtigen Leute für Jobs, Projekte oder Learning findest. Keine Buzzwords, kein Sales Pitch, nur echter Austausch."
+
+**2 Minuten (Pitch/Presentation):**
+> "KINN steht für KI Innsbruck Network - die erste AI-fokussierte Developer Community in Tirol.
+>
+> **Das Problem:** AI Devs in Innsbruck arbeiten oft isoliert. Man weiß nicht wer an ähnlichen Problemen arbeitet, wer sucht, wer bietet.
+>
+> **Unsere Lösung:** Monatliche KINN Treffs für echten fachlichen Austausch. Dazu ein Profil-System wo du angibst: Was ich suche (Jobs, Co-Founder, Learning) und was ich biete (Skills, Mentoring, Collaboration). Das System matched dich automatisch - '3 andere RAG-Experten in Innsbruck'.
+>
+> **Warum KINN anders ist:**
+> - AI-only, kein generic tech talk
+> - Community-owned: KINN'der an die Macht
+> - Supply/Demand matching statt reines Networking
+> - Tiroler Identität mit globaler Relevanz
+>
+> **Status:** In KINN'derschuhen, aber wachsend. 50+ Early Adopters, erste Events geplant.
+>
+> **Vision:** Das Leading AI Network in Österreich, started in Innsbruck."
+
+### Key Messages (Hierarchy)
+
+**Primary Message:**
+> "Community-owned AI network in Tirol"
+- Was: Developer-driven, nicht corporate
+- Wer: Für AI/ML Professionals in & around Innsbruck
+- Wie: Monthly events + smart matching platform
+
+**Secondary Messages:**
+1. "From networking to actual collaboration"
+   - Nicht nur Visitenkarten austauschen
+   - Konkrete Outcomes: Jobs, Projekte, Learning
+
+2. "KINN'der an die Macht"
+   - Community entscheidet (Topics, Features, Direction)
+   - Bottom-up statt Top-down
+
+3. "In KINN'derschuhen, aber wir wachsen schnell"
+   - Early stage positioning
+   - Join now to shape the community
+
+**Tertiary Messages:**
+1. "Local identity, global relevance"
+   - Proudly Tiroler, but world-class tech
+   - Remote-friendly für expats
+
+2. "Zero bullshit AI community"
+   - No marketing speak
+   - No recruiter spam
+   - Just builders talking to builders
+
+3. "Supply meets demand"
+   - Smart matching based on actual needs
+   - Efficient networking
+
+### Proof Points (Update Quarterly)
+
+**Current (Month 1):**
+- [X] KINN'der registered
+- [Y] Events planned
+- [Z] Profile completions
+- Built by: Thomas + KINN Core Team
+
+**Target (Month 3):**
+- 50+ KINN'der
+- 3 successful events
+- 20+ active profiles
+- First successful matches
+
+**Target (Month 6):**
+- 200+ KINN'der
+- 6 events completed
+- 50+ active profiles
+- First job placement via KINN
+- First co-founder match
+
+**Target (Month 12):**
+- 500+ KINN'der
+- 12 events
+- 200+ profiles
+- Premium tier launched
+- Break-even on costs
+- Recognized as #1 AI community in Austria
+
+### Supporting Facts
+
+**Market Context:**
+- Innsbruck: ~130k population, growing tech scene
+- Austria: AI adoption increasing, but fragmented community
+- Tirol: Strong education (Uni Innsbruck) but brain drain to Vienna/Munich
+- Gap: No dedicated AI community space in western Austria
+
+**Competitive Advantage:**
+- Only AI-focused community in Tirol
+- Supply/Demand matching is unique
+- Calendar-first = frictionless engagement
+- Tiroler identity = authentic differentiation
+
+**Social Proof (Collect):**
+- Testimonials from first 5 events
+- Company endorsements
+- Media mentions
+- Partnership announcements
+
+---
+
 ## Value Propositions
 
 ### Was wir bieten (aktuell)
