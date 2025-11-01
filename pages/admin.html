@@ -23,10 +23,21 @@
       margin: 0 auto;
     }
 
-    .logo {
+    .logo-link {
+      display: block;
       width: 200px;
-      height: auto;
       margin: 0 auto 2rem;
+      cursor: pointer;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .logo-link:hover {
+      transform: scale(1.02);
+    }
+
+    .logo {
+      width: 100%;
+      height: auto;
       display: block;
     }
 
@@ -177,10 +188,12 @@
 <body>
   <div class="container">
     <!-- KINN Logo -->
-    <svg class="logo" viewBox="0 0 640 160" xmlns="http://www.w3.org/2000/svg">
-      <rect width="640" height="160" fill="none"/>
-      <text x="320" y="120" font-family="system-ui, -apple-system, sans-serif" font-size="120" font-weight="300" text-anchor="middle" fill="#000">KINN</text>
-    </svg>
+    <a href="/" class="logo-link">
+      <svg class="logo" viewBox="0 0 640 160" xmlns="http://www.w3.org/2000/svg">
+        <rect width="640" height="160" fill="none"/>
+        <text x="320" y="120" font-family="system-ui, -apple-system, sans-serif" font-size="120" font-weight="300" text-anchor="middle" fill="#000">KINN</text>
+      </svg>
+    </a>
 
     <h1>Event Creator</h1>
     <p class="subtitle">Erstelle KI Treff Events für alle verbundenen Kalender</p>
