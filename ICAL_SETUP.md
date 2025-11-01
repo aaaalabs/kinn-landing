@@ -91,7 +91,7 @@ Automatic event updates
   ],
   "defaults": {
     "timezone": "Europe/Vienna",
-    "organizer": "treff@in.kinn.at",
+    "organizer": "thomas@kinn.at",
     "categories": ["KI", "AI", "Networking", "Innsbruck"],
     "reminder": "24h"
   }
@@ -125,7 +125,7 @@ Automatic event updates
 | Field | Description | Default Value |
 |-------|-------------|---------------|
 | `timezone` | IANA timezone identifier | `"Europe/Vienna"` |
-| `organizer` | Organizer email | `"treff@in.kinn.at"` |
+| `organizer` | Organizer email | `"thomas@kinn.at"` |
 | `categories` | Event categories | `["KI", "AI", "Networking", "Innsbruck"]` |
 | `reminder` | Reminder time (not yet implemented) | `"24h"` |
 
@@ -222,7 +222,7 @@ SUMMARY:KINN - KI Treff Innsbruck
 DESCRIPTION:Monatlicher KI-Austausch...
 LOCATION:Coworkingspace Innsbruck
 URL:https://kinn.at
-ORGANIZER;CN=KINN:mailto:treff@in.kinn.at
+ORGANIZER;CN=KINN:mailto:thomas@kinn.at
 CATEGORIES:KI,AI,Networking,Innsbruck
 STATUS:CONFIRMED
 SEQUENCE:0
@@ -509,7 +509,7 @@ Alternative to Redis for non-technical event management:
 
 For issues or questions:
 - GitHub: https://github.com/aaaalabs/kinn-landing
-- Email: treff@in.kinn.at
+- Email: thomas@kinn.at
 
 ---
 

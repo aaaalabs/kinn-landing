@@ -83,7 +83,7 @@ export async function getEventsConfig() {
         events: [],
         defaults: {
           timezone: 'Europe/Vienna',
-          organizer: 'treff@in.kinn.at',
+          organizer: 'thomas@kinn.at',
           categories: ['KI', 'AI', 'Networking', 'Innsbruck'],
           reminder: '24h'
         }
@@ -98,7 +98,7 @@ export async function getEventsConfig() {
       events: [],
       defaults: {
         timezone: 'Europe/Vienna',
-        organizer: 'treff@in.kinn.at',
+        organizer: 'thomas@kinn.at',
         categories: ['KI', 'AI', 'Networking', 'Innsbruck'],
         reminder: '24h'
       }

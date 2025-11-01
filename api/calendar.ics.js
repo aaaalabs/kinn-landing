@@ -87,7 +87,7 @@ function generateICalFeed(events, defaults = {}) {
  */
 function generateICalEvent(event, timestamp, defaults = {}) {
   const timezone = defaults.timezone || 'Europe/Vienna';
-  const organizer = defaults.organizer || 'treff@in.kinn.at';
+  const organizer = defaults.organizer || 'thomas@kinn.at';
   const categories = defaults.categories || ['KI', 'AI', 'Networking'];
 
   // Parse event dates

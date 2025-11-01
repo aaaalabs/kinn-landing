@@ -121,7 +121,7 @@ export default async function handler(req, res) {
     const [adminEmail, userEmail] = await Promise.all([
       // 1. Admin notification to treff@in.kinn.at
       resend.emails.send({
-        from: (process.env.SENDER_EMAIL || 'KINN <noreply@in.kinn.at>').trim(),
+        from: (process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>').trim(),
         to: (process.env.RECIPIENT_EMAIL || 'treff@in.kinn.at').trim(),
         subject: 'Neue Anmeldung: KI Treff Verteiler',
         html: `
@@ -138,7 +138,7 @@ export default async function handler(req, res) {
 
       // 2. Opt-in confirmation to user with React Email template
       resend.emails.send({
-        from: (process.env.SENDER_EMAIL || 'KINN <noreply@in.kinn.at>').trim(),
+        from: (process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>').trim(),
         to: email.trim(),
         subject: 'Bestätige deine Anmeldung zum KINN KI Treff',
         html: optInHtml,
