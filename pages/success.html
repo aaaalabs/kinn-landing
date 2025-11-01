@@ -125,13 +125,13 @@
 </head>
 <body>
   <div class="container">
-    <!-- KINN Logo (inline SVG from landing page) -->
+    <!-- KINN Logo -->
     <svg class="logo" viewBox="0 0 640 160" xmlns="http://www.w3.org/2000/svg">
       <rect width="640" height="160" fill="none"/>
       <text x="320" y="120" font-family="system-ui, -apple-system, sans-serif" font-size="120" font-weight="300" text-anchor="middle" fill="#000">KINN</text>
     </svg>
 
-    <!-- Dynamic content based on status parameter -->
+    <!-- Content -->
     <div id="content"></div>
 
     <div class="footer">
@@ -140,87 +140,26 @@
   </div>
 
   <script>
-    // Parse URL parameters
     const params = new URLSearchParams(window.location.search);
     const status = params.get('status');
-    const email = params.get('email');
-    const isDemo = params.get('demo') === 'true';
-
     const content = document.getElementById('content');
 
-    // Add demo mode badge if in demo mode
-    if (isDemo) {
-      const badge = document.createElement('div');
-      badge.style.cssText = 'position: fixed; top: 1rem; right: 1rem; background: rgba(255, 152, 0, 0.9); color: #fff; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 1000; font-family: system-ui;';
-      badge.textContent = '🎬 DEMO MODE';
-      document.body.appendChild(badge);
-    }
+    if (status === 'confirmed' || status === 'already-subscribed') {
+      const isAlready = status === 'already-subscribed';
 
-    // Helper: Get OAuth URL (demo or real)
-    function getOAuthUrl(email) {
-      if (isDemo) {
-        return '/pages/oauth-demo.html';
-      }
-      return email ? '/api/oauth/authorize?email=' + encodeURIComponent(email) : '#';
-    }
-
-    // Helper: Get Calendar Demo URL
-    function getCalendarDemoUrl() {
-      return isDemo ? '/pages/calendar-demo.html' : 'https://calendar.google.com';
-    }
-
-    // Display appropriate message based on status
-    if (status === 'confirmed') {
       content.innerHTML =
-        '<div class="status-icon">✅</div>' +
-        '<h1>Bestätigung erfolgreich!</h1>' +
-        '<p>Danke für deine Anmeldung zum KINN KI Treff Innsbruck.</p>' +
+        '<div class="status-icon">' + (isAlready ? '✓' : '✅') + '</div>' +
+        '<h1>' + (isAlready ? 'Bereits eingetragen' : 'Bestätigung erfolgreich!') + '</h1>' +
+        '<p>' + (isAlready ? 'Diese Email-Adresse ist bereits für den KI Treff eingetragen.' : 'Danke für deine Anmeldung zum KINN KI Treff Innsbruck.') + '</p>' +
         '<div class="message-box">' +
           '<p><strong>Nächster Schritt: Kalender abonnieren</strong></p>' +
           '<p>Abonniere den KINN Event-Kalender und verpasse keinen KI Treff mehr.</p>' +
           '<p>Funktioniert mit Google Calendar, Apple Kalender, Outlook und allen gängigen Kalender-Apps.</p>' +
         '</div>' +
-        // OAuth option (hidden for now, until Google approval)
-        (isDemo && email ? '<a href="' + getOAuthUrl(email) + '" class="cta-button" style="background: #f5f5f5;">📅 Google Kalender verbinden (Demo)</a>' : '') +
         '<a href="/api/calendar.ics" class="cta-button">📅 Kalender abonnieren</a>' +
         '<a href="/" class="cta-button" style="background: #f5f5f5;">Später</a>';
-    } else if (status === 'already-subscribed') {
-      content.innerHTML =
-        '<div class="status-icon">✓</div>' +
-        '<h1>Bereits eingetragen</h1>' +
-        '<p>Diese Email-Adresse ist bereits für den KI Treff eingetragen.</p>' +
-        '<div class="message-box">' +
-          '<p><strong>Kalender abonnieren?</strong></p>' +
-          '<p>Falls noch nicht abonniert, kannst du jetzt den KINN Event-Kalender hinzufügen:</p>' +
-        '</div>' +
-        (isDemo && email ? '<a href="' + getOAuthUrl(email) + '" class="cta-button" style="background: #f5f5f5;">📅 Google Kalender verbinden (Demo)</a>' : '') +
-        '<a href="/api/calendar.ics" class="cta-button">📅 Kalender abonnieren</a>' +
-        '<a href="/" class="cta-button" style="background: #f5f5f5;">Zurück zur Startseite</a>';
-    } else if (status === 'oauth-connected') {
-      content.innerHTML =
-        '<div class="status-icon">🎉</div>' +
-        '<h1>Kalender verbunden!</h1>' +
-        '<p>Perfekt! Dein Google Kalender ist jetzt mit KINN verbunden.</p>' +
-        '<div class="message-box">' +
-          '<p><strong>Du bist startklar!</strong></p>' +
-          '<p>Ab sofort erscheinen alle KI Treff Events automatisch in deinem Google Kalender.</p>' +
-          '<p>Freue dich auf spannende KI-Events in Innsbruck! 🧠</p>' +
-        '</div>' +
-        (isDemo ? '<a href="' + getCalendarDemoUrl() + '" class="cta-button">📆 Kalender ansehen</a>' : '') +
-        '<a href="/" class="cta-button" style="background: #f5f5f5;">Zurück zur Startseite</a>';
-    } else if (status === 'oauth-denied') {
-      content.innerHTML =
-        '<div class="status-icon">⚠️</div>' +
-        '<h1>Kalender-Zugriff abgelehnt</h1>' +
-        '<p>Du hast den Kalender-Zugriff nicht erteilt.</p>' +
-        '<div class="message-box">' +
-          '<p><strong>Kein Problem!</strong></p>' +
-          '<p>Du kannst alternativ den Kalender abonnieren:</p>' +
-        '</div>' +
-        '<a href="/api/calendar.ics" class="cta-button">📅 Kalender abonnieren</a>' +
-        '<a href="/" class="cta-button" style="background: #f5f5f5;">Zurück zur Startseite</a>';
     } else {
-      // Fallback for unknown status
+      // Fallback
       content.innerHTML =
         '<div class="status-icon">ℹ️</div>' +
         '<h1>KINN KI Treff Innsbruck</h1>' +
