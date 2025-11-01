@@ -1,5 +1,6 @@
 import { verifyConfirmToken } from './utils/tokens.js';
 import { addSubscriber, isSubscribed } from './utils/redis.js';
+import { generateBrandedError, ErrorTemplates } from './utils/branded-error.js';
 
 /**
  * Confirmation endpoint for email opt-in
@@ -22,50 +23,13 @@ export default async function handler(req, res) {
     const { token } = req.query;
 
     if (!token) {
-      return res.status(400).send(`
-        <!DOCTYPE html>
-        <html lang="de">
-        <head>
-          <meta charset="UTF-8">
-          <title>Fehler - KINN</title>
-          <style>
-            body {
-              font-family: system-ui, -apple-system, sans-serif;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              min-height: 100vh;
-              background: #ffffff;
-              margin: 0;
-            }
-            .container {
-              text-align: center;
-              max-width: 400px;
-              padding: 40px;
-            }
-            h1 { font-size: 2rem; font-weight: 300; color: #333; margin-bottom: 1rem; }
-            p { color: #666; line-height: 1.618; }
-            a {
-              display: inline-block;
-              margin-top: 2rem;
-              padding: 12px 24px;
-              background: #E0EEE9;
-              color: #000;
-              text-decoration: none;
-              border-radius: 12px;
-              font-weight: 500;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>Ungültiger Link</h1>
-            <p>Der Bestätigungslink ist ungültig oder fehlt.</p>
-            <a href="/">Zurück zur Startseite</a>
-          </div>
-        </body>
-        </html>
-      `);
+      return res.status(400).send(
+        generateBrandedError({
+          ...ErrorTemplates.invalidRequest,
+          title: 'Ungültiger Link',
+          message: 'Der Bestätigungslink ist ungültig oder fehlt.'
+        })
+      );
     }
 
     // [EH01] Log for debugging
@@ -76,51 +40,12 @@ export default async function handler(req, res) {
 
     if (!email) {
       console.error('[CONFIRM] Token verification failed');
-      return res.status(400).send(`
-        <!DOCTYPE html>
-        <html lang="de">
-        <head>
-          <meta charset="UTF-8">
-          <title>Link abgelaufen - KINN</title>
-          <style>
-            body {
-              font-family: system-ui, -apple-system, sans-serif;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              min-height: 100vh;
-              background: #ffffff;
-              margin: 0;
-            }
-            .container {
-              text-align: center;
-              max-width: 400px;
-              padding: 40px;
-            }
-            h1 { font-size: 2rem; font-weight: 300; color: #333; margin-bottom: 1rem; }
-            p { color: #666; line-height: 1.618; }
-            a {
-              display: inline-block;
-              margin-top: 2rem;
-              padding: 12px 24px;
-              background: #E0EEE9;
-              color: #000;
-              text-decoration: none;
-              border-radius: 12px;
-              font-weight: 500;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>Link abgelaufen</h1>
-            <p>Dieser Bestätigungslink ist abgelaufen (gültig für 48 Stunden).</p>
-            <p>Bitte melde dich erneut an, um einen neuen Link zu erhalten.</p>
-            <a href="/">Zurück zur Startseite</a>
-          </div>
-        </body>
-        </html>
-      `);
+      return res.status(400).send(
+        generateBrandedError({
+          ...ErrorTemplates.tokenExpired,
+          details: 'Bitte melde dich erneut an, um einen neuen Link zu erhalten.'
+        })
+      );
     }
 
     // Check if already subscribed
@@ -155,50 +80,12 @@ export default async function handler(req, res) {
     });
 
     // [EH02] User-friendly error response
-    return res.status(500).send(`
-      <!DOCTYPE html>
-      <html lang="de">
-      <head>
-        <meta charset="UTF-8">
-        <title>Fehler - KINN</title>
-        <style>
-          body {
-            font-family: system-ui, -apple-system, sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background: #ffffff;
-            margin: 0;
-          }
-          .container {
-            text-align: center;
-            max-width: 400px;
-            padding: 40px;
-          }
-          h1 { font-size: 2rem; font-weight: 300; color: #333; margin-bottom: 1rem; }
-          p { color: #666; line-height: 1.618; }
-          a {
-            display: inline-block;
-            margin-top: 2rem;
-            padding: 12px 24px;
-            background: #E0EEE9;
-            color: #000;
-            text-decoration: none;
-            border-radius: 12px;
-            font-weight: 500;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <h1>Ein Fehler ist aufgetreten</h1>
-          <p>Die Bestätigung konnte nicht verarbeitet werden.</p>
-          <p>Bitte versuche es später erneut.</p>
-          <a href="/">Zurück zur Startseite</a>
-        </div>
-      </body>
-      </html>
-    `);
+    return res.status(500).send(
+      generateBrandedError({
+        ...ErrorTemplates.serverError,
+        message: 'Die Bestätigung konnte nicht verarbeitet werden.',
+        details: process.env.NODE_ENV === 'development' ? error.message : 'Bitte versuche es später erneut.'
+      })
+    );
   }
 }

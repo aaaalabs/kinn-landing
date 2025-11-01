@@ -1,6 +1,7 @@
 import { verifyConfirmToken } from '../utils/tokens.js';
 import { encryptTokens } from '../utils/encryption.js';
 import { storeOAuthTokens } from '../utils/redis.js';
+import { generateBrandedError, ErrorTemplates } from '../utils/branded-error.js';
 
 /**
  * OAuth Callback Endpoint
@@ -29,20 +30,13 @@ export default async function handler(req, res) {
 
     // [SC02] Validate parameters
     if (!code || !state) {
-      return res.status(400).send(`
-        <!DOCTYPE html>
-        <html lang="de">
-        <head>
-          <meta charset="UTF-8">
-          <title>Fehler - KINN</title>
-        </head>
-        <body>
-          <h1>Ungültige OAuth Callback</h1>
-          <p>Code oder State Parameter fehlt.</p>
-          <a href="/">Zurück zur Startseite</a>
-        </body>
-        </html>
-      `);
+      return res.status(400).send(
+        generateBrandedError({
+          ...ErrorTemplates.invalidRequest,
+          title: 'Ungültige OAuth Callback',
+          details: 'Code oder State Parameter fehlt.'
+        })
+      );
     }
 
     // [SC02] Verify state parameter (CSRF protection)
@@ -50,21 +44,14 @@ export default async function handler(req, res) {
 
     if (!email) {
       console.error('[OAUTH] Invalid or expired state token');
-      return res.status(400).send(`
-        <!DOCTYPE html>
-        <html lang="de">
-        <head>
-          <meta charset="UTF-8">
-          <title>Fehler - KINN</title>
-        </head>
-        <body>
-          <h1>Ungültiger oder abgelaufener Link</h1>
-          <p>Der OAuth-Link ist abgelaufen oder ungültig.</p>
-          <p>Bitte starte den Prozess erneut.</p>
-          <a href="/">Zurück zur Startseite</a>
-        </body>
-        </html>
-      `);
+      return res.status(400).send(
+        generateBrandedError({
+          ...ErrorTemplates.tokenExpired,
+          title: 'Ungültiger oder abgelaufener Link',
+          message: 'Der OAuth-Link ist abgelaufen oder ungültig.',
+          details: 'Bitte starte den Prozess erneut.'
+        })
+      );
     }
 
     console.log('[OAUTH] Valid state, exchanging code for tokens...');
@@ -119,20 +106,12 @@ export default async function handler(req, res) {
       ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
     });
 
-    return res.status(500).send(`
-      <!DOCTYPE html>
-      <html lang="de">
-      <head>
-        <meta charset="UTF-8">
-        <title>Fehler - KINN</title>
-      </head>
-      <body>
-        <h1>Ein Fehler ist aufgetreten</h1>
-        <p>Die Kalender-Verbindung konnte nicht hergestellt werden.</p>
-        <p>Bitte versuche es später erneut.</p>
-        <a href="/">Zurück zur Startseite</a>
-      </body>
-      </html>
-    `);
+    return res.status(500).send(
+      generateBrandedError({
+        ...ErrorTemplates.oauthFailed,
+        message: 'Die Kalender-Verbindung konnte nicht hergestellt werden.',
+        details: process.env.NODE_ENV === 'development' ? error.message : 'Bitte versuche es später erneut.'
+      })
+    );
   }
 }

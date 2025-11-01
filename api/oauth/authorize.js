@@ -1,4 +1,5 @@
 import { generateConfirmToken } from '../utils/tokens.js';
+import { generateBrandedError, ErrorTemplates } from '../utils/branded-error.js';
 
 /**
  * OAuth Authorization Endpoint
@@ -21,38 +22,19 @@ export default async function handler(req, res) {
 
     // [SC02] Validate email parameter
     if (!email || typeof email !== 'string') {
-      return res.status(400).send(`
-        <!DOCTYPE html>
-        <html lang="de">
-        <head>
-          <meta charset="UTF-8">
-          <title>Fehler - KINN</title>
-        </head>
-        <body>
-          <h1>Ungültige Anfrage</h1>
-          <p>Email-Parameter fehlt.</p>
-          <a href="/">Zurück zur Startseite</a>
-        </body>
-        </html>
-      `);
+      return res.status(400).send(
+        generateBrandedError({
+          ...ErrorTemplates.invalidRequest,
+          details: 'Email-Parameter fehlt.'
+        })
+      );
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return res.status(400).send(`
-        <!DOCTYPE html>
-        <html lang="de">
-        <head>
-          <meta charset="UTF-8">
-          <title>Fehler - KINN</title>
-        </head>
-        <body>
-          <h1>Ungültige Email-Adresse</h1>
-          <p>Bitte gib eine gültige Email-Adresse an.</p>
-          <a href="/">Zurück zur Startseite</a>
-        </body>
-        </html>
-      `);
+      return res.status(400).send(
+        generateBrandedError(ErrorTemplates.invalidEmail)
+      );
     }
 
     // [SC02] Generate state parameter for CSRF protection
@@ -78,19 +60,12 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('[OAUTH] Authorization error:', error.message);
 
-    return res.status(500).send(`
-      <!DOCTYPE html>
-      <html lang="de">
-      <head>
-        <meta charset="UTF-8">
-        <title>Fehler - KINN</title>
-      </head>
-      <body>
-        <h1>Ein Fehler ist aufgetreten</h1>
-        <p>Die OAuth-Autorisierung konnte nicht gestartet werden.</p>
-        <a href="/">Zurück zur Startseite</a>
-      </body>
-      </html>
-    `);
+    return res.status(500).send(
+      generateBrandedError({
+        ...ErrorTemplates.serverError,
+        message: 'Die OAuth-Autorisierung konnte nicht gestartet werden.',
+        details: process.env.NODE_ENV === 'development' ? error.message : null
+      })
+    );
   }
 }
