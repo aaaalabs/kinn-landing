@@ -1,215 +1,120 @@
-# KINN MVP Landing Page
+# KINN Landing Page
 
-> **Status**: Day 1 Complete ✅
-> **Type**: Static HTML (Manual Workflow)
+> **Monatlicher AI Austausch in Innsbruck**
+>
+> Marketing Strategy → See `MARKETING.md`
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
-### Local Testing
+### Local Development
 
 ```bash
-# Navigate to MVP folder
-cd /Users/libra/GitHub_quicks/_KINN/mvp
+npm install
+npm run dev
+```
 
-# Start local server
-python3 -m http.server 8000
+### Deployment
 
-# Open in browser
-open http://localhost:8000
+```bash
+npm run deploy
 ```
 
 ---
 
-## 📁 Files
+## Tech Stack
+
+- **Frontend**: Vanilla HTML/CSS/JavaScript
+- **Backend**: Vercel Serverless Functions
+- **Database**: Upstash Redis (KV)
+- **Email**: Resend API
+- **Auth**: JWT (token-based)
+- **Calendar**: iCal feed generation
+
+---
+
+## Features
+
+- ✅ Email subscription with double opt-in
+- ✅ Calendar feed (iCal/webcal)
+- ✅ Admin dashboard (event management)
+- ✅ User profiles with supply/demand matching
+- ✅ Email notification preferences
+- ✅ GDPR-compliant unsubscribe
+
+---
+
+## Project Structure
 
 ```
 /mvp
-  index.html        # Complete landing page (195 lines)
-  README.md         # This file
+├── index.html                 # Landing page
+├── /pages
+│   ├── success.html          # Confirmation success
+│   ├── profil.html           # User profile management
+│   ├── privacy.html          # Privacy policy
+│   └── agb.html              # Terms of service
+├── /admin
+│   └── index.html            # Event management dashboard
+├── /api
+│   ├── signup.js             # Email subscription
+│   ├── confirm.js            # Email confirmation
+│   ├── calendar.ics.js       # iCal feed
+│   ├── profile.js            # Get profile
+│   ├── /profile
+│   │   ├── update.js         # Update preferences
+│   │   └── unsubscribe.js    # Unsubscribe
+│   ├── /admin
+│   │   ├── login.js          # Admin auth
+│   │   ├── events.js         # CRUD events
+│   │   └── subscribers.js    # List subscribers
+│   └── /utils
+│       ├── tokens.js         # JWT functions
+│       ├── redis.js          # Database operations
+│       └── branded-error.js  # Error pages
+├── MARKETING.md              # Marketing strategy
+├── KINN_BRAND_STYLEGUIDE.md  # Design system
+└── CLAUDE.md                 # Project documentation
 ```
 
 ---
 
-## ✨ Features
+## Documentation
 
-- ✅ Schwarz/Weiß minimal design
-- ✅ KINN Logo inline SVG
-- ✅ Responsive (mobile & desktop)
-- ✅ Modal with email input
-- ✅ mailto: integration
-- ✅ Keyboard shortcuts (Esc to close)
-- ✅ Zero dependencies
+- **Marketing Strategy**: `MARKETING.md` - Brand voice, campaigns, growth tactics
+- **Design System**: `KINN_BRAND_STYLEGUIDE.md` - Visual guidelines, components
+- **Project Setup**: `CLAUDE.md` - Technical documentation, API specs
+- **Event Management**: `EVENT_CREATION.md` - How to create/manage events
+- **iCal Setup**: `ICAL_SETUP.md` - Calendar feed implementation
 
 ---
 
-## 🧪 Testing Checklist
+## Environment Variables
 
-### Desktop
-- [ ] Chrome
-- [ ] Safari
-- [ ] Firefox
-
-### Mobile
-- [ ] iPhone Safari
-- [ ] Android Chrome
-
-### Functionality
-- [ ] Logo displays correctly
-- [ ] Button opens modal
-- [ ] Email input works
-- [ ] Submit opens mail client
-- [ ] Escape closes modal
-- [ ] Click outside closes modal
-
----
-
-## 📧 Manual Workflow
-
-### When user signs up:
-
-1. **User Action**: Fills email → Clicks "Abschicken"
-2. **System**: Opens mail client with pre-filled email to treff@in.kinn.at
-3. **Email lands in your inbox**
-4. **Your Action** (2 minutes):
-   - Copy email to Google Sheets
-   - Send confirmation email (template below)
-   - Mark in sheets when confirmed
-
----
-
-## 📝 Email Templates
-
-### Template 1: Confirmation Email
-
-```
-To: [user email]
-Subject: Bestätige deine Anmeldung - KINN KI Treff Innsbruck
-
-Servus [NAME],
-
-danke für dein Interesse am KINN KI Treff Innsbruck!
-
-Bitte bestätige kurz deine Email-Adresse:
-→ Ja, ich bin dabei! (Einfach auf diese Email antworten)
-
-Was dich erwartet:
-📅 Monatliche Stammtische in Die Bäckerei, Innsbruck
-🧠 Austausch über KI, Neural Networks, LLMs
-🤝 Community von Entwicklern, Forschern & Enthusiasten
-
-Du bekommst rechtzeitig eine Einladung zum nächsten Treff!
-
-Bis bald,
-Das KINN Team
-
----
-P.S.: Nicht mehr dabei? Einfach Bescheid geben.
-```
-
-### Template 2: Welcome Email (after confirmation)
-
-```
-To: [user email]
-Subject: Willkommen beim KINN KI Treff! 🎉
-
-Servus [NAME],
-
-super, du bist dabei!
-
-Der nächste KINN KI Stammtisch:
-📅 [DATUM], [UHRZEIT]
-📍 Die Bäckerei, Dreiheiligenstraße 21a, Innsbruck
-🧠 Thema: [THEMA]
-
-Ich schicke dir ca. 1 Woche vorher eine Einladung mit allen Details.
-
-Bis bald!
-Das KINN Team
-
-💬 Discord: [link]
-🔗 LinkedIn: [link]
-```
-
----
-
-## 🚀 Deployment Options
-
-### Option 1: GitHub Pages
+Required in Vercel dashboard:
 
 ```bash
-# Create repo
-git init
-git add .
-git commit -m "MVP launch"
-git branch -M main
-git remote add origin https://github.com/[user]/kinn-landing.git
-git push -u origin main
+# Redis (Upstash)
+KINNST_KV_REST_API_URL=...
+KINNST_KV_REST_API_TOKEN=...
 
-# Enable GitHub Pages in repo settings
-# Point to main branch, / (root)
-```
+# Email (Resend)
+RESEND_API_KEY=...
+SENDER_EMAIL="KINN <thomas@kinn.at>"
 
-### Option 2: Vercel
+# JWT
+JWT_SECRET=...
 
-```bash
-# Install Vercel CLI
-npm i -g vercel
+# Admin
+ADMIN_USERNAME=...
+ADMIN_PASSWORD_HASH=...
 
-# Deploy
-vercel
-
-# Production
-vercel --prod
-```
-
-### Option 3: Netlify Drop
-
-1. Go to https://app.netlify.com/drop
-2. Drag & drop the `mvp` folder
-3. Done! Get instant URL
-
----
-
-## 📊 Success Metrics (Week 1)
-
-```
-Target: 10+ email signups
-Track in: Google Sheets
-Time per signup: ~2 minutes (manual)
+# Base URL
+BASE_URL="https://kinn.at"
 ```
 
 ---
 
-## 🔄 Next Steps (Day 8 Transition)
-
-When ready to automate:
-1. Build Next.js backend (see /plan.md Track B)
-2. Setup Google Calendar API
-3. Import emails from Sheets → Redis
-4. Switch mailto: to POST /api/signup
-5. Deploy automated system
-6. Create first event → All invited! 🎉
-
----
-
-## 💡 Tips
-
-**Email subject line optimization:**
-- Current: "Eintragen in KI Treff Verteiler"
-- Can test: "KINN Stammtisch Anmeldung" or "KI Treff Innsbruck: [NAME]"
-
-**Spam prevention:**
-- Create contact: treff@in.kinn.at in your contacts
-- SPF/DKIM if using custom domain
-
-**Response templates:**
-- Save templates in Gmail for faster replies
-- Use keyboard shortcuts (Cmd+Option+1 etc)
-
----
-
-**Built**: 2025-10-31
-**Launch**: TBD
-**Status**: ✅ Ready for testing
+**Built**: 2024-11-01
+**Status**: ✅ Production
