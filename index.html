@@ -5,6 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KINN - KI Treff Innsbruck</title>
   <meta name="description" content="Monatlicher KI-Austausch in Innsbruck. Für Entwickler, Forscher & Enthusiasten.">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/public/favicon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png">
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/public/manifest.json">
+  <meta name="theme-color" content="#E0EEE9">
+
+  <!-- iOS specific -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="KINN">
   <style>
     * {
       margin: 0;
@@ -749,6 +762,21 @@
         openModal()
       }
     })
+  </script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/public/service-worker.js')
+          .then((registration) => {
+            console.log('[PWA] Service Worker registered:', registration);
+          })
+          .catch((error) => {
+            console.log('[PWA] Service Worker registration failed:', error);
+          });
+      });
+    }
   </script>
 </body>
 </html>
