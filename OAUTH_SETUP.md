@@ -234,9 +234,10 @@ BASE_URL=https://kinn.at
 # JWT Signing
 JWT_SECRET=<base64-encoded-secret>
 
-# Redis
-KV_REST_API_URL=https://true-panther-30432.upstash.io
-KV_REST_API_TOKEN=<your-token>
+# Redis (Upstash KV)
+KINNST_KV_REST_API_URL=https://true-panther-30432.upstash.io
+KINNST_KV_REST_API_TOKEN=<your-token>
+KINNST_REDIS_URL=rediss://default:...@true-panther-30432.upstash.io:6379
 ```
 
 ---

@@ -1,8 +1,8 @@
 import { Redis } from '@upstash/redis';
 
 const redis = new Redis({
-  url: process.env.KV_REST_API_URL?.trim(),
-  token: process.env.KV_REST_API_TOKEN?.trim(),
+  url: process.env.KINNST_KV_REST_API_URL?.trim(),
+  token: process.env.KINNST_KV_REST_API_TOKEN?.trim(),
 });
 
 const SUBSCRIBERS_KEY = 'subscribers:confirmed';
