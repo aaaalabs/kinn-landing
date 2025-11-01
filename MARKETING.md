@@ -26,16 +26,32 @@
 
 ## Naming Conventions
 
-### Community Members
-**KINN'der** (Plural) / **KINN'dler** (Singular)
-- "Die KINN'der treffen sich monatlich"
-- "Als KINN'dler hast du Zugang zu..."
+### Community Members (OFFICIAL)
 
-**KINN'sider** (für aktive/early Members)
-- "Unsere KINN'sider haben exklusiven Zugang"
+**KINN'der** (Primary - für alle Members) ✅
+- Plural: "Die KINN'der"
+- Singular: "Ein KINN'der" / "Eine KINN'derin"
+- Beispiele:
+  - "Die KINN'der treffen sich monatlich"
+  - "Als KINN'der hast du Zugang zum Job Board"
+  - "150+ KINN'der in Innsbruck"
+  - "KINN'der an die Macht!"
+
+**KINN'sider** (für Premium/Early Adopters)
+- "Unsere KINN'sider haben early access"
 - "Werde KINN'sider und shape die Community"
+- "KINN'sider bekommen 2 Wochen vorab Zugang"
 
-**Alternative:** KINN'ies (lockerer, younger audience)
+**KINN Core** (für Team/Organizers)
+- "Das KINN Core Team organisiert die Events"
+- Klein, fokussiert, entscheidet operational
+
+**Why KINN'der?**
+- ✅ Self-aware witzig ("Kinderschuhe")
+- ✅ Authentisch Tirolerisch
+- ✅ Inklusiv (Junior bis Senior)
+- ✅ International aussprechbar
+- ✅ Ermöglicht Wortspiele ("In KINN'derschuhen", "KINN'der an die Macht")
 
 ### Event-Typen
 - **KINN Treff** – Monatlicher Stammtisch
@@ -55,18 +71,37 @@
 
 ### Campaign Ideas
 
+**"KINN'der an die Macht"** 🔥
+- Community-owned positioning
+- Playful rebellisch, passt zu Devs
+- "Die Community entscheidet, nicht das Team"
+- Verwendung: Launch, Governance, Voting
+
 **"Hol dein KINN hervor"**
 - Call-to-action für Profil-Erstellung
 - Doppeldeutung: Show yourself / Zeig Gesicht
+- Verwendung: Profile CTA, Onboarding
+
+**"In KINN'derschuhen"**
+- Early stage positioning mit Self-Awareness
+- "Wir stecken noch in KINN'derschuhen"
+- Verwendung: Early Days Communication, Beta Features
 
 **"KINN raus, Skills rein"**
 - Für Tech-Workshops/Learning
+- Action-oriented, klar
+
+**"Mehr KINN zeigen"**
+- Aktivierung für passive Members
+- "Zeig mehr KINN beim nächsten Treff"
 
 **"Mehr KINN, weniger Bullshit"**
 - Edgy, aber authentic (A/B testen)
+- Für anti-corporate positioning
 
 **"Tiroler KI, weltweit relevant"**
 - Für überregionale Kampagnen
+- Regional pride meets global ambition
 
 **"Von Innsbruck, für die Welt"**
 - Global positioning
@@ -352,6 +387,28 @@
 
 **Just Right:**
 > "Monatlicher AI Austausch in Innsbruck. Für Leute die wirklich bauen, nicht nur reden."
+
+**Perfect (Playful + Authentic):**
+> "KINN steckt noch in KINN'derschuhen, aber wir wachsen schnell. KINN'der an die Macht - die Community entscheidet, nicht das Team."
+
+**Campaign Example:**
+```
+Subject: KINN'der an die Macht - Voting für nächstes Event-Thema
+
+Servus!
+
+Wir stecken noch in KINN'derschuhen, aber eines ist klar:
+Die KINN'der entscheiden, nicht wir.
+
+Welches Thema soll beim nächsten Treff auf den Tisch?
+→ RAG Pipelines in Production
+→ LLM Fine-tuning mit LoRA
+→ Agent Systems & Multi-Agent Coordination
+
+Vote bis Sonntag! KINN'der an die Macht 🚀
+
+Thomas & das KINN Core Team
+```
 
 ---
 
