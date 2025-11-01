@@ -63,9 +63,37 @@ function generateWelcomeEmail(profileToken) {
         <!-- Divider -->
         <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 32px 0;">
 
-        <!-- Profile Link -->
+        <!-- Profile CTA Section -->
+        <h2 style="font-size: 18px; line-height: 1.3; font-weight: 600; color: #2C3E50; margin-bottom: 12px; letter-spacing: 0.01em;">
+          Zeit sparen beim Stammtisch
+        </h2>
+
+        <p style="font-size: 14px; line-height: 1.6; color: #6B6B6B; margin-bottom: 16px;">
+          Füll dein KINN Profil vorab aus (5 Min) und ich kann dich schon vorher mit passenden Leuten matchen:
+        </p>
+
+        <ul style="font-size: 14px; line-height: 1.8; color: #6B6B6B; margin: 0 0 24px 20px; padding: 0;">
+          <li>Was du suchst (Jobs, Co-Founder, Projekte)</li>
+          <li>Was du anbietest (Skills, Experience, Verfügbarkeit)</li>
+        </ul>
+
+        <!-- Profile Button -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin: 24px 0;">
+          <tr>
+            <td align="center">
+              <a href="${profilePageUrl}#profil" style="display: inline-block; padding: 12px 28px; background-color: #ffffff; color: #2C3E50; border: 2px solid #5ED9A6; text-decoration: none; border-radius: 12px; font-size: 15px; font-weight: 600; letter-spacing: 0.01em;">
+                Profil ausfüllen
+              </a>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Divider -->
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 32px 0;">
+
+        <!-- Profile Settings Link -->
         <p style="font-size: 13px; line-height: 1.6; color: #6B6B6B; text-align: center; margin-bottom: 16px;">
-          <a href="${profilePageUrl}" style="color: #5ED9A6; text-decoration: none; font-weight: 500;">Profil verwalten</a> •
+          <a href="${profilePageUrl}" style="color: #5ED9A6; text-decoration: none; font-weight: 500;">Einstellungen verwalten</a> •
           Email-Benachrichtigungen anpassen oder abmelden
         </p>
 

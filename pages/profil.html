@@ -342,6 +342,281 @@
       font-size: 0.9375rem;
     }
 
+    /* Tab Navigation */
+    .tab-navigation {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .tab-button {
+      font-family: 'Work Sans', sans-serif;
+      padding: 0.75rem 1.5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: #6B6B6B;
+      position: relative;
+      transition: color 0.2s ease;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+    }
+
+    .tab-button:hover {
+      color: #3A3A3A;
+    }
+
+    .tab-button.active {
+      color: #2C3E50;
+      font-weight: 600;
+      border-bottom-color: #5ED9A6;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #2C3E50;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.01em;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 0.5rem;
+      font-family: 'Work Sans', sans-serif;
+      font-size: 0.9375rem;
+      transition: all 0.2s ease;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #5ED9A6;
+      box-shadow: 0 0 0 3px rgba(94, 217, 166, 0.1);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 0.5rem;
+      font-family: 'Work Sans', sans-serif;
+      font-size: 0.9375rem;
+      background: rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: #5ED9A6;
+      box-shadow: 0 0 0 3px rgba(94, 217, 166, 0.1);
+    }
+
+    .form-textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 0.5rem;
+      font-family: 'Work Sans', sans-serif;
+      font-size: 0.9375rem;
+      min-height: 100px;
+      resize: vertical;
+      background: rgba(255, 255, 255, 0.8);
+      transition: all 0.2s ease;
+    }
+
+    .form-textarea:focus {
+      outline: none;
+      border-color: #5ED9A6;
+      box-shadow: 0 0 0 3px rgba(94, 217, 166, 0.1);
+    }
+
+    /* Multi-Select Chips */
+    .chip-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: rgba(94, 217, 166, 0.15);
+      border: 1px solid rgba(94, 217, 166, 0.3);
+      border-radius: 2rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #2C3E50;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .chip:hover {
+      background: rgba(94, 217, 166, 0.25);
+    }
+
+    .chip.selected {
+      background: #5ED9A6;
+      border-color: #5ED9A6;
+      color: #000;
+    }
+
+    .chip-remove {
+      background: none;
+      border: none;
+      padding: 0;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: currentColor;
+      font-size: 1.125rem;
+      line-height: 1;
+    }
+
+    /* Radio Group */
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .radio-option:hover {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: rgba(94, 217, 166, 0.3);
+    }
+
+    .radio-option input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: #5ED9A6;
+    }
+
+    .radio-option label {
+      flex: 1;
+      cursor: pointer;
+      font-size: 0.9375rem;
+      color: #3A3A3A;
+    }
+
+    /* Checkbox Group */
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .checkbox-option {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox-option:hover {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: rgba(94, 217, 166, 0.3);
+    }
+
+    .checkbox-option input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: #5ED9A6;
+    }
+
+    .checkbox-option label {
+      flex: 1;
+      cursor: pointer;
+      font-size: 0.9375rem;
+      color: #3A3A3A;
+    }
+
+    /* Section Divider */
+    .section-divider {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    /* Match Hints */
+    .match-hints {
+      background: rgba(94, 217, 166, 0.1);
+      border: 1px solid rgba(94, 217, 166, 0.3);
+      border-radius: 0.75rem;
+      padding: 1rem 1.25rem;
+      margin-top: 1rem;
+    }
+
+    .match-hints h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #2C3E50;
+      margin-bottom: 0.5rem;
+    }
+
+    .match-hints ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .match-hints li {
+      font-size: 0.875rem;
+      color: #3A3A3A;
+      padding: 0.25rem 0;
+      padding-left: 1.25rem;
+      position: relative;
+    }
+
+    .match-hints li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: #5ED9A6;
+      font-weight: 600;
+    }
+
     /* Footer */
     .footer {
       margin-top: 4rem;
@@ -415,8 +690,16 @@
     const content = document.getElementById('content');
 
     // State
-    let userPreferences = null;
+    let userProfile = null;
     let isSaving = false;
+    let activeTab = window.location.hash === '#profil' ? 'profil' : 'settings';
+
+    // Available skills for selection
+    const AVAILABLE_SKILLS = [
+      'RAG', 'LangChain', 'Computer Vision', 'NLP', 'MLOps',
+      'PyTorch', 'TensorFlow', 'Transformers', 'LLM Fine-tuning',
+      'Vector Databases', 'Prompt Engineering', 'Agent Systems'
+    ];
 
     // Initialize
     (async function init() {
@@ -426,7 +709,7 @@
       }
 
       try {
-        // Fetch user preferences
+        // Fetch user profile (extended with supply/demand data)
         const response = await fetch(`/api/profile?token=${encodeURIComponent(token)}`);
 
         if (!response.ok) {
@@ -441,7 +724,10 @@
         }
 
         const data = await response.json();
-        userPreferences = data.preferences;
+        userProfile = data.preferences; // The API returns { preferences: {...} }
+
+        // Handle URL hash for tab navigation
+        window.addEventListener('hashchange', handleHashChange);
 
         // Render profile UI
         renderProfile();
@@ -452,9 +738,20 @@
       }
     })();
 
-    function renderProfile() {
-      const notificationsEnabled = userPreferences.notifications?.enabled ?? true;
+    function handleHashChange() {
+      const hash = window.location.hash;
+      activeTab = hash === '#profil' ? 'profil' : 'settings';
+      renderProfile();
+    }
 
+    function switchTab(tab) {
+      activeTab = tab;
+      window.location.hash = tab === 'profil' ? '#profil' : '#settings';
+      renderProfile();
+    }
+
+    function renderProfile() {
+      // Tab Navigation + Content based on active tab
       content.innerHTML = `
         <div class="status-indicator">
           <svg viewBox="0 0 24 24">
@@ -463,11 +760,32 @@
           </svg>
         </div>
 
-        <h1>Profil-Einstellungen</h1>
-        <p class="subtitle">${userPreferences.email}</p>
+        <h1>Mein KINN Profil</h1>
+        <p class="subtitle">${userProfile.email}</p>
+
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+          <button class="tab-button ${activeTab === 'settings' ? 'active' : ''}" onclick="switchTab('settings')">
+            Einstellungen
+          </button>
+          <button class="tab-button ${activeTab === 'profil' ? 'active' : ''}" onclick="switchTab('profil')">
+            Mein Profil
+          </button>
+        </div>
 
         <div id="message"></div>
 
+        <!-- Tab Content -->
+        <div id="tab-content">
+          ${activeTab === 'settings' ? renderSettingsTab() : renderProfilTab()}
+        </div>
+      `;
+    }
+
+    function renderSettingsTab() {
+      const notificationsEnabled = userProfile.notifications?.enabled ?? true;
+
+      return `
         <div class="card">
           <h2>Email-Benachrichtigungen</h2>
           <p>Verwalte, wie wir mit dir kommunizieren.</p>
@@ -503,13 +821,335 @@
         </button>
 
         <p class="meta" style="margin-top: 1rem; text-align: center;">
-          Abgemeldet seit: ${new Date(userPreferences.subscribedAt).toLocaleDateString('de-DE', {
+          Angemeldet seit: ${new Date(userProfile.subscribedAt || Date.now()).toLocaleDateString('de-DE', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
           })}
         </p>
       `;
+    }
+
+    function renderProfilTab() {
+      const identity = userProfile.identity || {};
+      const supply = userProfile.supply || {};
+      const demand = userProfile.demand || {};
+      const privacy = userProfile.preferences?.privacy || {};
+
+      return `
+        <div class="card">
+          <h2>Zeit sparen beim Stammtisch</h2>
+          <p>Füll dein Profil aus und ich kann dich schon vorab mit passenden Leuten matchen.</p>
+
+          <form id="profileForm" onsubmit="handleProfileSubmit(event)">
+            <!-- Section: Basis-Info -->
+            <div class="form-group">
+              <label class="form-label">Name</label>
+              <input type="text" class="form-input" name="name" value="${identity.name || ''}" placeholder="Dein Name">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">LinkedIn Profil</label>
+              <input type="url" class="form-input" name="linkedIn" value="${identity.linkedIn || ''}" placeholder="https://linkedin.com/in/...">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">GitHub (optional)</label>
+              <input type="url" class="form-input" name="github" value="${identity.github || ''}" placeholder="https://github.com/...">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Location Präferenz</label>
+              <select class="form-select" name="location">
+                <option value="">Bitte wählen...</option>
+                <option value="ibk" ${identity.location === 'ibk' ? 'selected' : ''}>Innsbruck</option>
+                <option value="tirol" ${identity.location === 'tirol' ? 'selected' : ''}>Tirol</option>
+                <option value="hybrid" ${identity.location === 'hybrid' ? 'selected' : ''}>Hybrid</option>
+                <option value="remote" ${identity.location === 'remote' ? 'selected' : ''}>Remote</option>
+              </select>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- Section: Was ich anbiete (Supply) -->
+            <h2 style="margin-bottom: 1rem;">Was ich anbiete</h2>
+
+            <div class="form-group">
+              <label class="form-label">Skills (klicken zum auswählen)</label>
+              <div class="chip-container" id="skillsContainer">
+                ${AVAILABLE_SKILLS.map(skill => `
+                  <div class="chip ${(supply.skills || []).includes(skill.toLowerCase()) ? 'selected' : ''}" data-skill="${skill.toLowerCase()}" onclick="toggleSkill(this)">
+                    ${skill}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Experience Level</label>
+              <div class="radio-group">
+                <div class="radio-option">
+                  <input type="radio" id="exp-junior" name="experience" value="junior" ${supply.experience === 'junior' ? 'checked' : ''}>
+                  <label for="exp-junior">Junior</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="exp-mid" name="experience" value="mid" ${supply.experience === 'mid' ? 'checked' : ''}>
+                  <label for="exp-mid">Mid-Level</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="exp-senior" name="experience" value="senior" ${supply.experience === 'senior' ? 'checked' : ''}>
+                  <label for="exp-senior">Senior</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="exp-lead" name="experience" value="lead" ${supply.experience === 'lead' ? 'checked' : ''}>
+                  <label for="exp-lead">Lead / Expert</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Verfügbarkeit</label>
+              <div class="radio-group">
+                <div class="radio-option">
+                  <input type="radio" id="avail-fulltime" name="availability" value="fulltime" ${supply.availability === 'fulltime' ? 'checked' : ''}>
+                  <label for="avail-fulltime">Vollzeit angestellt & offen</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="avail-freelance" name="availability" value="freelance" ${supply.availability === 'freelance' ? 'checked' : ''}>
+                  <label for="avail-freelance">Freelance</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="avail-sideproject" name="availability" value="sideproject" ${supply.availability === 'sideproject' ? 'checked' : ''}>
+                  <label for="avail-sideproject">Side Projects</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="avail-passive" name="availability" value="passive" ${supply.availability === 'passive' ? 'checked' : ''}>
+                  <label for="avail-passive">Nur Networking</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Was ich teilen kann</label>
+              <div class="checkbox-group">
+                <div class="checkbox-option">
+                  <input type="checkbox" id="offer-mentoring" name="canOffer" value="mentoring" ${(supply.canOffer || []).includes('mentoring') ? 'checked' : ''}>
+                  <label for="offer-mentoring">Mentoring</label>
+                </div>
+                <div class="checkbox-option">
+                  <input type="checkbox" id="offer-codereview" name="canOffer" value="code-review" ${(supply.canOffer || []).includes('code-review') ? 'checked' : ''}>
+                  <label for="offer-codereview">Code Review</label>
+                </div>
+                <div class="checkbox-option">
+                  <input type="checkbox" id="offer-workshop" name="canOffer" value="workshop" ${(supply.canOffer || []).includes('workshop') ? 'checked' : ''}>
+                  <label for="offer-workshop">Workshop halten</label>
+                </div>
+                <div class="checkbox-option">
+                  <input type="checkbox" id="offer-projects" name="canOffer" value="projects" ${(supply.canOffer || []).includes('projects') ? 'checked' : ''}>
+                  <label for="offer-projects">Projekte vorstellen</label>
+                </div>
+              </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- Section: Was ich suche (Demand) -->
+            <h2 style="margin-bottom: 1rem;">Was ich suche</h2>
+
+            <div class="form-group">
+              <label class="form-label">Interesse an</label>
+              <div class="checkbox-group">
+                <div class="checkbox-option">
+                  <input type="checkbox" id="seek-job" name="seeking" value="job" ${(demand.seeking || []).includes('job') ? 'checked' : ''}>
+                  <label for="seek-job">Vollzeit Job</label>
+                </div>
+                <div class="checkbox-option">
+                  <input type="checkbox" id="seek-freelance" name="seeking" value="freelance" ${(demand.seeking || []).includes('freelance') ? 'checked' : ''}>
+                  <label for="seek-freelance">Freelance Gigs</label>
+                </div>
+                <div class="checkbox-option">
+                  <input type="checkbox" id="seek-cofounder" name="seeking" value="cofounder" ${(demand.seeking || []).includes('cofounder') ? 'checked' : ''}>
+                  <label for="seek-cofounder">Co-Founder</label>
+                </div>
+                <div class="checkbox-option">
+                  <input type="checkbox" id="seek-collaboration" name="seeking" value="collaboration" ${(demand.seeking || []).includes('collaboration') ? 'checked' : ''}>
+                  <label for="seek-collaboration">Collaboration</label>
+                </div>
+                <div class="checkbox-option">
+                  <input type="checkbox" id="seek-learning" name="seeking" value="learning" ${(demand.seeking || []).includes('learning') ? 'checked' : ''}>
+                  <label for="seek-learning">Learning / Mentorship</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Branchen</label>
+              <div class="checkbox-group">
+                <div class="checkbox-option">
+                  <input type="checkbox" id="ind-startup" name="industries" value="startup" ${(demand.industries || []).includes('startup') ? 'checked' : ''}>
+                  <label for="ind-startup">Startup</label>
+                </div>
+                <div class="checkbox-option">
+                  <input type="checkbox" id="ind-corporate" name="industries" value="corporate" ${(demand.industries || []).includes('corporate') ? 'checked' : ''}>
+                  <label for="ind-corporate">Corporate</label>
+                </div>
+                <div class="checkbox-option">
+                  <input type="checkbox" id="ind-agency" name="industries" value="agency" ${(demand.industries || []).includes('agency') ? 'checked' : ''}>
+                  <label for="ind-agency">Agency</label>
+                </div>
+                <div class="checkbox-option">
+                  <input type="checkbox" id="ind-research" name="industries" value="research" ${(demand.industries || []).includes('research') ? 'checked' : ''}>
+                  <label for="ind-research">Research</label>
+                </div>
+                <div class="checkbox-option">
+                  <input type="checkbox" id="ind-opensource" name="industries" value="opensource" ${(demand.industries || []).includes('opensource') ? 'checked' : ''}>
+                  <label for="ind-opensource">Open Source</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Aktiv suchend?</label>
+              <div class="radio-group">
+                <div class="radio-option">
+                  <input type="radio" id="search-active" name="activeSearch" value="true" ${demand.activeSearch === true ? 'checked' : ''}>
+                  <label for="search-active">Ja, aktiv auf Suche</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="search-passive" name="activeSearch" value="false" ${demand.activeSearch === false ? 'checked' : ''}>
+                  <label for="search-passive">Passiv offen / Nur Networking</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Spezifische Interessen (optional)</label>
+              <textarea class="form-textarea" name="interests" placeholder="z.B. Suche Co-Founder für Healthcare AI Startup, interessiert an LLM Fine-tuning, etc.">${demand.interests || ''}</textarea>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- Section: Privacy -->
+            <h2 style="margin-bottom: 1rem;">Privacy</h2>
+
+            <div class="checkbox-group">
+              <div class="checkbox-option">
+                <input type="checkbox" id="privacy-directory" name="showInDirectory" ${privacy.showInDirectory ? 'checked' : ''}>
+                <label for="privacy-directory">Im KINN Verzeichnis anzeigen (öffentlich)</label>
+              </div>
+              <div class="checkbox-option">
+                <input type="checkbox" id="privacy-matching" name="allowMatching" ${privacy.allowMatching ? 'checked' : ''}>
+                <label for="privacy-matching">Automatisches Matching erlauben</label>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="cta-button" style="margin-top: 2rem;">
+              Profil speichern
+            </button>
+          </form>
+
+          <!-- Match Hints (populated after save) -->
+          <div id="matchHintsContainer"></div>
+        </div>
+
+        <a href="/" class="cta-button secondary-button">
+          Zur Startseite
+        </a>
+      `;
+    }
+
+    // Skill chip toggle
+    function toggleSkill(chip) {
+      chip.classList.toggle('selected');
+    }
+
+    // Profile form submission
+    async function handleProfileSubmit(event) {
+      event.preventDefault();
+
+      if (isSaving) return;
+      isSaving = true;
+
+      const form = event.target;
+      const formData = new FormData(form);
+
+      // Build profile data object
+      const profileData = {
+        identity: {
+          name: formData.get('name'),
+          linkedIn: formData.get('linkedIn'),
+          github: formData.get('github'),
+          location: formData.get('location')
+        },
+        supply: {
+          skills: Array.from(document.querySelectorAll('#skillsContainer .chip.selected'))
+            .map(chip => chip.dataset.skill),
+          experience: formData.get('experience'),
+          availability: formData.get('availability'),
+          canOffer: formData.getAll('canOffer')
+        },
+        demand: {
+          seeking: formData.getAll('seeking'),
+          industries: formData.getAll('industries'),
+          activeSearch: formData.get('activeSearch') === 'true',
+          interests: formData.get('interests')
+        },
+        preferences: {
+          privacy: {
+            showInDirectory: formData.get('showInDirectory') === 'on',
+            allowMatching: formData.get('allowMatching') === 'on'
+          }
+        }
+      };
+
+      try {
+        const response = await fetch('/api/profile/update-extended', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token,
+            ...profileData
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Update fehlgeschlagen');
+        }
+
+        const data = await response.json();
+        userProfile = data.profile;
+
+        // Show success message
+        showMessage('success', 'Profil erfolgreich gespeichert!');
+
+        // Show match hints if available
+        if (data.matches && data.matches.hints && data.matches.hints.length > 0) {
+          const hintsContainer = document.getElementById('matchHintsContainer');
+          if (hintsContainer) {
+            hintsContainer.innerHTML = `
+              <div class="match-hints">
+                <h3>Match-Potential</h3>
+                <ul>
+                  ${data.matches.hints.map(hint => `<li>${hint}</li>`).join('')}
+                </ul>
+              </div>
+            `;
+          }
+        }
+
+        // Scroll to top to see success message
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      } catch (error) {
+        console.error('[PROFILE] Error updating profile:', error);
+        showMessage('error', 'Profil konnte nicht gespeichert werden. Bitte versuche es erneut.');
+      } finally {
+        isSaving = false;
+      }
     }
 
     async function handleToggleChange(checkbox) {
@@ -538,7 +1178,7 @@
         }
 
         const data = await response.json();
-        userPreferences = data.preferences;
+        userProfile = data.preferences;
 
         // Show success message
         showMessage('success', newValue

@@ -199,3 +199,186 @@ export async function removeSubscriber(email) {
     throw new Error(`Database error: ${error.message}`);
   }
 }
+
+// ===== Extended Profile Management =====
+
+/**
+ * Gets full profile including extended data
+ * @param {string} email - User email address
+ * @returns {Promise<Object|null>} Full profile object or null if not found
+ */
+export async function getProfile(email) {
+  try {
+    const key = `profile:${email.toLowerCase()}`;
+    const profile = await redis.get(key);
+    return profile;
+  } catch (error) {
+    console.error('[REDIS] Failed to get profile:', error.message);
+    throw new Error(`Database error: ${error.message}`);
+  }
+}
+
+/**
+ * Updates extended profile with supply/demand data
+ * @param {string} email - User email address
+ * @param {Object} profileData - Profile data object
+ * @returns {Promise<Object>} Updated profile
+ */
+export async function updateProfileExtended(email, profileData) {
+  try {
+    const normalizedEmail = email.toLowerCase();
+    const key = `profile:${normalizedEmail}`;
+
+    // Get existing profile or create new
+    const existing = await redis.get(key) || {
+      email: normalizedEmail,
+      createdAt: new Date().toISOString()
+    };
+
+    // Merge with new data
+    const updated = {
+      ...existing,
+      email: normalizedEmail,
+      updatedAt: new Date().toISOString(),
+      identity: {
+        ...(existing.identity || {}),
+        ...(profileData.identity || {})
+      },
+      supply: {
+        ...(existing.supply || {}),
+        ...(profileData.supply || {})
+      },
+      demand: {
+        ...(existing.demand || {}),
+        ...(profileData.demand || {})
+      },
+      preferences: {
+        ...(existing.preferences || { notifications: { enabled: true } }),
+        ...(profileData.preferences || {})
+      },
+      meta: {
+        ...(existing.meta || {}),
+        ...(profileData.meta || {})
+      }
+    };
+
+    // Save to Redis
+    await redis.set(key, updated);
+
+    // Update reverse indexes
+    await updateReverseIndexes(normalizedEmail, updated);
+
+    console.log('[REDIS] Extended profile updated:', normalizedEmail);
+    return updated;
+  } catch (error) {
+    console.error('[REDIS] Failed to update extended profile:', error.message);
+    throw new Error(`Database error: ${error.message}`);
+  }
+}
+
+/**
+ * Updates reverse indexes for efficient matching
+ * [CP01] KISS: Simple SADD operations for each category
+ * @param {string} email - User email address
+ * @param {Object} profile - Full profile object
+ * @returns {Promise<void>}
+ */
+export async function updateReverseIndexes(email, profile) {
+  try {
+    const normalizedEmail = email.toLowerCase();
+
+    // Index skills
+    if (profile.supply?.skills && Array.isArray(profile.supply.skills)) {
+      for (const skill of profile.supply.skills) {
+        await redis.sadd(`skill:${skill.toLowerCase()}`, normalizedEmail);
+      }
+    }
+
+    // Index demand types
+    if (profile.demand?.seeking && Array.isArray(profile.demand.seeking)) {
+      for (const type of profile.demand.seeking) {
+        await redis.sadd(`demand:${type.toLowerCase()}`, normalizedEmail);
+      }
+    }
+
+    // Index supply offers
+    if (profile.supply?.canOffer && Array.isArray(profile.supply.canOffer)) {
+      for (const offer of profile.supply.canOffer) {
+        await redis.sadd(`supply:${offer.toLowerCase()}`, normalizedEmail);
+      }
+    }
+
+    // Index location
+    if (profile.identity?.location) {
+      await redis.sadd(`location:${profile.identity.location.toLowerCase()}`, normalizedEmail);
+    }
+
+    // Index experience level (senior+)
+    if (profile.supply?.experience && ['senior', 'lead', 'expert'].includes(profile.supply.experience)) {
+      await redis.sadd('supply:senior+', normalizedEmail);
+    }
+
+    console.log('[REDIS] Reverse indexes updated:', normalizedEmail);
+  } catch (error) {
+    console.error('[REDIS] Failed to update reverse indexes:', error.message);
+    // Don't throw - indexing is not critical
+  }
+}
+
+/**
+ * Gets match hints for a profile
+ * @param {Object} profile - User profile object
+ * @returns {Promise<Object>} Match hints with count and messages
+ */
+export async function getMatchHints(profile) {
+  try {
+    const hints = [];
+    let totalMatches = 0;
+
+    // Match 1: People with similar skills in same location
+    if (profile.supply?.skills && profile.supply.skills.length > 0 && profile.identity?.location) {
+      const topSkill = profile.supply.skills[0];
+      const skillMatches = await redis.scard(`skill:${topSkill.toLowerCase()}`);
+      const locationMatches = await redis.scard(`location:${profile.identity.location.toLowerCase()}`);
+
+      if (skillMatches > 1) {
+        hints.push(`${skillMatches - 1} andere Devs mit ${topSkill} Experience`);
+        totalMatches += skillMatches - 1;
+      }
+
+      if (locationMatches > 1 && profile.identity.location === 'ibk') {
+        hints.push(`${locationMatches - 1} AI Devs in Innsbruck`);
+      }
+    }
+
+    // Match 2: Active job seekers
+    if (profile.demand?.activeSearch) {
+      const activeSearchers = await redis.scard('demand:job');
+      if (activeSearchers > 0) {
+        hints.push(`${activeSearchers} andere aktiv auf Jobsuche`);
+      }
+    }
+
+    // Match 3: People offering mentoring
+    if (profile.demand?.seeking?.includes('learning')) {
+      const mentors = await redis.scard('supply:mentoring');
+      if (mentors > 0) {
+        hints.push(`${mentors} Personen bieten Mentoring an`);
+      }
+    }
+
+    // Match 4: Senior+ devs
+    const seniorCount = await redis.scard('supply:senior+');
+    if (seniorCount > 0 && profile.supply?.experience && !['senior', 'lead', 'expert'].includes(profile.supply.experience)) {
+      hints.push(`${seniorCount} Senior+ Devs im Netzwerk`);
+    }
+
+    return {
+      count: totalMatches,
+      hints: hints.slice(0, 3) // Max 3 hints
+    };
+  } catch (error) {
+    console.error('[REDIS] Failed to get match hints:', error.message);
+    return { count: 0, hints: [] };
+  }
+}
