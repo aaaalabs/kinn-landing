@@ -131,9 +131,48 @@ Automatic event updates
 
 ## Managing Events
 
-### Current Method: Direct Redis Access
+### Recommended: Admin Interface
 
-Until an admin interface is built, events must be updated directly in Upstash Redis:
+**URL:** `/admin/index.html`
+
+The admin interface provides a simple web UI for managing events and viewing subscribers.
+
+**Features:**
+- 📅 Event Management: Add, edit, delete events
+- 👥 Subscriber List: View all confirmed subscribers
+- 🔒 Password Protected: Requires ADMIN_PASSWORD
+- 📱 Responsive Design: Works on desktop and mobile
+
+**Authentication:**
+Set environment variable `ADMIN_PASSWORD` in Vercel:
+```env
+ADMIN_PASSWORD=your-secure-password-here
+```
+
+**Usage:**
+1. Navigate to `https://kinn.at/admin/`
+2. Enter admin password
+3. Manage events in the Events tab
+4. View subscribers in the Subscribers tab
+
+**Event Form Fields:**
+- Event ID (required): Unique identifier (e.g., `kinn-2025-02`)
+- Title (required): Event name
+- Date (required): Event date (YYYY-MM-DD)
+- Start/End Time (required): 24-hour format (HH:MM)
+- Location (required): Event venue
+- Description (required): Event details
+- URL (optional): Event website
+- Status: confirmed, tentative, or cancelled
+
+**Auto-Features:**
+- Events are automatically sorted by date
+- Changes are saved to Redis instantly
+- iCal feed updates automatically (within 1 hour cache)
+
+### Alternative: Direct Redis Access
+
+For advanced users or automation:
 
 1. Go to Upstash Console: https://console.upstash.com
 2. Select KINN Redis database
@@ -142,14 +181,6 @@ Until an admin interface is built, events must be updated directly in Upstash Re
 5. Edit JSON directly
 
 **Important:** Validate JSON before saving to avoid breaking the feed.
-
-### Future: Admin Interface
-
-Planned features:
-- Web UI for event management
-- Add/edit/delete events
-- Preview generated iCal
-- Validation and error checking
 
 ### Newsletter Integration Workflow
 
@@ -356,6 +387,13 @@ vercel logs [deployment-url]
 ```env
 KINNST_KV_REST_API_URL=https://...upstash.io
 KINNST_KV_REST_API_TOKEN=...
+ADMIN_PASSWORD=your-secure-password-here
+```
+
+**Optional:**
+```env
+SENDER_EMAIL=KINN <thomas@kinn.at>
+BASE_URL=https://kinn.at
 ```
 
 **Not needed (removed with OAuth):**
@@ -365,7 +403,103 @@ KINNST_KV_REST_API_TOKEN=...
 
 ## API Reference
 
-### GET /api/calendar.ics
+### Admin APIs
+
+All admin endpoints require authentication via Bearer token.
+
+**Authentication Header:**
+```http
+Authorization: Bearer {ADMIN_PASSWORD}
+```
+
+#### GET /api/admin/events
+
+**Description:** Get current events configuration
+
+**Response Success (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "events": [...],
+    "defaults": {...}
+  }
+}
+```
+
+**Response Unauthorized (401):**
+```json
+{
+  "error": "Unauthorized",
+  "message": "Invalid or missing admin password"
+}
+```
+
+#### PUT /api/admin/events
+
+**Description:** Update events configuration
+
+**Request Body:**
+```json
+{
+  "events": [
+    {
+      "id": "kinn-2025-02",
+      "title": "KINN - KI Treff Innsbruck",
+      "date": "2025-02-06",
+      "startTime": "18:00",
+      "endTime": "20:00",
+      "location": "Coworkingspace Innsbruck",
+      "description": "Event details...",
+      "url": "https://kinn.at",
+      "status": "confirmed"
+    }
+  ],
+  "defaults": {
+    "timezone": "Europe/Vienna",
+    "organizer": "thomas@kinn.at",
+    "categories": ["KI", "AI", "Networking", "Innsbruck"],
+    "reminder": "24h"
+  }
+}
+```
+
+**Response Success (200):**
+```json
+{
+  "success": true,
+  "message": "Events updated successfully",
+  "data": {...}
+}
+```
+
+**Response Validation Error (400):**
+```json
+{
+  "error": "Invalid event",
+  "message": "Event missing required field: title",
+  "event": {...}
+}
+```
+
+#### GET /api/admin/subscribers
+
+**Description:** Get all confirmed subscribers
+
+**Response Success (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "subscribers": ["email1@example.com", "email2@example.com"],
+    "count": 2
+  }
+}
+```
+
+### Public APIs
+
+#### GET /api/calendar.ics
 
 **Description:** Generates iCal feed from Redis event configuration
 

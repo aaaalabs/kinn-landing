@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KINN Admin - Event & Teilnehmer Verwaltung</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #ffffff;
+      color: #000;
+      padding: 20px;
+      line-height: 1.618;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .logo h1 {
+      font-size: 3rem;
+      font-weight: 300;
+      letter-spacing: -0.03em;
+      color: #000;
+    }
+
+    .logo p {
+      font-size: 0.75rem;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.5rem;
+    }
+
+    /* Login Screen */
+    #login-screen {
+      max-width: 400px;
+      margin: 4rem auto;
+      text-align: center;
+    }
+
+    #login-screen input {
+      width: 100%;
+      padding: 14px 20px;
+      font-size: 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      font-family: inherit;
+    }
+
+    #login-screen input:focus {
+      outline: none;
+      border-color: #E0EEE9;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: #E0EEE9;
+      color: #000;
+      text-decoration: none;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.125rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn:hover {
+      background: #d0ddd4;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #f5f5f5;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    .btn-danger {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .btn-danger:hover {
+      background: #ffcdd2;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .tab {
+      padding: 1rem 2rem;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: #999;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .tab.active {
+      color: #000;
+      border-bottom-color: #E0EEE9;
+    }
+
+    .tab:hover {
+      color: #000;
+    }
+
+    /* Tab Content */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Event List */
+    .event-card {
+      background: #f9f9f9;
+      border-left: 4px solid #E0EEE9;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .event-card h3 {
+      font-size: 1.25rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .event-meta {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+
+    .event-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .btn-small {
+      padding: 8px 16px;
+      font-size: 0.875rem;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: #333;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #E0EEE9;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    /* Subscribers List */
+    .subscriber-count {
+      font-size: 1.25rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    .subscriber-list {
+      background: #f9f9f9;
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .subscriber-item {
+      padding: 0.75rem;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 0.95rem;
+    }
+
+    .subscriber-item:last-child {
+      border-bottom: none;
+    }
+
+    /* Messages */
+    .message {
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .message.success {
+      background: #E0EEE9;
+      color: #2e7d32;
+    }
+
+    .message.error {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    /* Hidden */
+    .hidden {
+      display: none !important;
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #999;
+    }
+
+    @media (max-width: 640px) {
+      .logo h1 { font-size: 2rem; }
+      .tab { padding: 0.75rem 1rem; font-size: 1rem; }
+      .form-actions { flex-direction: column; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Logo -->
+    <div class="logo">
+      <h1>KINN</h1>
+      <p>Admin Dashboard</p>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen">
+      <h2 style="margin-bottom: 1.5rem; font-weight: 400;">Admin Login</h2>
+      <input type="password" id="password-input" placeholder="Passwort eingeben..." />
+      <button class="btn" onclick="login()">Einloggen</button>
+      <div id="login-error" class="message error hidden" style="margin-top: 1rem;">
+        Falsches Passwort
+      </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" class="hidden">
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('events')">📅 Events</button>
+        <button class="tab" onclick="switchTab('subscribers')">👥 Teilnehmer</button>
+        <button class="tab" onclick="logout()" style="margin-left: auto;">🚪 Logout</button>
+      </div>
+
+      <!-- Messages -->
+      <div id="message-container"></div>
+
+      <!-- Events Tab -->
+      <div id="events-tab" class="tab-content active">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <h2 style="font-weight: 400;">Event Verwaltung</h2>
+          <button class="btn" onclick="showEventForm()">+ Neues Event</button>
+        </div>
+
+        <!-- Event Form (hidden by default) -->
+        <div id="event-form" class="hidden" style="background: #f9f9f9; padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
+          <h3 style="margin-bottom: 1.5rem; font-weight: 400;">Event Details</h3>
+
+          <div class="form-group">
+            <label>Event ID *</label>
+            <input type="text" id="event-id" placeholder="z.B. kinn-2025-02" />
+          </div>
+
+          <div class="form-group">
+            <label>Titel *</label>
+            <input type="text" id="event-title" placeholder="KINN - KI Treff Innsbruck" />
+          </div>
+
+          <div class="form-group">
+            <label>Datum *</label>
+            <input type="date" id="event-date" />
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label>Start Zeit *</label>
+              <input type="time" id="event-start-time" />
+            </div>
+
+            <div class="form-group">
+              <label>End Zeit *</label>
+              <input type="time" id="event-end-time" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Location *</label>
+            <input type="text" id="event-location" placeholder="Coworkingspace Innsbruck" />
+          </div>
+
+          <div class="form-group">
+            <label>Beschreibung *</label>
+            <textarea id="event-description" placeholder="Monatlicher KI-Austausch in Innsbruck..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>URL</label>
+            <input type="url" id="event-url" placeholder="https://kinn.at" />
+          </div>
+
+          <div class="form-group">
+            <label>Status</label>
+            <select id="event-status" style="width: 100%; padding: 12px 16px; font-size: 1rem; border: 2px solid #e0e0e0; border-radius: 8px; font-family: inherit;">
+              <option value="confirmed">Bestätigt</option>
+              <option value="tentative">Vorläufig</option>
+              <option value="cancelled">Abgesagt</option>
+            </select>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn" onclick="saveEvent()">Speichern</button>
+            <button class="btn btn-secondary" onclick="cancelEventForm()">Abbrechen</button>
+          </div>
+        </div>
+
+        <!-- Event List -->
+        <div id="events-list" class="loading">Lade Events...</div>
+      </div>
+
+      <!-- Subscribers Tab -->
+      <div id="subscribers-tab" class="tab-content">
+        <h2 style="font-weight: 400; margin-bottom: 2rem;">Teilnehmer Liste</h2>
+
+        <div class="subscriber-count" id="subscriber-count">Lade...</div>
+
+        <div id="subscribers-list" class="loading">Lade Teilnehmer...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let adminPassword = null;
+    let eventsConfig = null;
+    let editingEventIndex = null;
+
+    // API base URL
+    const API_BASE = '/api/admin';
+
+    // === Authentication ===
+
+    function login() {
+      const password = document.getElementById('password-input').value;
+
+      if (!password) {
+        showLoginError();
+        return;
+      }
+
+      // Store password and verify with first API call
+      adminPassword = password;
+      sessionStorage.setItem('adminPassword', password);
+
+      // Try to load data
+      loadEvents().then(success => {
+        if (success) {
+          document.getElementById('login-screen').classList.add('hidden');
+          document.getElementById('admin-dashboard').classList.remove('hidden');
+          document.getElementById('login-error').classList.add('hidden');
+        } else {
+          showLoginError();
+          adminPassword = null;
+          sessionStorage.removeItem('adminPassword');
+        }
+      });
+    }
+
+    function showLoginError() {
+      document.getElementById('login-error').classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('login-error').classList.add('hidden');
+      }, 3000);
+    }
+
+    function logout() {
+      adminPassword = null;
+      sessionStorage.removeItem('adminPassword');
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('admin-dashboard').classList.add('hidden');
+      document.getElementById('password-input').value = '';
+    }
+
+    // Check if already logged in
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedPassword = sessionStorage.getItem('adminPassword');
+      if (savedPassword) {
+        adminPassword = savedPassword;
+        document.getElementById('password-input').value = savedPassword;
+        login();
+      }
+    });
+
+    // === API Calls ===
+
+    async function apiCall(endpoint, method = 'GET', body = null) {
+      const options = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminPassword}`
+        }
+      };
+
+      if (body) {
+        options.body = JSON.stringify(body);
+      }
+
+      const response = await fetch(API_BASE + endpoint, options);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'API Error');
+      }
+
+      return data;
+    }
+
+    // === Tab Management ===
+
+    function switchTab(tabName) {
+      // Update tab buttons
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // Update tab content
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById(tabName + '-tab').classList.add('active');
+
+      // Load data if needed
+      if (tabName === 'subscribers') {
+        loadSubscribers();
+      }
+    }
+
+    // === Messages ===
+
+    function showMessage(message, type = 'success') {
+      const container = document.getElementById('message-container');
+      const div = document.createElement('div');
+      div.className = `message ${type}`;
+      div.textContent = message;
+      container.innerHTML = '';
+      container.appendChild(div);
+
+      setTimeout(() => {
+        div.remove();
+      }, 5000);
+    }
+
+    // === Events Management ===
+
+    async function loadEvents() {
+      try {
+        const response = await apiCall('/events');
+        eventsConfig = response.data;
+        renderEvents();
+        return true;
+      } catch (error) {
+        console.error('Failed to load events:', error);
+        document.getElementById('events-list').innerHTML =
+          `<div class="message error">Fehler beim Laden: ${error.message}</div>`;
+        return false;
+      }
+    }
+
+    function renderEvents() {
+      const container = document.getElementById('events-list');
+      const events = eventsConfig.events || [];
+
+      if (events.length === 0) {
+        container.innerHTML = '<p style="color: #999; text-align: center; padding: 2rem;">Noch keine Events vorhanden.</p>';
+        return;
+      }
+
+      container.innerHTML = events.map((event, index) => `
+        <div class="event-card">
+          <h3>${event.title}</h3>
+          <div class="event-meta">
+            📅 ${formatDate(event.date)} • 🕐 ${event.startTime} - ${event.endTime}
+          </div>
+          <div class="event-meta">📍 ${event.location}</div>
+          <div class="event-meta">ℹ️ ${event.description}</div>
+          ${event.url ? `<div class="event-meta">🔗 <a href="${event.url}" target="_blank">${event.url}</a></div>` : ''}
+          <div class="event-meta">Status: ${getStatusLabel(event.status)}</div>
+          <div class="event-actions">
+            <button class="btn btn-small btn-secondary" onclick="editEvent(${index})">Bearbeiten</button>
+            <button class="btn btn-small btn-danger" onclick="deleteEvent(${index})">Löschen</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('de-DE', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+    function getStatusLabel(status) {
+      const labels = {
+        confirmed: '✅ Bestätigt',
+        tentative: '⏳ Vorläufig',
+        cancelled: '❌ Abgesagt'
+      };
+      return labels[status] || status;
+    }
+
+    function showEventForm(event = null) {
+      document.getElementById('event-form').classList.remove('hidden');
+
+      if (event) {
+        // Edit mode
+        document.getElementById('event-id').value = event.id;
+        document.getElementById('event-title').value = event.title;
+        document.getElementById('event-date').value = event.date;
+        document.getElementById('event-start-time').value = event.startTime;
+        document.getElementById('event-end-time').value = event.endTime;
+        document.getElementById('event-location').value = event.location;
+        document.getElementById('event-description').value = event.description;
+        document.getElementById('event-url').value = event.url || '';
+        document.getElementById('event-status').value = event.status || 'confirmed';
+      } else {
+        // Add mode
+        clearEventForm();
+      }
+
+      // Scroll to form
+      document.getElementById('event-form').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function clearEventForm() {
+      document.getElementById('event-id').value = '';
+      document.getElementById('event-title').value = '';
+      document.getElementById('event-date').value = '';
+      document.getElementById('event-start-time').value = '';
+      document.getElementById('event-end-time').value = '';
+      document.getElementById('event-location').value = '';
+      document.getElementById('event-description').value = '';
+      document.getElementById('event-url').value = 'https://kinn.at';
+      document.getElementById('event-status').value = 'confirmed';
+    }
+
+    function cancelEventForm() {
+      document.getElementById('event-form').classList.add('hidden');
+      editingEventIndex = null;
+    }
+
+    function editEvent(index) {
+      editingEventIndex = index;
+      showEventForm(eventsConfig.events[index]);
+    }
+
+    async function deleteEvent(index) {
+      if (!confirm('Event wirklich löschen?')) return;
+
+      const events = [...eventsConfig.events];
+      events.splice(index, 1);
+
+      try {
+        await apiCall('/events', 'PUT', {
+          events,
+          defaults: eventsConfig.defaults
+        });
+
+        showMessage('Event gelöscht!');
+        await loadEvents();
+      } catch (error) {
+        showMessage('Fehler beim Löschen: ' + error.message, 'error');
+      }
+    }
+
+    async function saveEvent() {
+      // Get form values
+      const event = {
+        id: document.getElementById('event-id').value.trim(),
+        title: document.getElementById('event-title').value.trim(),
+        date: document.getElementById('event-date').value,
+        startTime: document.getElementById('event-start-time').value,
+        endTime: document.getElementById('event-end-time').value,
+        location: document.getElementById('event-location').value.trim(),
+        description: document.getElementById('event-description').value.trim(),
+        url: document.getElementById('event-url').value.trim() || 'https://kinn.at',
+        status: document.getElementById('event-status').value
+      };
+
+      // Validate
+      const required = ['id', 'title', 'date', 'startTime', 'endTime', 'location', 'description'];
+      for (const field of required) {
+        if (!event[field]) {
+          showMessage(`Bitte ${field} ausfüllen!`, 'error');
+          return;
+        }
+      }
+
+      // Update or add
+      const events = [...eventsConfig.events];
+      if (editingEventIndex !== null) {
+        events[editingEventIndex] = event;
+      } else {
+        events.push(event);
+      }
+
+      // Sort by date
+      events.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      try {
+        await apiCall('/events', 'PUT', {
+          events,
+          defaults: eventsConfig.defaults
+        });
+
+        showMessage(editingEventIndex !== null ? 'Event aktualisiert!' : 'Event erstellt!');
+        cancelEventForm();
+        await loadEvents();
+        editingEventIndex = null;
+      } catch (error) {
+        showMessage('Fehler beim Speichern: ' + error.message, 'error');
+      }
+    }
+
+    // === Subscribers Management ===
+
+    async function loadSubscribers() {
+      const container = document.getElementById('subscribers-list');
+      const countElement = document.getElementById('subscriber-count');
+
+      try {
+        const response = await apiCall('/subscribers');
+        const { subscribers, count } = response.data;
+
+        countElement.textContent = `${count} Teilnehmer`;
+
+        if (subscribers.length === 0) {
+          container.innerHTML = '<p style="color: #999; text-align: center; padding: 2rem;">Noch keine Teilnehmer.</p>';
+          return;
+        }
+
+        container.innerHTML = `
+          <div class="subscriber-list">
+            ${subscribers.map(email => `<div class="subscriber-item">${email}</div>`).join('')}
+          </div>
+        `;
+      } catch (error) {
+        console.error('Failed to load subscribers:', error);
+        container.innerHTML = `<div class="message error">Fehler beim Laden: ${error.message}</div>`;
+      }
+    }
+  </script>
+</body>
+</html>
