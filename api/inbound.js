@@ -46,11 +46,23 @@ export default async function handler(req, res) {
       subject,
     });
 
-    // Fetch full email content from Resend Inbound API
+    // Fetch full email content from Resend Receiving API
     let emailContent;
     try {
-      // Use the Resend SDK's emails.get() method for inbound emails
-      emailContent = await resend.emails.get(email_id);
+      // Use Resend Receiving API to get full email content (html, text, headers)
+      const response = await fetch(`https://api.resend.com/emails/receiving/${email_id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Resend API error: ${errorData.message || response.statusText}`);
+      }
+
+      emailContent = await response.json();
     } catch (error) {
       console.error('[INBOUND] Failed to fetch email content:', error.message);
       throw new Error(`Email retrieval failed: ${error.message}`);

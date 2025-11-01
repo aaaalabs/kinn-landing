@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - KINN Event Creator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #ffffff;
+      color: #000;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      width: 200px;
+      height: auto;
+      margin: 0 auto 2rem;
+      display: block;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      color: #333;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #999;
+      margin-bottom: 3rem;
+      font-size: 0.9rem;
+    }
+
+    .form-section {
+      background: #f9f9f9;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: #333;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #E0EEE9;
+      box-shadow: 0 0 0 3px rgba(224, 238, 233, 0.3);
+    }
+
+    .datetime-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .button {
+      background: #E0EEE9;
+      color: #000;
+      padding: 14px 32px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    .button:hover {
+      background: #d0ddd4;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .result {
+      display: none;
+      background: #f0f0f0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .result.show {
+      display: block;
+    }
+
+    .result.success {
+      background: #d4edda;
+      border-left: 4px solid #28a745;
+    }
+
+    .result.error {
+      background: #f8d7da;
+      border-left: 4px solid #dc3545;
+    }
+
+    .result h3 {
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+
+    .result-details {
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 0.85rem;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .api-key-input {
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 0.9rem;
+    }
+
+    .example {
+      background: #fff;
+      border-left: 4px solid #E0EEE9;
+      padding: 1rem;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    @media (max-width: 640px) {
+      .datetime-group {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- KINN Logo -->
+    <svg class="logo" viewBox="0 0 640 160" xmlns="http://www.w3.org/2000/svg">
+      <rect width="640" height="160" fill="none"/>
+      <text x="320" y="120" font-family="system-ui, -apple-system, sans-serif" font-size="120" font-weight="300" text-anchor="middle" fill="#000">KINN</text>
+    </svg>
+
+    <h1>Event Creator</h1>
+    <p class="subtitle">Erstelle KI Treff Events für alle verbundenen Kalender</p>
+
+    <!-- API Key Section -->
+    <div class="form-section">
+      <div class="form-group">
+        <label for="apiKey">Admin API Key *</label>
+        <input
+          type="password"
+          id="apiKey"
+          class="api-key-input"
+          placeholder="LDDnwzVkB0nZu3EKDkOuiR46T28udQWGeCsjLM7dxo8="
+          required
+        >
+      </div>
+    </div>
+
+    <!-- Event Form -->
+    <form id="eventForm" class="form-section">
+      <div class="form-group">
+        <label for="summary">Event Titel *</label>
+        <input
+          type="text"
+          id="summary"
+          placeholder="z.B. KINN KI Treff #12: Prompt Engineering Workshop"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="description">Beschreibung</label>
+        <textarea
+          id="description"
+          placeholder="Details zum Event..."
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="location">Location</label>
+        <input
+          type="text"
+          id="location"
+          placeholder="z.B. KINN Office, Maria-Theresien-Straße 18, Innsbruck"
+          value="Innsbruck, Tirol"
+        >
+      </div>
+
+      <div class="datetime-group">
+        <div class="form-group">
+          <label for="start">Start *</label>
+          <input
+            type="datetime-local"
+            id="start"
+            required
+          >
+          <div class="example">Format: 2025-02-15 18:00</div>
+        </div>
+
+        <div class="form-group">
+          <label for="end">Ende *</label>
+          <input
+            type="datetime-local"
+            id="end"
+            required
+          >
+          <div class="example">Format: 2025-02-15 20:00</div>
+        </div>
+      </div>
+
+      <button type="submit" class="button" id="submitBtn">
+        📅 Event für alle Kalender erstellen
+      </button>
+    </form>
+
+    <!-- Result Display -->
+    <div id="result" class="result">
+      <h3 id="resultTitle"></h3>
+      <pre id="resultDetails" class="result-details"></pre>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('eventForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const resultDiv = document.getElementById('result');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultDetails = document.getElementById('resultDetails');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Get values
+      const apiKey = document.getElementById('apiKey').value.trim();
+      const summary = document.getElementById('summary').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const location = document.getElementById('location').value.trim();
+      const start = document.getElementById('start').value;
+      const end = document.getElementById('end').value;
+
+      // Validate API key
+      if (!apiKey) {
+        alert('Bitte gib den Admin API Key ein.');
+        return;
+      }
+
+      // Disable button
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Events werden erstellt...';
+
+      // Convert datetime-local to ISO 8601
+      const startISO = new Date(start).toISOString();
+      const endISO = new Date(end).toISOString();
+
+      try {
+        const response = await fetch('/api/events/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            summary,
+            description,
+            location,
+            start: startISO,
+            end: endISO,
+          }),
+        });
+
+        const data = await response.json();
+
+        // Display result
+        resultDiv.classList.remove('success', 'error');
+        resultDiv.classList.add('show');
+
+        if (response.ok) {
+          resultDiv.classList.add('success');
+          resultTitle.textContent = `✅ Erfolg: ${data.stats.successful} Events erstellt`;
+          resultDetails.textContent = JSON.stringify(data, null, 2);
+        } else {
+          resultDiv.classList.add('error');
+          resultTitle.textContent = '❌ Fehler: Event-Erstellung fehlgeschlagen';
+          resultDetails.textContent = JSON.stringify(data, null, 2);
+        }
+
+      } catch (error) {
+        resultDiv.classList.remove('success');
+        resultDiv.classList.add('error', 'show');
+        resultTitle.textContent = '❌ Fehler: Netzwerk-Problem';
+        resultDetails.textContent = error.message;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '📅 Event für alle Kalender erstellen';
+      }
+    });
+
+    // Set default times (tomorrow 18:00 - 20:00)
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(18, 0, 0, 0);
+
+    const endTime = new Date(tomorrow);
+    endTime.setHours(20, 0, 0, 0);
+
+    // Format for datetime-local input (YYYY-MM-DDTHH:mm)
+    const formatDatetimeLocal = (date) => {
+      const pad = (n) => n.toString().padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    };
+
+    document.getElementById('start').value = formatDatetimeLocal(tomorrow);
+    document.getElementById('end').value = formatDatetimeLocal(endTime);
+  </script>
+</body>
+</html>
