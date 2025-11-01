@@ -7,13 +7,12 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
- * Generate Welcome Email with calendar subscription links
+ * Generate Welcome Email - Simple, spam-safe version
+ * Links to website instead of direct webcal:// links
  */
 function generateWelcomeEmail() {
   const baseUrl = process.env.BASE_URL || 'https://kinn.at';
-  const domain = baseUrl.replace('https://', '').replace('http://', '');
-  const webcalUrl = `webcal://${domain}/api/calendar.ics`;
-  const httpsUrl = `${baseUrl}/api/calendar.ics`;
+  const calendarPageUrl = `${baseUrl}/pages/success.html?status=confirmed`;
 
   return `
 <!DOCTYPE html>
@@ -22,54 +21,53 @@ function generateWelcomeEmail() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; background-color: #ffffff;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; margin: 0 auto; padding: 20px 0 48px;">
+<body style="margin: 0; padding: 0; font-family: 'Work Sans', system-ui, -apple-system, sans-serif; background-color: #ffffff;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; margin: 0 auto; padding: 40px 20px;">
     <tr>
-      <td style="padding: 40px;">
-        <h1 style="font-size: 24px; line-height: 1.3; font-weight: 300; color: #333; margin-bottom: 20px;">Willkommen beim KINN! 🎉</h1>
+      <td style="padding: 0 20px;">
+        <!-- Header -->
+        <h1 style="font-size: 26px; line-height: 1.3; font-weight: 600; color: #2C3E50; margin-bottom: 16px; letter-spacing: 0.02em;">
+          Willkommen beim KINN
+        </h1>
 
-        <p style="font-size: 16px; line-height: 1.618; color: #000; margin-bottom: 16px;">
-          Deine Email-Adresse ist jetzt bestätigt!
+        <!-- Body -->
+        <p style="font-size: 16px; line-height: 1.6; color: #3A3A3A; margin-bottom: 16px;">
+          Deine Email-Adresse ist jetzt bestätigt.
         </p>
 
-        <p style="font-size: 16px; line-height: 1.618; color: #000; margin-bottom: 16px;">
-          <strong>Nächster Schritt:</strong> Abonniere den KINN Event-Kalender und verpasse keinen KI Treff mehr.
+        <p style="font-size: 16px; line-height: 1.6; color: #3A3A3A; margin-bottom: 24px;">
+          Nächster Schritt: Abonniere den Event-Kalender, um keinen KI Treff in Innsbruck zu verpassen.
         </p>
 
+        <!-- CTA Button -->
         <table width="100%" cellpadding="0" cellspacing="0" style="margin: 32px 0;">
           <tr>
-            <td style="padding-bottom: 12px;">
-              <a href="${webcalUrl}" style="background-color: #E0EEE9; border-radius: 12px; color: #000; font-size: 14px; font-weight: 600; text-decoration: none; text-align: center; display: block; padding: 14px 24px;">
-                📅 Kalender abonnieren
+            <td align="center">
+              <a href="${calendarPageUrl}" style="display: inline-block; padding: 14px 32px; background-color: #5ED9A6; color: #000; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 600; letter-spacing: 0.01em;">
+                Kalender-Abonnement einrichten
               </a>
             </td>
           </tr>
         </table>
 
-        <p style="font-size: 13px; line-height: 1.618; color: #666; margin-bottom: 8px; text-align: center;">
-          <strong>Funktioniert mit allen Kalender-Apps:</strong><br>
-          Google Calendar, Apple Kalender, Outlook
+        <!-- Info -->
+        <p style="font-size: 14px; line-height: 1.6; color: #6B6B6B; margin-top: 24px; margin-bottom: 8px;">
+          <strong>Was ist eine Kalender-Subscription?</strong>
+        </p>
+        <p style="font-size: 14px; line-height: 1.6; color: #6B6B6B; margin-bottom: 32px;">
+          Neue Events erscheinen automatisch in deinem Kalender – keine weiteren Emails nötig. Funktioniert mit Google Calendar, Apple Kalender und Outlook.
         </p>
 
-        <p style="font-size: 12px; line-height: 1.618; color: #999; margin-bottom: 16px; text-align: center;">
-          Falls der Button nicht funktioniert, kopiere diese URL:<br>
-          <code style="background: #f5f5f5; padding: 4px 8px; border-radius: 4px; font-size: 11px;">${httpsUrl}</code><br>
-          <span style="font-size: 11px;">und füge sie in deiner Kalender-App unter "Kalender hinzufügen → Per URL" ein.</span>
-        </p>
-
-        <p style="font-size: 14px; line-height: 1.618; color: #666; margin-bottom: 16px;">
-          <strong>Was ist eine Kalender-Subscription?</strong><br>
-          Neue Events erscheinen automatisch in deinem Kalender – keine weiteren Emails nötig.
-        </p>
-
+        <!-- Divider -->
         <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 32px 0;">
 
-        <p style="font-size: 12px; line-height: 1.5; color: #ccc; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">
+        <!-- Footer -->
+        <p style="font-size: 12px; line-height: 1.5; color: #999; text-align: center; margin-bottom: 8px;">
           KINN – Wo Tiroler KI Profil bekommt
         </p>
 
-        <p style="font-size: 11px; line-height: 1.5; color: #999; text-align: center; margin-top: 16px;">
-          Bei Fragen: <a href="mailto:thomas@kinn.at" style="color: #999;">thomas@kinn.at</a> oder <a href="mailto:ki@in.kinn.at" style="color: #999;">ki@in.kinn.at</a>
+        <p style="font-size: 11px; line-height: 1.5; color: #999; text-align: center;">
+          Bei Fragen: <a href="mailto:thomas@kinn.at" style="color: #999; text-decoration: none;">thomas@kinn.at</a> oder <a href="mailto:ki@in.kinn.at" style="color: #999; text-decoration: none;">ki@in.kinn.at</a>
         </p>
       </td>
     </tr>
@@ -149,7 +147,7 @@ export default async function handler(req, res) {
     resend.emails.send({
       from: (process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>').trim(),
       to: email.trim(),
-      subject: 'Willkommen beim KINN – Kalender abonnieren! 📅',
+      subject: 'Willkommen beim KINN – Kalender-Abonnement',
       html: generateWelcomeEmail(),
     }).then(result => {
       console.log(`[CONFIRM] Welcome email sent: ${result.id}`);

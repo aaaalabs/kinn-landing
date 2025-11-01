@@ -193,10 +193,10 @@
     }
 
     .modal-content {
-      background: #e8e9ea;
+      background: #ffffff; /* White instead of gray */
       padding: 0;
       border-radius: 1rem;
-      max-width: 600px;
+      max-width: 520px; /* More compact: 600px → 520px */
       width: 100%;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
       position: relative;
@@ -207,9 +207,9 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1.25rem 1.5rem;
-      background: #e8e9ea;
-      border-bottom: 1px solid #d1d5db;
+      padding: 1rem 1.25rem; /* Tighter: 1.25rem 1.5rem → 1rem 1.25rem */
+      background: #ffffff; /* White instead of gray */
+      border-bottom: 1px solid #e5e7eb; /* Lighter border */
     }
 
     .modal-header h2 {
@@ -240,15 +240,15 @@
     }
 
     .modal-body {
-      padding: 1.5rem;
-      background: #e8e9ea;
+      padding: 1.25rem; /* Tighter: 1.5rem → 1.25rem */
+      background: #ffffff; /* White instead of gray */
     }
 
     .form-row {
       display: grid;
-      grid-template-columns: 60px 1fr;
-      gap: 1rem;
-      margin-bottom: 1rem;
+      grid-template-columns: 50px 1fr; /* Tighter: 60px → 50px */
+      gap: 0.75rem; /* Tighter: 1rem → 0.75rem */
+      margin-bottom: 0.75rem; /* Tighter: 1rem → 0.75rem */
       align-items: center;
     }
 
@@ -269,14 +269,29 @@
       font-weight: 400;
       color: #3A3A3A;
       outline: none;
+      border-bottom: 2px solid transparent; /* Add border space */
+      transition: border-color 0.2s ease;
+    }
+
+    /* Mint focus state */
+    .form-row input:focus {
+      border-bottom: 2px solid #5ED9A6; /* Mint accent on focus */
     }
 
     .form-row input:disabled {
-      color: #6b7280;
+      color: #9ca3af; /* Lighter gray for disabled */
+      border-bottom: 2px solid #f3f4f6; /* Subtle border for disabled */
     }
 
     .form-row input::placeholder {
       color: #9ca3af;
+    }
+
+    /* Highlight label when input is focused */
+    .form-row:has(input:focus) label {
+      color: #5ED9A6; /* Mint label when active */
+      font-weight: 600;
+      transition: color 0.2s ease, font-weight 0.2s ease;
     }
 
     /* Typing cursor animation */
@@ -295,27 +310,35 @@
     }
 
     .modal-footer {
-      padding: 1.5rem;
-      background: #e8e9ea;
+      padding: 1rem 1.25rem; /* Tighter: 1.5rem → 1rem 1.25rem */
+      background: #ffffff; /* White instead of gray */
       display: flex;
       justify-content: flex-end;
+      border-top: 1px solid #e5e7eb; /* Add separator */
     }
 
     .btn-send {
       font-family: 'Work Sans', sans-serif;
-      background: #000;
-      color: #fff;
+      background: #5ED9A6; /* Mint instead of black */
+      color: #000; /* Black text on mint */
       border: none;
       padding: 0.5rem 1.5rem;
       border-radius: 0.5rem;
       font-size: 0.875rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s ease;
     }
 
     .btn-send:hover {
-      background: #333;
+      background: #4EC995; /* Darker mint on hover */
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(94, 217, 166, 0.25);
+    }
+
+    .btn-send:active {
+      background: #3EB885;
+      transform: translateY(0);
     }
 
     .footer {
@@ -415,7 +438,7 @@
       }
 
       .form-row {
-        grid-template-columns: 50px 1fr;
+        grid-template-columns: 45px 1fr; /* Tighter on mobile */
         gap: 0.5rem;
       }
 
@@ -428,7 +451,7 @@
       }
 
       .modal-header {
-        padding: 1rem;
+        padding: 0.875rem 1rem; /* Tighter on mobile */
       }
 
       .modal-body {
