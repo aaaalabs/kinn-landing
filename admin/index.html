@@ -351,8 +351,11 @@
           <h3 style="margin-bottom: 1.5rem; font-weight: 400;">Event Details</h3>
 
           <div class="form-group">
-            <label>Event ID *</label>
-            <input type="text" id="event-id" placeholder="z.B. kinn-2025-02" />
+            <label>Event ID (wird automatisch generiert)</label>
+            <input type="text" id="event-id" placeholder="kinn-2025-02-15" readonly style="background: #e9ecef; cursor: not-allowed;" />
+            <small style="display: block; margin-top: 0.5rem; color: #6B6B6B; font-size: 0.875rem;">
+              Format: kinn-YYYY-MM-DD (basierend auf Event-Datum)
+            </small>
           </div>
 
           <div class="form-group">
@@ -362,7 +365,7 @@
 
           <div class="form-group">
             <label>Datum *</label>
-            <input type="date" id="event-date" />
+            <input type="date" id="event-date" onchange="generateEventId()" />
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -630,6 +633,18 @@
       document.getElementById('event-form').scrollIntoView({ behavior: 'smooth' });
     }
 
+    function generateEventId() {
+      const dateInput = document.getElementById('event-date').value;
+      if (!dateInput) {
+        document.getElementById('event-id').value = '';
+        return;
+      }
+
+      // Format: kinn-YYYY-MM-DD
+      const eventId = `kinn-${dateInput}`;
+      document.getElementById('event-id').value = eventId;
+    }
+
     function clearEventForm() {
       document.getElementById('event-id').value = '';
       document.getElementById('event-title').value = '';
@@ -640,6 +655,11 @@
       document.getElementById('event-description').value = '';
       document.getElementById('event-url').value = 'https://kinn.at';
       document.getElementById('event-status').value = 'confirmed';
+
+      // Set default date to today and generate ID
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('event-date').value = today;
+      generateEventId();
     }
 
     function cancelEventForm() {
