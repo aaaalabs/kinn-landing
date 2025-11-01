@@ -83,6 +83,34 @@ See: **`MARKETING.md`** for complete marketing strategy:
 - Calendar Integration (✅ implemented)
 - Future: Job Board, Learning Paths, Academy
 
+### Platform Potentials & Roadmap
+
+See: **`POTENZIALE.md`** for comprehensive feature opportunities:
+
+**Vision:** KINN as Operating System für Tirols AI Community
+
+**Quick Wins (P0):**
+- Email Forwards mit AI-Matching (`vorname@kinn.at`)
+- QR Code Mini-Profiles (`code.kinn.at/thomas`)
+- KINN Directory (Public Talent Search)
+
+**Strategic Plays (P1-P2):**
+- Reverse Job Board (Members post what they seek)
+- KINN Verified Badge (Trust Layer)
+- KINN Spotlight (Member Storytelling)
+- Learning Hub (Peer-to-Peer Knowledge)
+
+**Moonshots (P3-P4):**
+- KINN Ventures (Angel Syndicate)
+- KINN Remote (Umbrella Company)
+- KINN API (Programmable Talent Network)
+
+**Network Effects:**
+- Match-Qualität steigt exponentiell mit Netzwerkgröße
+- KINN wird zum Signal für Quality ("KINN-verified")
+- Data Moat: Supply/Demand Intelligence
+- Distribution Power: KINN Recommendation = Hiring-Signal
+
 ## API Endpoints
 
 ### Public Endpoints
