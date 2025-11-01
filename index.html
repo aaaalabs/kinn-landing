@@ -640,6 +640,18 @@
   </div>
 
   <script>
+    // Demo mode detection
+    const urlParams = new URLSearchParams(window.location.search);
+    const isDemo = urlParams.get('demo') === 'true';
+
+    // Add demo badge if in demo mode
+    if (isDemo) {
+      const badge = document.createElement('div');
+      badge.style.cssText = 'position: fixed; top: 1rem; right: 1rem; background: rgba(255, 152, 0, 0.9); color: #fff; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 1000; font-family: Work Sans, system-ui;';
+      badge.textContent = '🎬 DEMO MODE';
+      document.body.appendChild(badge);
+    }
+
     function openModal() {
       document.getElementById('modal').classList.add('open')
       setTimeout(() => {
@@ -676,6 +688,12 @@
     async function handleSubmit(e) {
       e.preventDefault()
       const email = document.getElementById('from').value
+
+      // Demo mode: Skip API call and redirect directly to success page
+      if (isDemo) {
+        window.location.href = '/pages/success.html?status=confirmed&email=' + encodeURIComponent(email) + '&demo=true';
+        return;
+      }
 
       // Step 1: Fade out form content
       const modalContent = document.querySelector('.modal-content')
