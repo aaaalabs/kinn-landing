@@ -1,4 +1,7 @@
 import { Resend } from 'resend';
+import { render } from '@react-email/render';
+import OptInEmail from '../emails/opt-in.tsx';
+import { generateConfirmToken } from './utils/tokens.js';
 
 // Initialize Resend client
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -59,32 +62,52 @@ export default async function handler(req, res) {
     // [EH01] Log for debugging (without sensitive data)
     console.log(`[SIGNUP] Processing request for domain: ${email.split('@')[1]}`);
 
-    // Send email via Resend API
-    const data = await resend.emails.send({
-      from: process.env.SENDER_EMAIL || 'KINN <noreply@in.kinn.at>',
-      to: process.env.RECIPIENT_EMAIL || 'treff@in.kinn.at',
-      subject: 'Neue Anmeldung: KI Treff Verteiler',
-      html: `
-        <h2>Neue Anmeldung für den KI Treff Verteiler</h2>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Zeitstempel:</strong> ${new Date().toLocaleString('de-AT', {
-          timeZone: 'Europe/Vienna'
-        })}</p>
-        <hr>
-        <p><em>Automatisch generiert von in.kinn.at</em></p>
-      `,
-      // Plain text fallback
-      text: `Neue Anmeldung für den KI Treff Verteiler\n\nEmail: ${email}\nZeitstempel: ${new Date().toLocaleString('de-AT', { timeZone: 'Europe/Vienna' })}\n\n---\nAutomatisch generiert von in.kinn.at`
-    });
+    // Generate confirmation token (48h expiry)
+    const confirmToken = generateConfirmToken(email);
+    const confirmUrl = `${process.env.BASE_URL || 'https://kinn.at'}/api/confirm?token=${confirmToken}`;
+
+    // Render React Email template to HTML
+    const optInHtml = render(OptInEmail({ confirmUrl }));
+
+    // Send TWO emails in parallel for speed
+    const [adminEmail, userEmail] = await Promise.all([
+      // 1. Admin notification to treff@in.kinn.at
+      resend.emails.send({
+        from: process.env.SENDER_EMAIL || 'KINN <noreply@in.kinn.at>',
+        to: process.env.RECIPIENT_EMAIL || 'treff@in.kinn.at',
+        subject: 'Neue Anmeldung: KI Treff Verteiler',
+        html: `
+          <h2>Neue Anmeldung für den KI Treff Verteiler</h2>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Zeitstempel:</strong> ${new Date().toLocaleString('de-AT', {
+            timeZone: 'Europe/Vienna'
+          })}</p>
+          <p><strong>Status:</strong> Wartet auf Bestätigung</p>
+          <hr>
+          <p><em>Automatisch generiert von in.kinn.at</em></p>
+        `,
+      }),
+
+      // 2. Opt-in confirmation to user with React Email template
+      resend.emails.send({
+        from: process.env.SENDER_EMAIL || 'KINN <noreply@in.kinn.at>',
+        to: email,
+        subject: 'Bestätige deine Anmeldung zum KINN KI Treff',
+        html: optInHtml,
+      }),
+    ]);
 
     // [EH01] Log success
-    console.log(`[SIGNUP] Email sent successfully. ID: ${data.id}`);
+    console.log(`[SIGNUP] Dual emails sent - Admin: ${adminEmail.id}, User: ${userEmail.id}`);
 
     // Return success response
     return res.status(200).json({
       success: true,
       message: 'Anmeldung erfolgreich! Check deine Inbox für die Bestätigung.',
-      emailId: data.id
+      emailIds: {
+        admin: adminEmail.id,
+        user: userEmail.id,
+      }
     });
 
   } catch (error) {
