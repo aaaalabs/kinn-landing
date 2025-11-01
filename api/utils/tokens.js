@@ -2,8 +2,17 @@ import jwt from 'jsonwebtoken';
 
 const SECRET = process.env.JWT_SECRET;
 
+// Validate JWT secret exists and is strong
 if (!SECRET) {
   throw new Error('JWT_SECRET environment variable is required');
+}
+
+if (SECRET.length < 32) {
+  throw new Error('JWT_SECRET must be at least 32 characters long for security');
+}
+
+if (SECRET === 'secret' || SECRET === 'password' || SECRET.match(/^[a-z]+$/i)) {
+  console.warn('[TOKENS] WARNING: JWT_SECRET appears weak. Use a strong random string.');
 }
 
 /**
@@ -49,7 +58,7 @@ export function verifyConfirmToken(token) {
 /**
  * Generates a profile token for user preference management
  * @param {string} email - User email address
- * @returns {string} JWT token with no expiration (long-lived)
+ * @returns {string} JWT token valid for 30 days
  */
 export function generateProfileToken(email) {
   return jwt.sign(
@@ -58,8 +67,8 @@ export function generateProfileToken(email) {
       type: 'profile',
       timestamp: Date.now()
     },
-    SECRET
-    // No expiresIn = never expires (long-lived token)
+    SECRET,
+    { expiresIn: '30d' } // 30 days expiration for security
   );
 }
 

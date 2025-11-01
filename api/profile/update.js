@@ -1,6 +1,7 @@
 import { verifyProfileToken } from '../utils/tokens.js';
 import { getUserPreferences, updateUserPreferences, isSubscribed } from '../utils/redis.js';
 import { generateBrandedError, ErrorTemplates } from '../utils/branded-error.js';
+import { enforceRateLimit } from '../utils/rate-limiter.js';
 
 /**
  * Profile update endpoint for modifying user preferences
@@ -18,6 +19,17 @@ export default async function handler(req, res) {
       error: 'Method not allowed',
       message: 'Only PUT requests are accepted'
     });
+  }
+
+  // Rate limiting: 20 requests per minute per IP
+  const rateLimitAllowed = await enforceRateLimit(req, res, {
+    maxRequests: 20,
+    windowMs: 60 * 1000, // 1 minute
+    keyPrefix: 'ratelimit:profile:update'
+  });
+
+  if (!rateLimitAllowed) {
+    return; // Response already sent by enforceRateLimit
   }
 
   try {

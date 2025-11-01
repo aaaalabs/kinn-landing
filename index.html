@@ -68,18 +68,25 @@
       text-align: center;
     }
 
-    /* V1: Logo with sculptural drop-shadow */
-    .logo {
+    /* V1: Logo link wrapper */
+    .logo-link {
+      display: block;
       width: 420px;
       max-width: 80%;
       margin: 0 auto 3rem;
-      display: block;
-      filter: drop-shadow(0 4px 16px rgba(0,0,0,0.06));
+      cursor: pointer;
       transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    .logo:hover {
+    .logo-link:hover {
       transform: scale(1.02);
+    }
+
+    /* V1: Logo with sculptural drop-shadow */
+    .logo {
+      width: 100%;
+      display: block;
+      filter: drop-shadow(0 4px 16px rgba(0,0,0,0.06));
     }
 
     /* Typography Hierarchy */
@@ -376,7 +383,7 @@
         padding: 3rem 2rem;
       }
 
-      .logo {
+      .logo-link {
         width: 340px;
         margin-bottom: 2.5rem;
       }
@@ -403,7 +410,7 @@
         justify-content: center;
       }
 
-      .logo {
+      .logo-link {
         width: 280px;
         margin-bottom: 2rem;
       }
@@ -598,12 +605,14 @@
 <body>
   <div class="container">
     <!-- Logo (inline SVG) -->
-    <svg class="logo" viewBox="0 0 931.35 308.55" xmlns="http://www.w3.org/2000/svg">
-      <polygon points="495.04 20.27 569.04 153.27 569.04 20.27 654.04 20.27 654.04 288.27 572.54 288.27 498.04 159.27 498.04 288.27 416.04 288.27 416.04 20.27 495.04 20.27"/>
-      <path d="M682.04,20.27l78.89.11,73.11,133.89V20.27h81v268h-80l-72-130v130h-78.5c-.61,0-1.53-.8-2.5,0V20.27Z"/>
-      <polygon points="100.04 20.27 100.04 136.27 160.54 20.27 256.04 20.27 182.26 145.61 262.04 288.27 166.54 288.27 100.04 159.27 100.04 288.27 21.04 288.27 21.04 20.27 100.04 20.27"/>
-      <path d="M359.04,20.27v265.5c0,.31,1.37,1.42,1,2.5h-82V20.27h81Z"/>
-    </svg>
+    <a href="/" class="logo-link">
+      <svg class="logo" viewBox="0 0 931.35 308.55" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="495.04 20.27 569.04 153.27 569.04 20.27 654.04 20.27 654.04 288.27 572.54 288.27 498.04 159.27 498.04 288.27 416.04 288.27 416.04 20.27 495.04 20.27"/>
+        <path d="M682.04,20.27l78.89.11,73.11,133.89V20.27h81v268h-80l-72-130v130h-78.5c-.61,0-1.53-.8-2.5,0V20.27Z"/>
+        <polygon points="100.04 20.27 100.04 136.27 160.54 20.27 256.04 20.27 182.26 145.61 262.04 288.27 166.54 288.27 100.04 159.27 100.04 288.27 21.04 288.27 21.04 20.27 100.04 20.27"/>
+        <path d="M359.04,20.27v265.5c0,.31,1.37,1.42,1,2.5h-82V20.27h81Z"/>
+      </svg>
+    </a>
 
     <h1>KI Treff Innsbruck</h1>
     <p class="subtitle">Monatlicher Austausch</p>

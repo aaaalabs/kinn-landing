@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { generateConfirmToken } from './utils/tokens.js';
+import { enforceRateLimit } from './utils/rate-limiter.js';
 
 // Initialize Resend client
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -54,12 +55,27 @@ function generateOptInEmail(confirmUrl) {
   `.trim();
 }
 
-// CORS headers for browser requests
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+// Allowed origins for CORS
+const ALLOWED_ORIGINS = [
+  'https://kinn.at',
+  'https://www.kinn.at',
+  ...(process.env.NODE_ENV === 'development' ? ['http://localhost:8000', 'http://localhost:3000'] : [])
+];
+
+/**
+ * Get CORS headers for request origin
+ */
+function getCorsHeaders(origin) {
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    return {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Credentials': 'true'
+    };
+  }
+  return {};
+}
 
 /**
  * Serverless function to handle signup email via Resend API
@@ -69,7 +85,10 @@ const corsHeaders = {
  * [SC02] Input validation
  */
 export default async function handler(req, res) {
-  // Set CORS headers
+  // Set CORS headers based on origin
+  const origin = req.headers.origin;
+  const corsHeaders = getCorsHeaders(origin);
+
   Object.entries(corsHeaders).forEach(([key, value]) => {
     res.setHeader(key, value);
   });
@@ -85,6 +104,17 @@ export default async function handler(req, res) {
       error: 'Method not allowed',
       message: 'Only POST requests are accepted'
     });
+  }
+
+  // Rate limiting: 10 requests per minute per IP
+  const rateLimitAllowed = await enforceRateLimit(req, res, {
+    maxRequests: 10,
+    windowMs: 60 * 1000, // 1 minute
+    keyPrefix: 'ratelimit:signup'
+  });
+
+  if (!rateLimitAllowed) {
+    return; // Response already sent by enforceRateLimit
   }
 
   try {

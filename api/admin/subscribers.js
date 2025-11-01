@@ -1,4 +1,6 @@
 import { getAllSubscribers, getSubscriberCount } from '../utils/redis.js';
+import { enforceRateLimit } from '../utils/rate-limiter.js';
+import crypto from 'crypto';
 
 /**
  * Admin API for Subscriber Management
@@ -8,15 +10,30 @@ import { getAllSubscribers, getSubscriberCount } from '../utils/redis.js';
  * Authentication: Bearer token via ADMIN_PASSWORD env var
  */
 
-// CORS headers
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+// Allowed origins for CORS
+const ALLOWED_ORIGINS = [
+  'https://kinn.at',
+  'https://www.kinn.at',
+  ...(process.env.NODE_ENV === 'development' ? ['http://localhost:8000', 'http://localhost:3000'] : [])
+];
 
 /**
- * Verify admin password
+ * Get CORS headers for request origin
+ */
+function getCorsHeaders(origin) {
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    return {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Credentials': 'true'
+    };
+  }
+  return {};
+}
+
+/**
+ * Verify admin password using timing-safe comparison
  */
 function isAuthenticated(req) {
   const authHeader = req.headers.authorization;
@@ -31,12 +48,28 @@ function isAuthenticated(req) {
     return false;
   }
 
-  const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-  return token === adminPassword;
+  const token = authHeader.substring(7);
+
+  try {
+    const tokenBuffer = Buffer.from(token);
+    const passwordBuffer = Buffer.from(adminPassword);
+
+    if (tokenBuffer.length !== passwordBuffer.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(tokenBuffer, passwordBuffer);
+  } catch (error) {
+    console.error('[ADMIN] Authentication error:', error.message);
+    return false;
+  }
 }
 
 export default async function handler(req, res) {
-  // Set CORS headers
+  // Set CORS headers based on request origin
+  const origin = req.headers.origin;
+  const corsHeaders = getCorsHeaders(origin);
+
   Object.entries(corsHeaders).forEach(([key, value]) => {
     res.setHeader(key, value);
   });
@@ -44,6 +77,17 @@ export default async function handler(req, res) {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).json({ ok: true });
+  }
+
+  // Rate limiting: 5 requests per minute per IP (stricter for admin)
+  const rateLimitAllowed = await enforceRateLimit(req, res, {
+    maxRequests: 5,
+    windowMs: 60 * 1000, // 1 minute
+    keyPrefix: 'ratelimit:admin:subscribers'
+  });
+
+  if (!rateLimitAllowed) {
+    return; // Response already sent by enforceRateLimit
   }
 
   // Only accept GET requests
