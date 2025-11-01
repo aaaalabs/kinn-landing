@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
-import OptInEmail from '../emails/opt-in.tsx';
+import OptInEmail from '../emails/opt-in.jsx';
 import { generateConfirmToken } from './utils/tokens.js';
 
 // Initialize Resend client
