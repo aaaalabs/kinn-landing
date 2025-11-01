@@ -128,7 +128,7 @@ export default async function handler(req, res) {
 
     if (alreadySubscribed) {
       console.log(`[CONFIRM] Email already subscribed: ${email}`);
-      return res.redirect('/pages/success.html?status=already-subscribed');
+      return res.redirect(`/pages/success.html?status=already-subscribed&email=${encodeURIComponent(email)}`);
     }
 
     // Add to Redis subscribers set
@@ -137,14 +137,14 @@ export default async function handler(req, res) {
     if (!added) {
       // This shouldn't happen since we checked isSubscribed, but handle it anyway
       console.warn(`[CONFIRM] Subscriber was already in set: ${email}`);
-      return res.redirect('/pages/success.html?status=already-subscribed');
+      return res.redirect(`/pages/success.html?status=already-subscribed&email=${encodeURIComponent(email)}`);
     }
 
     // [EH01] Log success
     console.log(`[CONFIRM] New subscriber confirmed: ${email}`);
 
-    // Redirect to success page
-    return res.redirect('/pages/success.html?status=confirmed');
+    // Redirect to success page with email for OAuth flow
+    return res.redirect(`/pages/success.html?status=confirmed&email=${encodeURIComponent(email)}`);
 
   } catch (error) {
     // [EH01] Contextual logging
