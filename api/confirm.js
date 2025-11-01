@@ -212,20 +212,21 @@ export default async function handler(req, res) {
       userAgent: userAgent.substring(0, 60)
     });
 
-    // Send welcome email in background (don't block redirect)
-    resend.emails.send({
-      from: (process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>').trim(),
-      to: email.trim(),
-      subject: 'Willkommen beim KINN – Kalender-Abonnement',
-      html: generateWelcomeEmail(profileToken),
-    }).then(result => {
-      console.log(`[CONFIRM] Welcome email sent: ${result.id}`);
-    }).catch(error => {
+    // Send welcome email (wait for it to ensure it gets sent)
+    try {
+      const emailResult = await resend.emails.send({
+        from: (process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>').trim(),
+        to: email.trim(),
+        subject: 'Willkommen beim KINN – Kalender-Abonnement',
+        html: generateWelcomeEmail(profileToken),
+      });
+      console.log(`[CONFIRM] Welcome email sent: ${emailResult.id}`);
+    } catch (emailError) {
       // Log but don't fail - user is already confirmed
-      console.error('[CONFIRM] Welcome email failed:', error.message);
-    });
+      console.error('[CONFIRM] Welcome email failed:', emailError.message);
+    }
 
-    // Redirect to success page with profile token (don't wait for email)
+    // Redirect to success page with profile token
     return res.redirect(`/pages/success.html?status=confirmed&email=${encodeURIComponent(email)}&token=${profileToken}`);
 
   } catch (error) {
