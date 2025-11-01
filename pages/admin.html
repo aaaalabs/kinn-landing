@@ -193,7 +193,7 @@
           type="password"
           id="apiKey"
           class="api-key-input"
-          placeholder="LDDnwzVkB0nZu3EKDkOuiR46T28udQWGeCsjLM7dxo8="
+          placeholder="Gib deinen Admin API Key ein..."
           required
         >
       </div>
@@ -269,12 +269,19 @@
     const resultDiv = document.getElementById('result');
     const resultTitle = document.getElementById('resultTitle');
     const resultDetails = document.getElementById('resultDetails');
+    const apiKeyInput = document.getElementById('apiKey');
+
+    // Load API key from localStorage on page load
+    const savedApiKey = localStorage.getItem('kinn_admin_api_key');
+    if (savedApiKey) {
+      apiKeyInput.value = savedApiKey;
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       // Get values
-      const apiKey = document.getElementById('apiKey').value.trim();
+      const apiKey = apiKeyInput.value.trim();
       const summary = document.getElementById('summary').value.trim();
       const description = document.getElementById('description').value.trim();
       const location = document.getElementById('location').value.trim();
@@ -311,13 +318,26 @@
           }),
         });
 
-        const data = await response.json();
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        let data;
+
+        if (contentType && contentType.includes('application/json')) {
+          data = await response.json();
+        } else {
+          // Response is not JSON (probably HTML error page)
+          const text = await response.text();
+          throw new Error(`Server returned non-JSON response: ${text.substring(0, 200)}`);
+        }
 
         // Display result
         resultDiv.classList.remove('success', 'error');
         resultDiv.classList.add('show');
 
         if (response.ok) {
+          // Save API key to localStorage on success
+          localStorage.setItem('kinn_admin_api_key', apiKey);
+
           resultDiv.classList.add('success');
           resultTitle.textContent = `✅ Erfolg: ${data.stats.successful} Events erstellt`;
           resultDetails.textContent = JSON.stringify(data, null, 2);
