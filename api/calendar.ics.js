@@ -6,6 +6,8 @@
  * Works with: Google Calendar, Apple Calendar, Outlook, etc.
  */
 
+import { getEventsConfig } from './utils/redis.js';
+
 export default async function handler(req, res) {
   // Only accept GET requests
   if (req.method !== 'GET') {
@@ -16,30 +18,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    // KINN Events (update this regularly with new events)
-    const events = [
-      {
-        uid: 'kinn-event-2025-02@kinn.at',
-        title: 'KINN - KI Treff Innsbruck',
-        description: 'Monatlicher KI-Austausch für Entwickler, Forscher und Enthusiasten in Innsbruck.\\n\\nNetworking, Knowledge Sharing und Diskussionen rund um künstliche Intelligenz.\\n\\nMehr Infos: https://kinn.at',
-        location: 'Coworkingspace Innsbruck, Tirol',
-        start: '2025-02-06T18:00:00',
-        end: '2025-02-06T20:00:00',
-        url: 'https://kinn.at'
-      },
-      {
-        uid: 'kinn-event-2025-03@kinn.at',
-        title: 'KINN - KI Treff Innsbruck',
-        description: 'Monatlicher KI-Austausch für Entwickler, Forscher und Enthusiasten in Innsbruck.\\n\\nNetworking, Knowledge Sharing und Diskussionen rund um künstliche Intelligenz.\\n\\nMehr Infos: https://kinn.at',
-        location: 'Coworkingspace Innsbruck, Tirol',
-        start: '2025-03-06T18:00:00',
-        end: '2025-03-06T20:00:00',
-        url: 'https://kinn.at'
-      }
-    ];
+    // Get events from Redis configuration
+    const config = await getEventsConfig();
+    const events = config.events || [];
+
+    console.log('[CALENDAR.ICS] Generating feed for', events.length, 'events');
 
     // Generate iCal format
-    const ical = generateICalFeed(events);
+    const ical = generateICalFeed(events, config.defaults);
 
     // Set headers for calendar file
     res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
@@ -63,11 +49,13 @@ export default async function handler(req, res) {
 /**
  * Generate iCal feed from events array
  * @param {Array} events - Array of event objects
+ * @param {Object} defaults - Default configuration (timezone, organizer, etc.)
  * @returns {string} - iCal formatted string
  */
-function generateICalFeed(events) {
+function generateICalFeed(events, defaults = {}) {
   const now = new Date();
   const timestamp = formatICalDate(now);
+  const timezone = defaults.timezone || 'Europe/Vienna';
 
   let ical =
     'BEGIN:VCALENDAR\r\n' +
@@ -77,12 +65,12 @@ function generateICalFeed(events) {
     'METHOD:PUBLISH\r\n' +
     'X-WR-CALNAME:KINN - KI Treff Innsbruck\r\n' +
     'X-WR-CALDESC:Monatlicher KI-Austausch in Innsbruck\r\n' +
-    'X-WR-TIMEZONE:Europe/Vienna\r\n' +
+    `X-WR-TIMEZONE:${timezone}\r\n` +
     'REFRESH-INTERVAL;VALUE=DURATION:PT1H\r\n'; // Refresh every hour
 
   // Add each event
   events.forEach(event => {
-    ical += generateICalEvent(event, timestamp);
+    ical += generateICalEvent(event, timestamp, defaults);
   });
 
   ical += 'END:VCALENDAR\r\n';
@@ -94,28 +82,39 @@ function generateICalFeed(events) {
  * Generate a single iCal event
  * @param {Object} event - Event object
  * @param {string} timestamp - Current timestamp
+ * @param {Object} defaults - Default configuration
  * @returns {string} - iCal formatted event
  */
-function generateICalEvent(event, timestamp) {
-  const startDate = formatICalDate(new Date(event.start));
-  const endDate = formatICalDate(new Date(event.end));
+function generateICalEvent(event, timestamp, defaults = {}) {
+  const timezone = defaults.timezone || 'Europe/Vienna';
+  const organizer = defaults.organizer || 'treff@in.kinn.at';
+  const categories = defaults.categories || ['KI', 'AI', 'Networking'];
+
+  // Parse event dates
+  const startDate = formatICalDate(new Date(event.start || event.date + 'T' + event.startTime));
+  const endDate = formatICalDate(new Date(event.end || event.date + 'T' + event.endTime));
+
+  // Build UID from event ID or generate one
+  const uid = event.uid || event.id + '@kinn.at';
 
   return (
     'BEGIN:VEVENT\r\n' +
-    'UID:' + event.uid + '\r\n' +
+    'UID:' + uid + '\r\n' +
     'DTSTAMP:' + timestamp + '\r\n' +
-    'DTSTART;TZID=Europe/Vienna:' + startDate + '\r\n' +
-    'DTEND;TZID=Europe/Vienna:' + endDate + '\r\n' +
+    `DTSTART;TZID=${timezone}:` + startDate + '\r\n' +
+    `DTEND;TZID=${timezone}:` + endDate + '\r\n' +
     'SUMMARY:' + escapeICalText(event.title) + '\r\n' +
     'DESCRIPTION:' + escapeICalText(event.description) + '\r\n' +
     'LOCATION:' + escapeICalText(event.location) + '\r\n' +
-    'URL:' + event.url + '\r\n' +
-    'STATUS:CONFIRMED\r\n' +
+    'URL:' + (event.url || 'https://kinn.at') + '\r\n' +
+    'ORGANIZER;CN=KINN:mailto:' + organizer + '\r\n' +
+    'CATEGORIES:' + categories.join(',') + '\r\n' +
+    'STATUS:' + (event.status || 'CONFIRMED').toUpperCase() + '\r\n' +
     'SEQUENCE:0\r\n' +
     'BEGIN:VALARM\r\n' +
     'TRIGGER:-PT24H\r\n' + // Reminder 24 hours before
     'ACTION:DISPLAY\r\n' +
-    'DESCRIPTION:KINN Event morgen um ' + new Date(event.start).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Vienna' }) + ' Uhr\r\n' +
+    'DESCRIPTION:KINN Event morgen um ' + new Date(event.start || event.date + 'T' + event.startTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: timezone }) + ' Uhr\r\n' +
     'END:VALARM\r\n' +
     'END:VEVENT\r\n'
   );
