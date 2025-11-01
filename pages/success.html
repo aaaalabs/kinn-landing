@@ -344,6 +344,7 @@
   <script>
     const params = new URLSearchParams(window.location.search);
     const status = params.get('status');
+    const profileToken = params.get('token');
     const content = document.getElementById('content');
 
     if (status === 'confirmed') {
@@ -381,6 +382,18 @@
           <p style="margin-top: 1rem;"><strong>Was ist eine Subscription?</strong><br>
           Neue Events erscheinen automatisch in deinem Kalender – keine weiteren Emails nötig.</p>
         </details>
+
+        ${profileToken ? `
+          <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
+            <h3 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.75rem;">Profil & Einstellungen</h3>
+            <p style="font-size: 0.9375rem; color: #6B6B6B; margin-bottom: 1.5rem;">
+              Passe deine Einstellungen an oder verwalte deine Email-Benachrichtigungen.
+            </p>
+            <a href="/pages/profil.html?token=${profileToken}" class="cta-button secondary-button">
+              Zu meinem Profil
+            </a>
+          </div>
+        ` : ''}
 
         <a href="/" class="cta-button secondary-button" style="margin-top: 2rem;">
           Zurück zur Startseite
@@ -420,6 +433,18 @@
             <li>Füge die URL ein und bestätige</li>
           </ol>
         </details>
+
+        ${profileToken ? `
+          <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
+            <h3 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.75rem;">Profil & Einstellungen</h3>
+            <p style="font-size: 0.9375rem; color: #6B6B6B; margin-bottom: 1.5rem;">
+              Passe deine Einstellungen an oder verwalte deine Email-Benachrichtigungen.
+            </p>
+            <a href="/pages/profil.html?token=${profileToken}" class="cta-button secondary-button">
+              Zu meinem Profil
+            </a>
+          </div>
+        ` : ''}
 
         <a href="/" class="cta-button secondary-button" style="margin-top: 2rem;">
           Zurück zur Startseite

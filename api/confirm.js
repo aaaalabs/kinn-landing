@@ -1,5 +1,5 @@
 import { verifyConfirmToken, generateProfileToken } from './utils/tokens.js';
-import { addSubscriber, isSubscribed, updateUserPreferences } from './utils/redis.js';
+import { addSubscriber, isSubscribed, updateUserPreferences, getUserPreferences } from './utils/redis.js';
 import { generateBrandedError, ErrorTemplates } from './utils/branded-error.js';
 import { Resend } from 'resend';
 
@@ -172,7 +172,16 @@ export default async function handler(req, res) {
 
     if (alreadySubscribed) {
       console.log(`[CONFIRM] Email already subscribed: ${email} (User-Agent: ${userAgent.substring(0, 60)})`);
-      return res.redirect(`/pages/success.html?status=already-subscribed&email=${encodeURIComponent(email)}`);
+
+      // Get existing profile token from user preferences
+      const existingPrefs = await getUserPreferences(email);
+      const existingToken = existingPrefs?.profileToken;
+
+      if (existingToken) {
+        return res.redirect(`/pages/success.html?status=already-subscribed&email=${encodeURIComponent(email)}&token=${existingToken}`);
+      } else {
+        return res.redirect(`/pages/success.html?status=already-subscribed&email=${encodeURIComponent(email)}`);
+      }
     }
 
     // Add to Redis subscribers set
@@ -216,8 +225,8 @@ export default async function handler(req, res) {
       console.error('[CONFIRM] Welcome email failed:', error.message);
     });
 
-    // Redirect to success page (don't wait for email)
-    return res.redirect(`/pages/success.html?status=confirmed&email=${encodeURIComponent(email)}`);
+    // Redirect to success page with profile token (don't wait for email)
+    return res.redirect(`/pages/success.html?status=confirmed&email=${encodeURIComponent(email)}&token=${profileToken}`);
 
   } catch (error) {
     // [EH01] Contextual logging
