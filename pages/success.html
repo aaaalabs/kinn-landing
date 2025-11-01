@@ -154,10 +154,12 @@
         '<div class="message-box">' +
           '<p><strong>Nächster Schritt: Kalender abonnieren</strong></p>' +
           '<p>Abonniere den KINN Event-Kalender und verpasse keinen KI Treff mehr.</p>' +
-          '<p>Funktioniert mit Google Calendar, Apple Kalender, Outlook und allen gängigen Kalender-Apps.</p>' +
         '</div>' +
-        '<a href="/api/calendar.ics" class="cta-button">📅 Kalender abonnieren</a>' +
-        '<a href="/" class="cta-button" style="background: #f5f5f5;">Später</a>';
+        '<div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">' +
+          '<a href="https://calendar.google.com/calendar/r?cid=webcal://kinn.at/api/calendar.ics" target="_blank" class="cta-button">📅 Zu Google Calendar hinzufügen</a>' +
+          '<a href="/api/calendar.ics" class="cta-button" style="background: #f5f5f5;">📱 Andere Kalender (Apple, Outlook, etc.)</a>' +
+        '</div>' +
+        '<a href="/" class="cta-button" style="background: transparent; box-shadow: none; margin-top: 1rem;">Später</a>';
     } else {
       // Fallback
       content.innerHTML =
