@@ -6,7 +6,7 @@ import { enforceRateLimit } from './utils/rate-limiter.js';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
- * Opt-In Email Template
+ * Opt-In Email Template (HTML)
  * Optimized for deliverability based on German best practices:
  * - Simple HTML (no images, minimal styling)
  * - No emojis (spam trigger in transactional emails)
@@ -81,6 +81,41 @@ function generateOptInEmail(confirmUrl) {
   </table>
 </body>
 </html>
+  `.trim();
+}
+
+/**
+ * Opt-In Email Template (Plain Text)
+ * Plain text version for better deliverability and spam filter compatibility
+ */
+function generateOptInEmailPlainText(confirmUrl) {
+  return `
+Hallo,
+
+vielen Dank für deine Anmeldung zum KINN KI Treff Innsbruck!
+
+Bitte bestätige deine E-Mail-Adresse:
+
+${confirmUrl}
+
+Warum dieser Schritt?
+Damit stellen wir sicher, dass nur du Zugriff auf deine Anmeldung hast und niemand unbefugt deine E-Mail-Adresse verwendet.
+
+Dieser Bestätigungslink ist 48 Stunden gültig.
+
+Viele Grüße,
+Thomas
+KINN
+
+---
+
+KINN – KI Treff Innsbruck
+Thomas Seiger
+E-Mail: thomas@kinn.at
+Web: https://kinn.at
+
+Datenschutz: https://kinn.at/pages/privacy.html
+Impressum: https://kinn.at/pages/agb.html
   `.trim();
 }
 
@@ -173,8 +208,9 @@ export default async function handler(req, res) {
     const confirmToken = generateConfirmToken(email);
     const confirmUrl = `${process.env.BASE_URL || 'https://kinn.at'}/api/confirm?token=${confirmToken}`;
 
-    // Generate HTML email
+    // Generate HTML and Plain Text emails
     const optInHtml = generateOptInEmail(confirmUrl);
+    const optInText = generateOptInEmailPlainText(confirmUrl);
 
     // Send TWO emails in parallel for speed
     const [adminEmail, userEmail] = await Promise.all([
@@ -201,6 +237,11 @@ export default async function handler(req, res) {
         to: email.trim(),
         subject: 'Noch ein Klick: Deine Newsletter-Anmeldung bestätigen',
         html: optInHtml,
+        text: optInText,
+        headers: {
+          'List-Unsubscribe': `<mailto:thomas@kinn.at?subject=Abmelden>, <https://kinn.at/pages/privacy.html>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
       }),
     ]);
 

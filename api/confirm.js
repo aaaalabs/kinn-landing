@@ -7,7 +7,7 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
- * Generate Welcome Email
+ * Generate Welcome Email (HTML)
  * Optimized for deliverability based on German best practices:
  * - Simple HTML structure
  * - Personal greeting and sign-off
@@ -92,6 +92,51 @@ function generateWelcomeEmail(profileToken) {
   </table>
 </body>
 </html>
+  `.trim();
+}
+
+/**
+ * Generate Welcome Email (Plain Text)
+ * Plain text version for better deliverability and spam filter compatibility
+ */
+function generateWelcomeEmailPlainText(profileToken) {
+  const baseUrl = process.env.BASE_URL || 'https://kinn.at';
+  const calendarPageUrl = `${baseUrl}/pages/success.html?status=confirmed&token=${profileToken}`;
+  const profilePageUrl = `${baseUrl}/pages/profil.html?token=${profileToken}`;
+
+  return `
+Hallo,
+
+deine E-Mail-Adresse ist jetzt bestätigt!
+
+Nächster Schritt: Abonniere den Event-Kalender, um keinen KI Treff in Innsbruck zu verpassen.
+
+Kalender abonnieren:
+${calendarPageUrl}
+
+Was ist eine Kalender-Subscription?
+Neue Events erscheinen automatisch in deinem Kalender – keine weiteren Emails nötig.
+
+---
+
+Optional: Füll dein KINN Profil aus (5 Min), damit ich dich beim Stammtisch mit passenden Leuten matchen kann.
+
+Profil: ${profilePageUrl}
+
+Viele Grüße,
+Thomas
+KINN
+
+---
+
+KINN – KI Treff Innsbruck
+Thomas Seiger
+E-Mail: thomas@kinn.at
+Web: https://kinn.at
+
+Datenschutz: https://kinn.at/pages/privacy.html
+Impressum: https://kinn.at/pages/agb.html
+Abmelden: ${profilePageUrl}
   `.trim();
 }
 
@@ -198,6 +243,11 @@ export default async function handler(req, res) {
         to: email.trim(),
         subject: 'Willkommen beim KINN',
         html: generateWelcomeEmail(profileToken),
+        text: generateWelcomeEmailPlainText(profileToken),
+        headers: {
+          'List-Unsubscribe': `<mailto:thomas@kinn.at?subject=Abmelden>, <${process.env.BASE_URL || 'https://kinn.at'}/pages/profil.html?token=${profileToken}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
       });
       console.log(`[CONFIRM] Welcome email sent: ${emailResult.id}`);
     } catch (emailError) {
