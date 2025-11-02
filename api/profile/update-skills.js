@@ -61,7 +61,7 @@ export default async function handler(req, res) {
         updatedAt: new Date().toISOString()
       };
 
-      await redis.set(profileKey, JSON.stringify(newProfile));
+      await redis.set(profileKey, newProfile);
 
       console.log(`[AUTO-SAVE-SKILLS] Created profile with ${skills.length} skills for ${email}`);
       return res.status(200).json({
@@ -71,12 +71,16 @@ export default async function handler(req, res) {
     }
 
     // Update existing profile - only skills in supply
-    const profile = JSON.parse(existingProfile);
+    // Note: Upstash Redis automatically handles JSON serialization
+    const profile = typeof existingProfile === 'string'
+      ? JSON.parse(existingProfile)
+      : existingProfile;
+
     profile.supply = profile.supply || {};
     profile.supply.skills = skills;
     profile.updatedAt = new Date().toISOString();
 
-    await redis.set(profileKey, JSON.stringify(profile));
+    await redis.set(profileKey, profile);
 
     console.log(`[AUTO-SAVE-SKILLS] Updated ${skills.length} skills for ${email}`);
 
