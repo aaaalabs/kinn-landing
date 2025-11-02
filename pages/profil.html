@@ -171,6 +171,35 @@
       line-height: 1.6;
     }
 
+    /* Welcome Card with Dismiss */
+    .welcome-card {
+      position: relative;
+    }
+
+    .dismiss-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      color: #999;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      line-height: 1;
+      transition: all 0.2s ease;
+      border-radius: 4px;
+    }
+
+    .dismiss-btn:hover {
+      color: #333;
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .dismiss-btn:active {
+      transform: scale(0.95);
+    }
+
     .meta {
       font-size: 0.875rem;
       color: #999;
@@ -1415,6 +1444,24 @@
       }
     }
 
+    function dismissWelcome() {
+      // Set localStorage flag
+      localStorage.setItem('kinn_dashboard_intro_dismissed', 'true');
+
+      // Animate fade-out
+      const welcomeCard = document.getElementById('welcome-card');
+      if (welcomeCard) {
+        welcomeCard.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        welcomeCard.style.opacity = '0';
+        welcomeCard.style.transform = 'scale(0.95)';
+
+        // Remove from DOM after animation
+        setTimeout(() => {
+          welcomeCard.remove();
+        }, 300);
+      }
+    }
+
     function renderDashboardTab() {
       // Check if profile is complete
       const hasName = userProfile.identity?.name && userProfile.identity.name.trim() !== '';
@@ -1424,42 +1471,42 @@
 
       const userName = userProfile.identity?.name || userProfile.email.split('@')[0];
 
-      // Onboarding Card (context-dependent)
-      const onboardingCard = isComplete ? `
-        <div class="card">
-          <h2>🎉 Profil komplett!</h2>
-          <p style="margin-bottom: 1rem;">Was du jetzt tun kannst:</p>
-          <div style="color: #666; line-height: 1.8;">
-            → Kommende Events ansehen<br>
-            → Kalender abonnieren<br>
-            → Bald: Passende KINN'der finden
-          </div>
-        </div>
-      ` : `
-        <div class="card" style="border-left: 4px solid #5ED9A6;">
-          <h2>👋 Hey ${userName}!</h2>
-          <p style="margin-bottom: 1.5rem;">Damit ich dich mit den richtigen Leuten matchen kann, füll bitte dein Profil aus:</p>
+      // Check if user has dismissed the welcome intro
+      const introDismissed = localStorage.getItem('kinn_dashboard_intro_dismissed') === 'true';
 
-          <div style="background: rgba(94, 217, 166, 0.08); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-            <div style="margin-bottom: 0.5rem; color: ${hasName ? '#059669' : '#666'};">
-              ${hasName ? '✅' : '☐'} Name & LinkedIn
-            </div>
-            <div style="margin-bottom: 0.5rem; color: ${hasSkills ? '#059669' : '#666'};">
-              ${hasSkills ? '✅' : '☐'} Skills auswählen (bis zu 20)
-            </div>
-            <div style="color: ${hasExperience ? '#059669' : '#666'};">
-              ${hasExperience ? '✅' : '☐'} Erfahrung & Situation
-            </div>
+      // Welcome Card (community-first, dismissable)
+      const welcomeCard = introDismissed ? '' : `
+        <div class="card welcome-card" style="border-left: 4px solid #5ED9A6;" id="welcome-card">
+          <button class="dismiss-btn" onclick="dismissWelcome()" aria-label="Schließen">×</button>
+
+          <h2>🤝 Willkommen bei KINN!</h2>
+          <p style="margin-bottom: 1.5rem;">KINN bringt AI Devs, Freelancer und Studenten in Tirol zusammen.</p>
+
+          <div style="color: #666; line-height: 1.8; margin-bottom: 1.5rem;">
+            → Komm zum nächsten Stammtisch<br>
+            → Tausch dich mit Gleichgesinnten aus<br>
+            → Finde Projektpartner, Jobs oder Mentoren
           </div>
 
-          <button onclick="switchTab('profil')" class="cta-button" style="border: none; cursor: pointer;">
-            Profil jetzt ausfüllen →
-          </button>
+          <p style="font-size: 0.875rem; color: #999;">
+            Optional: Profil ausfüllen für bessere Matches beim Event
+          </p>
         </div>
       `;
 
+      // Subtle profile hint (only if profile incomplete AND welcome dismissed)
+      const profileHint = (introDismissed && !isComplete) ? `
+        <div class="card" style="background: rgba(94, 217, 166, 0.05); border-left: 3px solid #5ED9A6;">
+          <p style="margin-bottom: 1rem;">💡 <strong>Tipp:</strong> Füll dein Profil aus für bessere Matches beim Stammtisch</p>
+          <button onclick="switchTab('profil')" class="cta-button" style="border: none; cursor: pointer; font-size: 0.875rem; padding: 0.75rem 1.5rem;">
+            Zum Profil →
+          </button>
+        </div>
+      ` : '';
+
       return `
-        ${onboardingCard}
+        ${welcomeCard}
+        ${profileHint}
 
         <div class="card">
           <h2>Kommende Events</h2>
