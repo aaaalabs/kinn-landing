@@ -1379,7 +1379,7 @@
 
               <!-- Domain Filters (Apple-inspired) -->
               <div class="domain-filters">
-                <button class="domain-chip ${activeDomains.includes('all') ? 'active' : ''}" data-domain="all" onclick="toggleDomainFilter('all')">
+                <button type="button" class="domain-chip ${activeDomains.includes('all') ? 'active' : ''}" data-domain="all" onclick="toggleDomainFilter('all')">
                   All <span class="count">147</span>
                 </button>
                 ${Object.entries(DOMAIN_MAPPING).map(([domainKey, domain]) => {
@@ -1389,6 +1389,7 @@
                   const isActive = activeDomains.includes(domainKey);
                   return `
                     <button
+                      type="button"
                       class="domain-chip ${isActive ? 'active' : ''}"
                       data-domain="${domainKey}"
                       style="--domain-color: ${domain.color}"
