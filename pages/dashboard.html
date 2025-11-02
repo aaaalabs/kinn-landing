@@ -405,6 +405,8 @@
       getSessionToken
     } from '/public/js/auth.js';
 
+    import { initPWAInstallPrompt } from '/public/js/pwa-install.js';
+
     // Check session on page load
     const session = getSession();
 
@@ -547,6 +549,9 @@
 
     // Load events on page load
     loadEvents();
+
+    // Initialize PWA install prompts
+    initPWAInstallPrompt();
   </script>
 </body>
 </html>
