@@ -1448,20 +1448,24 @@
               </p>
               <div class="radio-group">
                 <div class="radio-option">
-                  <input type="radio" id="avail-fulltime" name="availability" value="fulltime" ${supply.availability === 'fulltime' ? 'checked' : ''}>
-                  <label for="avail-fulltime">Vollzeit angestellt & offen</label>
+                  <input type="radio" id="avail-employed" name="availability" value="employed" ${['fulltime', 'employed', 'passive'].includes(supply.availability) ? 'checked' : ''}>
+                  <label for="avail-employed">Vollzeit angestellt</label>
                 </div>
                 <div class="radio-option">
-                  <input type="radio" id="avail-freelance" name="availability" value="freelance" ${supply.availability === 'freelance' ? 'checked' : ''}>
-                  <label for="avail-freelance">Freelance</label>
+                  <input type="radio" id="avail-freelancer" name="availability" value="freelancer" ${['freelance', 'freelancer'].includes(supply.availability) ? 'checked' : ''}>
+                  <label for="avail-freelancer">Freelancer / Selbstständig</label>
                 </div>
                 <div class="radio-option">
-                  <input type="radio" id="avail-sideproject" name="availability" value="sideproject" ${supply.availability === 'sideproject' ? 'checked' : ''}>
-                  <label for="avail-sideproject">Side Projects</label>
+                  <input type="radio" id="avail-student" name="availability" value="student" ${supply.availability === 'student' ? 'checked' : ''}>
+                  <label for="avail-student">Student / Lernend</label>
                 </div>
                 <div class="radio-option">
-                  <input type="radio" id="avail-passive" name="availability" value="passive" ${supply.availability === 'passive' ? 'checked' : ''}>
-                  <label for="avail-passive">Nur Networking</label>
+                  <input type="radio" id="avail-between-jobs" name="availability" value="between-jobs" ${supply.availability === 'between-jobs' ? 'checked' : ''}>
+                  <label for="avail-between-jobs">Zwischen Jobs</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="avail-side-projects" name="availability" value="side-projects" ${['sideproject', 'side-projects'].includes(supply.availability) ? 'checked' : ''}>
+                  <label for="avail-side-projects">Side Projects / Hobbies</label>
                 </div>
               </div>
             </div>
@@ -1520,41 +1524,19 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Branchen</label>
-              <div class="checkbox-group">
-                <div class="checkbox-option">
-                  <input type="checkbox" id="ind-startup" name="industries" value="startup" ${(demand.industries || []).includes('startup') ? 'checked' : ''}>
-                  <label for="ind-startup">Startup</label>
-                </div>
-                <div class="checkbox-option">
-                  <input type="checkbox" id="ind-corporate" name="industries" value="corporate" ${(demand.industries || []).includes('corporate') ? 'checked' : ''}>
-                  <label for="ind-corporate">Corporate</label>
-                </div>
-                <div class="checkbox-option">
-                  <input type="checkbox" id="ind-agency" name="industries" value="agency" ${(demand.industries || []).includes('agency') ? 'checked' : ''}>
-                  <label for="ind-agency">Agency</label>
-                </div>
-                <div class="checkbox-option">
-                  <input type="checkbox" id="ind-research" name="industries" value="research" ${(demand.industries || []).includes('research') ? 'checked' : ''}>
-                  <label for="ind-research">Research</label>
-                </div>
-                <div class="checkbox-option">
-                  <input type="checkbox" id="ind-opensource" name="industries" value="opensource" ${(demand.industries || []).includes('opensource') ? 'checked' : ''}>
-                  <label for="ind-opensource">Open Source</label>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-group">
               <label class="form-label">Wie aktiv?</label>
               <div class="radio-group">
                 <div class="radio-option">
-                  <input type="radio" id="search-active" name="activeSearch" value="true" ${demand.activeSearch === true ? 'checked' : ''}>
-                  <label for="search-active">Ja, aktiv auf Suche</label>
+                  <input type="radio" id="search-active" name="activeSearch" value="active" ${demand.activeSearch === 'active' || demand.activeSearch === true ? 'checked' : ''}>
+                  <label for="search-active">Aktiv suchend (bewerbe mich gerade)</label>
                 </div>
                 <div class="radio-option">
-                  <input type="radio" id="search-passive" name="activeSearch" value="false" ${demand.activeSearch === false ? 'checked' : ''}>
-                  <label for="search-passive">Passiv offen / Nur Networking</label>
+                  <input type="radio" id="search-passive" name="activeSearch" value="passive" ${demand.activeSearch === 'passive' ? 'checked' : ''}>
+                  <label for="search-passive">Passiv offen (höre mir Angebote an)</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="search-networking" name="activeSearch" value="networking-only" ${demand.activeSearch === 'networking-only' || demand.activeSearch === false ? 'checked' : ''}>
+                  <label for="search-networking">Nur Networking (nichts Konkretes)</label>
                 </div>
               </div>
             </div>

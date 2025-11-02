@@ -59,10 +59,14 @@ export default async function handler(req, res) {
     }
 
     if (supply) {
+      // availability: accept both old and new values for backward compatibility
+      const validAvailability = ['fulltime', 'freelance', 'sideproject', 'passive', 'employed', 'freelancer', 'student', 'between-jobs', 'side-projects'];
+      const availability = validAvailability.includes(supply.availability) ? supply.availability : undefined;
+
       profileData.supply = {
         skills: Array.isArray(supply.skills) ? supply.skills.map(s => s.toLowerCase().trim()) : undefined,
         experience: supply.experience || undefined,
-        availability: supply.availability || undefined,
+        availability,
         canOffer: Array.isArray(supply.canOffer) ? supply.canOffer.map(o => o.toLowerCase().trim()) : undefined
       };
       // Remove undefined fields
@@ -72,10 +76,18 @@ export default async function handler(req, res) {
     }
 
     if (demand) {
+      // activeSearch: accept both boolean (legacy) and string (new format)
+      let activeSearch = undefined;
+      if (typeof demand.activeSearch === 'boolean') {
+        activeSearch = demand.activeSearch; // Keep legacy boolean for backward compatibility
+      } else if (typeof demand.activeSearch === 'string' && ['active', 'passive', 'networking-only'].includes(demand.activeSearch)) {
+        activeSearch = demand.activeSearch; // New string format
+      }
+
       profileData.demand = {
         seeking: Array.isArray(demand.seeking) ? demand.seeking.map(s => s.toLowerCase().trim()) : undefined,
         industries: Array.isArray(demand.industries) ? demand.industries.map(i => i.toLowerCase().trim()) : undefined,
-        activeSearch: typeof demand.activeSearch === 'boolean' ? demand.activeSearch : undefined,
+        activeSearch,
         interests: demand.interests?.trim() || undefined
       };
       // Remove undefined fields

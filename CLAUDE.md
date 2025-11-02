@@ -202,19 +202,20 @@ Event {
   supply: {
     skills: Array<string>,           // UI: Multi-select skill badges
     experience: string,              // junior|mid|senior|lead
-    availability: string,            // UI Label: "Meine aktuelle Situation"
-                                     // Values: fulltime|freelance|sideproject|passive
+    availability: string,            // UI Label: "Meine aktuelle Situation" (pure status, no intent)
+                                     // NEW values: employed|freelancer|student|between-jobs|side-projects
+                                     // LEGACY values (still accepted): fulltime|freelance|sideproject|passive
     canOffer: Array<string>          // UI Label: "Ich biete an"
                                      // Values: mentoring|code-review|workshop|projects
   },
   demand: {
     seeking: Array<string>,          // UI Label: "Offen für"
                                      // Values: job|freelance|cofounder|collaboration|learning
-    industries: Array<string>,       // startup|corporate|agency|research|opensource
-    activeSearch: boolean,           // UI Label: "Wie aktiv?"
-                                     // true = "Ja, aktiv auf Suche"
-                                     // false = "Passiv offen / Nur Networking"
-    interests: string                // Free-text field
+    activeSearch: boolean | string,  // UI Label: "Wie aktiv?" (3 options)
+                                     // NEW values: "active"|"passive"|"networking-only"
+                                     // LEGACY values (still accepted): true (→active) | false (→networking-only)
+    interests: string                // Free-text field (optional)
+    // NOTE: "industries" field removed - skill-based matching is sufficient
   },
   preferences: { privacy: { showInDirectory, allowMatching } },
   createdAt: ISO8601,
