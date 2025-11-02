@@ -1093,7 +1093,7 @@
     const DOMAIN_MAPPING = {
       'creative': {
         emoji: '🎨',
-        label: 'Creative',
+        label: 'Kreativ',
         color: '#9B87F5',
         categories: [
           'GENERATIVE KI - BILD',
@@ -1105,7 +1105,7 @@
       },
       'language': {
         emoji: '💬',
-        label: 'Language',
+        label: 'Sprache',
         color: '#5ED9A6',
         categories: [
           'LLMs',
@@ -1138,7 +1138,7 @@
       },
       'applied': {
         emoji: '🎯',
-        label: 'Applied',
+        label: 'Anwendung',
         color: '#FF6B6B',
         categories: [
           'MARKETING KI',
@@ -1148,7 +1148,7 @@
       },
       'research': {
         emoji: '🔬',
-        label: 'Research',
+        label: 'Forschung',
         color: '#FBBF24',
         categories: [
           'KI-SICHERHEIT & ETHIK'
@@ -1464,7 +1464,7 @@
               <!-- Domain Filters (Apple-inspired) -->
               <div class="domain-filters">
                 <button type="button" class="domain-chip ${activeDomains.includes('all') ? 'active' : ''}" data-domain="all" onclick="toggleDomainFilter('all')">
-                  All <span class="count">95</span>
+                  Alle <span class="count">95</span>
                 </button>
                 ${Object.entries(DOMAIN_MAPPING).map(([domainKey, domain]) => {
                   const skillCount = domain.categories.reduce((sum, cat) => {
