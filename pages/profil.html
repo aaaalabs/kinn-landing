@@ -656,10 +656,10 @@
       opacity: 0.9;
     }
 
-    /* Flat Skills Grid (replacing accordion) */
+    /* Flat Skills Grid (content-aware width - Apple-style) */
     .skills-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      display: flex;
+      flex-wrap: wrap;
       gap: 0.625rem;
       margin-top: 1rem;
       animation: fadeInGrid 0.4s ease-out;
@@ -678,7 +678,6 @@
 
     @media (max-width: 768px) {
       .skills-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
         gap: 0.5rem;
       }
     }
@@ -688,6 +687,8 @@
       position: relative;
       padding-left: 1.5rem;
       justify-content: flex-start;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .skills-grid .chip::before {
