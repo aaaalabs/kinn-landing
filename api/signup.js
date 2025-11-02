@@ -27,7 +27,7 @@ function generateOptInEmail(confirmUrl) {
     <tr>
       <td style="padding: 20px;">
 
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Hallo,</p>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Grüß dich,</p>
 
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
           vielen Dank für deine Anmeldung zum <strong>KI Treff Innsbruck</strong>!
@@ -57,9 +57,8 @@ function generateOptInEmail(confirmUrl) {
         </p>
 
         <p style="font-size: 16px; line-height: 1.6; margin-top: 32px;">
-          Viele Grüße,<br>
-          <strong>Thomas</strong><br>
-          KINN
+          <strong>Viele Grüße,</strong><br>
+          Thomas
         </p>
 
         <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 32px 0;">
@@ -90,7 +89,7 @@ function generateOptInEmail(confirmUrl) {
  */
 function generateOptInEmailPlainText(confirmUrl) {
   return `
-Hallo,
+Grüß dich,
 
 vielen Dank für deine Anmeldung zum KI Treff Innsbruck!
 
@@ -105,7 +104,6 @@ Dieser Bestätigungslink ist 48 Stunden gültig.
 
 Viele Grüße,
 Thomas
-KINN
 
 ---
 
@@ -233,7 +231,7 @@ export default async function handler(req, res) {
 
       // 2. Opt-in confirmation to user (optimized for deliverability)
       resend.emails.send({
-        from: (process.env.SENDER_EMAIL || 'Thomas (von KINN) <thomas@kinn.at>').trim(),
+        from: (process.env.SENDER_EMAIL || 'Thomas @ KINN <thomas@kinn.at>').trim(),
         to: email.trim(),
         subject: 'Noch ein Klick: Deine Newsletter-Anmeldung bestätigen',
         html: optInHtml,
