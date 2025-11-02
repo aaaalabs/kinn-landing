@@ -8,6 +8,13 @@
 
 ## 🔄 Recent Changes
 
+**2025-02-02:** Gravatar Integration - Zero-Friction Profile Pictures
+- Automatic avatar via Gravatar (MD5 email hash)
+- Elegant fallback: KINN Mint initials avatar
+- Zero signup friction (no upload needed)
+- Privacy-first: User controls via gravatar.com
+- Philosophy: "Skills > Aussehen" - optional not required
+
 **2025-02-02:** Redis Schema v2.1 - Key Renaming for Clarity
 - `xp:*` → `level:*` (more professional, less gaming-associated)
 - `status:*` → `work:*` (more precise, avoids namespace collision)
@@ -47,12 +54,13 @@
 - [x] Skill Selection (95 AI Skills mit Domain-Filters)
 - [x] Supply/Demand Matching Framework
 - [x] Auto-save Skills
+- [x] Gravatar Integration (automatic profile pictures with initials fallback)
 
 #### 3. Data Infrastructure
-- [x] Redis Schema v2 (ULTRA-SIMPLE)
+- [x] Redis Schema v2.1 (ULTRA-SIMPLE)
   - `skill:*` - Skill Matching
-  - `xp:*` - Experience Level (junior, mid, senior, lead)
-  - `status:*` - Availability (employed, freelancer, student, etc.)
+  - `level:*` - Experience Level (junior, mid, senior, lead)
+  - `work:*` - Work Status (employed, freelancer, student, etc.)
   - `loc:*` - Location (tirol, online, all)
 - [x] Profile Storage (JSON Hashes)
 - [x] Match Hints System

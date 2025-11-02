@@ -68,7 +68,26 @@
       filter: drop-shadow(0 4px 16px rgba(0,0,0,0.06));
     }
 
-    /* Status indicator */
+    /* Profile Avatar (Gravatar + Initials Fallback) */
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+      border-radius: 50%;
+      display: block;
+      box-shadow: 0 8px 24px rgba(94, 217, 166, 0.25);
+      animation: fadeInScale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      object-fit: cover;
+      border: 3px solid rgba(94, 217, 166, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .profile-avatar:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 32px rgba(94, 217, 166, 0.35);
+    }
+
+    /* Status indicator (legacy - kept for error states) */
     .status-indicator {
       width: 64px;
       height: 64px;
@@ -1115,6 +1134,13 @@
       getSessionToken
     } from '/public/js/auth.js';
 
+    // Import Gravatar utilities
+    import {
+      getGravatarUrl,
+      getInitialsAvatarUrl,
+      createAvatarElement
+    } from '/public/js/gravatar.js';
+
     // Extract token from URL (for direct links from emails) or session (for dashboard redirects)
     // Both use the same token type (30 days validity)
     const params = new URLSearchParams(window.location.search);
@@ -1320,12 +1346,7 @@
     function renderProfile() {
       // Tab Navigation + Content based on active tab
       content.innerHTML = `
-        <div class="status-indicator">
-          <svg viewBox="0 0 24 24">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-        </div>
+        <div id="avatarContainer" style="text-align: center;"></div>
 
         <h1>Mein KINN Profil</h1>
         <p class="subtitle">${userProfile.email}</p>
@@ -1350,6 +1371,14 @@
           ${activeTab === 'dashboard' ? renderDashboardTab() : activeTab === 'settings' ? renderSettingsTab() : renderProfilTab()}
         </div>
       `;
+
+      // Inject Gravatar avatar with initials fallback
+      const avatarContainer = document.getElementById('avatarContainer');
+      if (avatarContainer && userProfile.email) {
+        const userName = userProfile.identity?.name || userProfile.email.split('@')[0];
+        const avatar = createAvatarElement(userProfile.email, userName, 80);
+        avatarContainer.appendChild(avatar);
+      }
 
       // Initialize skill counter after rendering
       setTimeout(() => updateSkillCounter(), 0);
@@ -1407,6 +1436,14 @@
       const notificationsEnabled = userProfile.notifications?.enabled ?? true;
 
       return `
+        <div class="card">
+          <h2>Profilbild</h2>
+          <p>Dein Avatar wird automatisch via <a href="https://gravatar.com" target="_blank" rel="noopener" style="color: #5ED9A6; text-decoration: underline;">Gravatar</a> geladen.</p>
+          <p class="meta" style="margin-top: 0.5rem;">
+            Kein Gravatar? Kein Problem - wir zeigen deine Initialen im KINN Design.
+          </p>
+        </div>
+
         <div class="card">
           <h2>Email-Benachrichtigungen</h2>
           <p>Verwalte, wie wir mit dir kommunizieren.</p>
