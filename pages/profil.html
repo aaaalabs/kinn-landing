@@ -1687,9 +1687,9 @@
           c.classList.remove('selected');
         });
       } else {
-        // Check selection limit (count unique skills, not total chips)
+        // Check selection limit (count unique skills in grid only, NOT selected bar!)
         const uniqueSelectedSkills = new Set(
-          Array.from(document.querySelectorAll('.chip.selected'))
+          Array.from(document.querySelectorAll('#skillsContainer .chip.selected'))
             .map(c => c.getAttribute('data-skill'))
         );
 
@@ -1705,6 +1705,7 @@
       }
 
       updateSkillCounter();
+      autoSaveSkills(); // Auto-save nach jedem Toggle
     }
 
     // Remove skill from selected bar
@@ -1715,6 +1716,38 @@
         chip.classList.remove('selected');
       });
       updateSkillCounter();
+      autoSaveSkills(); // Auto-save nach Entfernen
+    }
+
+    // Auto-save skills to Redis (instant save, no form submit needed)
+    async function autoSaveSkills() {
+      if (!token) return;
+
+      try {
+        // Get currently selected skills (deduplicated)
+        const selectedSkills = [...new Set(
+          Array.from(document.querySelectorAll('#skillsContainer .chip.selected'))
+            .map(chip => chip.dataset.skill)
+        )];
+
+        // Save to server
+        const response = await fetch('/api/profile/update-skills', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token,
+            skills: selectedSkills
+          })
+        });
+
+        if (!response.ok) {
+          console.error('[AUTO-SAVE] Failed to save skills:', response.statusText);
+        } else {
+          console.log('[AUTO-SAVE] Skills saved:', selectedSkills.length);
+        }
+      } catch (error) {
+        console.error('[AUTO-SAVE] Error saving skills:', error);
+      }
     }
 
     function updateSkillCounter() {
