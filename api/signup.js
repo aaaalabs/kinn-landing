@@ -41,7 +41,7 @@ function generateOptInEmail(confirmUrl) {
           <tr>
             <td style="text-align: center;">
               <a href="${confirmUrl}" style="background-color: #5ED9A6; color: #000; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px; padding: 14px 32px; display: inline-block;">
-                Ja, ich möchte den Newsletter erhalten
+                Ja, ich möchte zu KI Treffs informiert werden.
               </a>
             </td>
           </tr>
