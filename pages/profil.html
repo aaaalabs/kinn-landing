@@ -1065,6 +1065,13 @@
       color: #6B6B6B;
     }
 
+    .event-tentative-notice {
+      color: #FF8C00;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+      font-weight: 500;
+    }
+
     /* Loading Spinner */
     .loading {
       text-align: center;
@@ -2414,6 +2421,7 @@
               <li class="event-item">
                 <div class="event-title">${event.title || 'KINN KI Treff'}</div>
                 <div class="event-date">${formatEventDate(event.date, event.startTime)}</div>
+                ${event.status === 'tentative' ? '<div class="event-tentative-notice">⚠️ Details stehen noch nicht fest</div>' : ''}
               </li>
             `).join('')}
           </ul>

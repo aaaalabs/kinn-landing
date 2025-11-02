@@ -128,7 +128,8 @@ export default async function handler(req, res) {
       meetingLink,
       maxCapacity,
       start,
-      end
+      end,
+      status = 'confirmed'
     } = req.body;
 
     // Validate required fields
@@ -182,7 +183,7 @@ export default async function handler(req, res) {
       endTime: endDate.toTimeString().substring(0, 5), // HH:MM
       start: startDate.toISOString(),
       end: endDate.toISOString(),
-      status: 'confirmed',
+      status: status || 'confirmed',
       rsvps: {
         yes: [],
         no: [],
