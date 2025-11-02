@@ -1081,7 +1081,25 @@
         const data = await response.json();
 
         if (response.ok) {
-          showMessage(`✅ Event-Einladungen versendet: ${data.stats.sent} erfolgreich, ${data.stats.failed} fehlgeschlagen`, 'success');
+          const { stats } = data;
+          const skippedTotal = stats.skipped.alreadyInvited + stats.skipped.notifications + stats.skipped.location;
+
+          let message = `✅ Event-Einladungen versendet!\n\n`;
+          message += `📊 Von ${stats.total} Subscribern:\n`;
+          message += `✓ ${stats.sent} versendet\n`;
+
+          if (skippedTotal > 0) {
+            message += `⊘ ${skippedTotal} übersprungen:\n`;
+            if (stats.skipped.alreadyInvited > 0) message += `  • ${stats.skipped.alreadyInvited} bereits eingeladen\n`;
+            if (stats.skipped.notifications > 0) message += `  • ${stats.skipped.notifications} notifications aus\n`;
+            if (stats.skipped.location > 0) message += `  • ${stats.skipped.location} location mismatch\n`;
+          }
+
+          if (stats.failed > 0) {
+            message += `✗ ${stats.failed} fehlgeschlagen`;
+          }
+
+          showMessage(message, 'success');
           // Reload events to show updated RSVP counts
           loadEvents();
         } else {
