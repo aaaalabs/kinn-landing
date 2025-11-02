@@ -1190,6 +1190,7 @@
 
     // State
     let userProfile = null;
+    let userEmail = null;
     let isSaving = false;
 
     // Determine active tab from URL hash (default: dashboard)
@@ -1339,6 +1340,8 @@
 
         // Save session to localStorage for persistence across page reloads
         const email = data.preferences?.email || data.profile?.email;
+        userEmail = email; // Store email in state for dashboard rendering
+
         if (email && token) {
           saveSession(token, email);
           console.log('[PROFILE] Session saved for:', email);
@@ -1389,7 +1392,7 @@
         <div id="avatarContainer" style="text-align: center;"></div>
 
         <h1>Mein KINN Profil</h1>
-        <p class="subtitle">${userProfile.email}</p>
+        <p class="subtitle">${userEmail || ''}</p>
 
         <!-- Tab Navigation -->
         <div class="tab-navigation">
@@ -1414,9 +1417,9 @@
 
       // Inject Gravatar avatar with initials fallback
       const avatarContainer = document.getElementById('avatarContainer');
-      if (avatarContainer && userProfile.email) {
-        const userName = userProfile.identity?.name || userProfile.email.split('@')[0];
-        const avatar = createAvatarElement(userProfile.email, userName, 80);
+      if (avatarContainer && userEmail) {
+        const userName = userProfile.identity?.name || (userEmail ? userEmail.split('@')[0] : 'User');
+        const avatar = createAvatarElement(userEmail, userName, 80);
         avatarContainer.appendChild(avatar);
       }
 
@@ -1470,7 +1473,7 @@
       const hasExperience = userProfile.supply?.experience;
       const isComplete = hasName && hasSkills && hasExperience;
 
-      const userName = userProfile.identity?.name || userProfile.email.split('@')[0];
+      const userName = userProfile.identity?.name || (userEmail ? userEmail.split('@')[0] : 'User');
 
       // Check if user has dismissed the welcome intro
       const introDismissed = localStorage.getItem('kinn_dashboard_intro_dismissed') === 'true';
