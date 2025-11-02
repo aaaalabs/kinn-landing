@@ -402,12 +402,29 @@
       isSessionValid,
       clearSession,
       redirectToLanding,
-      getSessionToken
+      getSessionToken,
+      saveSession
     } from '/public/js/auth.js';
 
     import { initPWAInstallPrompt } from '/public/js/pwa-install.js';
 
-    // Check session on page load
+    // Handle magic link token in URL hash FIRST (from /api/auth/login)
+    // This must happen before session validation to avoid race condition
+    const hash = window.location.hash;
+    if (hash) {
+      const params = new URLSearchParams(hash.substring(1));
+      const token = params.get('token');
+      const email = params.get('email');
+
+      if (token && email) {
+        console.log('[DASHBOARD] Saving session from magic link');
+        saveSession(token, email);
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
+    // Check session on page load (after potentially saving from URL hash)
     const session = getSession();
 
     if (!isSessionValid()) {
@@ -418,22 +435,6 @@
     // Display user email
     if (session) {
       document.getElementById('userEmail').textContent = session.email;
-    }
-
-    // Handle magic link token in URL hash (from /api/auth/login)
-    const hash = window.location.hash;
-    if (hash) {
-      const params = new URLSearchParams(hash.substring(1));
-      const token = params.get('token');
-      const email = params.get('email');
-
-      if (token && email) {
-        import('/public/js/auth.js').then(({ saveSession }) => {
-          saveSession(token, email);
-          // Clean URL
-          window.history.replaceState({}, document.title, window.location.pathname);
-        });
-      }
     }
 
     // Tab switching
