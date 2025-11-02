@@ -1,4 +1,4 @@
-import { verifyConfirmToken, generateProfileToken } from './utils/tokens.js';
+import { verifyConfirmToken, generateProfileToken, generateSessionToken } from './utils/tokens.js';
 import { addSubscriber, isSubscribed, updateUserPreferences, getUserPreferences } from './utils/redis.js';
 import { generateBrandedError, ErrorTemplates } from './utils/branded-error.js';
 import { Resend } from 'resend';
@@ -217,8 +217,9 @@ export default async function handler(req, res) {
       return res.redirect(`/pages/success.html?status=already-subscribed&email=${encodeURIComponent(email)}`);
     }
 
-    // Generate profile token for user preference management
-    const profileToken = generateProfileToken(email);
+    // Generate tokens for user
+    const profileToken = generateProfileToken(email); // For email links (30 days)
+    const sessionToken = generateSessionToken(email); // For browser session (24 hours)
 
     // Create initial user preferences in Redis
     await updateUserPreferences(email, {
@@ -239,7 +240,7 @@ export default async function handler(req, res) {
     // Send welcome email (wait for it to ensure it gets sent)
     try {
       const emailResult = await resend.emails.send({
-        from: (process.env.SENDER_EMAIL || 'Thomas (von KINN) <thomas@kinn.at>').trim(),
+        from: (process.env.SENDER_EMAIL || 'Thomas @ KINN <thomas@kinn.at>').trim(),
         to: email.trim(),
         subject: 'Willkommen beim KINN',
         html: generateWelcomeEmail(profileToken),
@@ -255,8 +256,9 @@ export default async function handler(req, res) {
       console.error('[CONFIRM] Welcome email failed:', emailError.message);
     }
 
-    // Redirect to success page with profile token
-    return res.redirect(`/pages/success.html?status=confirmed&email=${encodeURIComponent(email)}&token=${profileToken}`);
+    // Redirect to success page with both tokens
+    // Session token will be stored in localStorage for auto-login
+    return res.redirect(`/pages/success.html?status=confirmed&email=${encodeURIComponent(email)}&token=${profileToken}&sessionToken=${sessionToken}`);
 
   } catch (error) {
     // [EH01] Contextual logging

@@ -382,3 +382,130 @@ export async function getMatchHints(profile) {
     return { count: 0, hints: [] };
   }
 }
+
+// ===== RSVP Management =====
+
+/**
+ * Updates RSVP for a specific event
+ * @param {string} eventId - Event ID
+ * @param {string} email - User email address
+ * @param {string} response - RSVP response: 'yes' | 'no' | 'maybe'
+ * @returns {Promise<Object>} Updated event config
+ */
+export async function updateEventRSVP(eventId, email, response) {
+  try {
+    const normalizedEmail = email.toLowerCase();
+    const config = await getEventsConfig();
+
+    // Find the event
+    const eventIndex = config.events.findIndex(e => e.id === eventId);
+    if (eventIndex === -1) {
+      throw new Error('Event not found');
+    }
+
+    const event = config.events[eventIndex];
+
+    // Initialize rsvps if not exists
+    if (!event.rsvps) {
+      event.rsvps = { yes: [], no: [], maybe: [] };
+    }
+
+    // Remove email from all RSVP lists
+    event.rsvps.yes = event.rsvps.yes?.filter(e => e !== normalizedEmail) || [];
+    event.rsvps.no = event.rsvps.no?.filter(e => e !== normalizedEmail) || [];
+    event.rsvps.maybe = event.rsvps.maybe?.filter(e => e !== normalizedEmail) || [];
+
+    // Add to selected list
+    if (response === 'yes' || response === 'no' || response === 'maybe') {
+      event.rsvps[response].push(normalizedEmail);
+    }
+
+    // Update event in config
+    config.events[eventIndex] = event;
+
+    // Save to Redis
+    await updateEventsConfig(config);
+
+    console.log('[REDIS] RSVP updated:', eventId, normalizedEmail, response);
+    return config;
+  } catch (error) {
+    console.error('[REDIS] Failed to update RSVP:', error.message);
+    throw new Error(`Database error: ${error.message}`);
+  }
+}
+
+/**
+ * Gets RSVP statistics for an event
+ * @param {string} eventId - Event ID
+ * @returns {Promise<Object>} RSVP stats { yes: [], no: [], maybe: [], counts: {} }
+ */
+export async function getEventRSVPs(eventId) {
+  try {
+    const config = await getEventsConfig();
+    const event = config.events.find(e => e.id === eventId);
+
+    if (!event) {
+      throw new Error('Event not found');
+    }
+
+    const rsvps = event.rsvps || { yes: [], no: [], maybe: [] };
+
+    return {
+      yes: rsvps.yes || [],
+      no: rsvps.no || [],
+      maybe: rsvps.maybe || [],
+      counts: {
+        yes: rsvps.yes?.length || 0,
+        no: rsvps.no?.length || 0,
+        maybe: rsvps.maybe?.length || 0,
+        total: (rsvps.yes?.length || 0) + (rsvps.no?.length || 0) + (rsvps.maybe?.length || 0)
+      }
+    };
+  } catch (error) {
+    console.error('[REDIS] Failed to get event RSVPs:', error.message);
+    throw new Error(`Database error: ${error.message}`);
+  }
+}
+
+/**
+ * Gets subscribers filtered by RSVP status
+ * @param {string} eventId - Event ID
+ * @param {string} filter - Filter: 'all' | 'yes' | 'no' | 'maybe' | 'yes_maybe' | 'none'
+ * @returns {Promise<string[]>} Array of email addresses
+ */
+export async function getSubscribersByRSVP(eventId, filter = 'all') {
+  try {
+    const allSubscribers = await getAllSubscribers();
+
+    if (filter === 'all') {
+      return allSubscribers;
+    }
+
+    const rsvps = await getEventRSVPs(eventId);
+
+    switch (filter) {
+      case 'yes':
+        return rsvps.yes;
+
+      case 'no':
+        return rsvps.no;
+
+      case 'maybe':
+        return rsvps.maybe;
+
+      case 'yes_maybe':
+        return [...rsvps.yes, ...rsvps.maybe];
+
+      case 'none':
+        // Subscribers who haven't responded
+        const responded = new Set([...rsvps.yes, ...rsvps.no, ...rsvps.maybe]);
+        return allSubscribers.filter(email => !responded.has(email));
+
+      default:
+        return allSubscribers;
+    }
+  } catch (error) {
+    console.error('[REDIS] Failed to get subscribers by RSVP:', error.message);
+    throw new Error(`Database error: ${error.message}`);
+  }
+}

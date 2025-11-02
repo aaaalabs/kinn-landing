@@ -129,6 +129,7 @@ export default async function handler(req, res) {
       // Validate each event has required fields
       const requiredFields = ['id', 'title', 'date', 'startTime', 'endTime', 'location', 'description'];
       for (const event of events) {
+        // Check required fields
         for (const field of requiredFields) {
           if (!event[field]) {
             return res.status(400).json({
@@ -137,6 +138,42 @@ export default async function handler(req, res) {
               event
             });
           }
+        }
+
+        // Validate event type
+        if (event.type && !['online', 'in-person', 'hybrid'].includes(event.type)) {
+          return res.status(400).json({
+            error: 'Invalid event',
+            message: `Event type must be 'online', 'in-person', or 'hybrid'`,
+            event
+          });
+        }
+
+        // Validate meetingLink for online/hybrid events
+        if ((event.type === 'online' || event.type === 'hybrid') && event.meetingLink) {
+          try {
+            new URL(event.meetingLink);
+          } catch (e) {
+            return res.status(400).json({
+              error: 'Invalid event',
+              message: `Invalid meetingLink URL: ${event.meetingLink}`,
+              event
+            });
+          }
+        }
+
+        // Validate maxCapacity if present
+        if (event.maxCapacity !== undefined && (typeof event.maxCapacity !== 'number' || event.maxCapacity < 1)) {
+          return res.status(400).json({
+            error: 'Invalid event',
+            message: `maxCapacity must be a positive number`,
+            event
+          });
+        }
+
+        // Initialize rsvps if not present
+        if (!event.rsvps) {
+          event.rsvps = { yes: [], no: [], maybe: [] };
         }
       }
 

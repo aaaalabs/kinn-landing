@@ -94,3 +94,47 @@ export function verifyProfileToken(token) {
     return null;
   }
 }
+
+/**
+ * Generates a session token for authenticated dashboard access
+ * @param {string} email - User email address
+ * @returns {string} JWT token valid for 24 hours
+ */
+export function generateSessionToken(email) {
+  return jwt.sign(
+    {
+      email,
+      type: 'session',
+      timestamp: Date.now()
+    },
+    SECRET,
+    { expiresIn: '24h' } // 24 hours for security
+  );
+}
+
+/**
+ * Verifies and decodes a session token
+ * @param {string} token - JWT token to verify
+ * @returns {Object|null} Decoded token payload if valid, null if invalid/expired
+ */
+export function verifySessionToken(token) {
+  try {
+    const decoded = jwt.verify(token, SECRET);
+
+    // Ensure it's a session token
+    if (decoded.type !== 'session') {
+      console.error('[TOKENS] Invalid token type:', decoded.type);
+      return null;
+    }
+
+    return {
+      email: decoded.email,
+      timestamp: decoded.timestamp,
+      exp: decoded.exp
+    };
+  } catch (error) {
+    // Token expired, invalid signature, or malformed
+    console.error('[TOKENS] Session token verification failed:', error.message);
+    return null;
+  }
+}

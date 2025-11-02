@@ -1,4 +1,4 @@
-import { getAllSubscribers, getSubscriberCount } from '../utils/redis.js';
+import { getAllSubscribers, getSubscriberCount, getSubscribersByRSVP, getEventRSVPs } from '../utils/redis.js';
 import { enforceRateLimit } from '../utils/rate-limiter.js';
 import crypto from 'crypto';
 
@@ -6,6 +6,10 @@ import crypto from 'crypto';
  * Admin API for Subscriber Management
  *
  * GET /api/admin/subscribers - Get all subscribers
+ *   Query params:
+ *   - filter: 'all' | 'yes' | 'no' | 'maybe' | 'yes_maybe' | 'none' (default: 'all')
+ *   - event: Event ID (required if filter != 'all')
+ *   - format: 'json' | 'text' (default: 'json')
  *
  * Authentication: Bearer token via ADMIN_PASSWORD env var
  */
@@ -107,17 +111,57 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get all subscribers from Redis
-    const subscribers = await getAllSubscribers();
-    const count = await getSubscriberCount();
+    const { filter = 'all', event, format = 'json' } = req.query;
 
-    console.log('[ADMIN] Subscribers fetched:', count);
+    // Validate filter
+    const validFilters = ['all', 'yes', 'no', 'maybe', 'yes_maybe', 'none'];
+    if (!validFilters.includes(filter)) {
+      return res.status(400).json({
+        error: 'Invalid filter',
+        message: `Filter must be one of: ${validFilters.join(', ')}`
+      });
+    }
 
+    // Require event ID if filter is not 'all'
+    if (filter !== 'all' && !event) {
+      return res.status(400).json({
+        error: 'Missing event ID',
+        message: 'Event ID is required when using RSVP filters'
+      });
+    }
+
+    // Get subscribers based on filter
+    let subscribers;
+    let rsvpStats = null;
+
+    if (filter === 'all') {
+      subscribers = await getAllSubscribers();
+    } else {
+      subscribers = await getSubscribersByRSVP(event, filter);
+      // Also get RSVP stats for context
+      rsvpStats = await getEventRSVPs(event);
+    }
+
+    const count = subscribers.length;
+
+    console.log('[ADMIN] Subscribers fetched:', count, 'filter:', filter);
+
+    // Return in requested format
+    if (format === 'text') {
+      // Plain text format for copy-paste
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.status(200).send(subscribers.sort().join(', '));
+    }
+
+    // Default JSON format
     return res.status(200).json({
       success: true,
       data: {
         subscribers: subscribers.sort(), // Sort alphabetically
-        count
+        count,
+        filter,
+        eventId: event || null,
+        rsvpStats
       }
     });
 

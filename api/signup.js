@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
-import { generateConfirmToken } from './utils/tokens.js';
+import { generateConfirmToken, generateSessionToken } from './utils/tokens.js';
 import { enforceRateLimit } from './utils/rate-limiter.js';
+import { isSubscribed } from './utils/redis.js';
 
 // Initialize Resend client
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -117,6 +118,98 @@ Impressum: https://kinn.at/pages/agb.html
   `.trim();
 }
 
+/**
+ * Magic Link Email Template (HTML)
+ * For returning users who are already subscribed
+ */
+function generateMagicLinkEmail(loginUrl) {
+  return `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #ffffff; color: #333;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <tr>
+      <td style="padding: 20px;">
+
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Grüß dich,</p>
+
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
+          du bist bereits bei KINN angemeldet! Hier ist dein Login-Link:
+        </p>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin: 24px 0;">
+          <tr>
+            <td style="text-align: center;">
+              <a href="${loginUrl}" style="background-color: #5ED9A6; color: #000; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px; padding: 14px 32px; display: inline-block;">
+                Zum Dashboard
+              </a>
+            </td>
+          </tr>
+        </table>
+
+        <p style="font-size: 14px; line-height: 1.6; color: #666; margin-bottom: 32px;">
+          Dieser Link ist 24 Stunden gültig.
+        </p>
+
+        <p style="font-size: 16px; line-height: 1.6; margin-top: 32px;">
+          <strong>Viele Grüße,</strong><br>
+          Thomas
+        </p>
+
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 32px 0;">
+
+        <p style="font-size: 12px; line-height: 1.5; color: #999;">
+          <strong>KINN – KI Treff Innsbruck</strong><br>
+          Thomas Seiger<br>
+          E-Mail: thomas@kinn.at<br>
+          Web: <a href="https://kinn.at" style="color: #999;">kinn.at</a>
+        </p>
+
+        <p style="font-size: 11px; line-height: 1.5; color: #999; margin-top: 16px;">
+          <a href="https://kinn.at/pages/privacy.html" style="color: #999; text-decoration: none;">Datenschutz</a> |
+          <a href="https://kinn.at/pages/agb.html" style="color: #999; text-decoration: none;">Impressum</a>
+        </p>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+}
+
+/**
+ * Magic Link Email Template (Plain Text)
+ */
+function generateMagicLinkEmailPlainText(loginUrl) {
+  return `
+Grüß dich,
+
+du bist bereits bei KINN angemeldet! Hier ist dein Login-Link:
+
+${loginUrl}
+
+Dieser Link ist 24 Stunden gültig.
+
+Viele Grüße,
+Thomas
+
+---
+
+KINN – KI Treff Innsbruck
+Thomas Seiger
+E-Mail: thomas@kinn.at
+Web: https://kinn.at
+
+Datenschutz: https://kinn.at/pages/privacy.html
+Impressum: https://kinn.at/pages/agb.html
+  `.trim();
+}
+
 // Allowed origins for CORS
 const ALLOWED_ORIGINS = [
   'https://kinn.at',
@@ -202,58 +295,86 @@ export default async function handler(req, res) {
     // [EH01] Log for debugging (without sensitive data)
     console.log(`[SIGNUP] Processing request for domain: ${email.split('@')[1]}`);
 
-    // Generate confirmation token (48h expiry)
-    const confirmToken = generateConfirmToken(email);
-    const confirmUrl = `${process.env.BASE_URL || 'https://kinn.at'}/api/confirm?token=${confirmToken}`;
+    // Check if user is already subscribed
+    const userExists = await isSubscribed(email);
 
-    // Generate HTML and Plain Text emails
-    const optInHtml = generateOptInEmail(confirmUrl);
-    const optInText = generateOptInEmailPlainText(confirmUrl);
+    let userEmail;
 
-    // Send TWO emails in parallel for speed
-    const [adminEmail, userEmail] = await Promise.all([
-      // 1. Admin notification to treff@in.kinn.at
-      resend.emails.send({
-        from: (process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>').trim(),
-        to: (process.env.RECIPIENT_EMAIL || 'treff@in.kinn.at').trim(),
-        subject: 'Neue Anmeldung: KI Treff Verteiler',
-        html: `
-          <h2>Neue Anmeldung für den KI Treff Verteiler</h2>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Zeitstempel:</strong> ${new Date().toLocaleString('de-AT', {
-            timeZone: 'Europe/Vienna'
-          })}</p>
-          <p><strong>Status:</strong> Wartet auf Bestätigung</p>
-          <hr>
-          <p><em>Automatisch generiert von in.kinn.at</em></p>
-        `,
-      }),
+    if (userExists) {
+      // Returning user - send magic link instead of confirmation
+      console.log(`[SIGNUP] Returning user detected - sending magic link`);
 
-      // 2. Opt-in confirmation to user (optimized for deliverability)
-      resend.emails.send({
+      const sessionToken = generateSessionToken(email);
+      const loginUrl = `${process.env.BASE_URL || 'https://kinn.at'}/api/auth/login?token=${sessionToken}`;
+
+      const magicLinkHtml = generateMagicLinkEmail(loginUrl);
+      const magicLinkText = generateMagicLinkEmailPlainText(loginUrl);
+
+      userEmail = await resend.emails.send({
         from: (process.env.SENDER_EMAIL || 'Thomas @ KINN <thomas@kinn.at>').trim(),
         to: email.trim(),
-        subject: 'Noch ein Klick: Deine Newsletter-Anmeldung bestätigen',
-        html: optInHtml,
-        text: optInText,
+        subject: 'Dein KINN Login-Link',
+        html: magicLinkHtml,
+        text: magicLinkText,
         headers: {
           'List-Unsubscribe': `<mailto:thomas@kinn.at?subject=Abmelden>, <https://kinn.at/pages/privacy.html>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         },
-      }),
-    ]);
+      });
+
+    } else {
+      // New user - send confirmation email
+      console.log(`[SIGNUP] New user - sending confirmation email`);
+
+      const confirmToken = generateConfirmToken(email);
+      const confirmUrl = `${process.env.BASE_URL || 'https://kinn.at'}/api/confirm?token=${confirmToken}`;
+
+      const optInHtml = generateOptInEmail(confirmUrl);
+      const optInText = generateOptInEmailPlainText(confirmUrl);
+
+      const [adminEmail, confirmEmail] = await Promise.all([
+        // Admin notification to treff@in.kinn.at
+        resend.emails.send({
+          from: (process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>').trim(),
+          to: (process.env.RECIPIENT_EMAIL || 'treff@in.kinn.at').trim(),
+          subject: 'Neue Anmeldung: KI Treff Verteiler',
+          html: `
+            <h2>Neue Anmeldung für den KI Treff Verteiler</h2>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Zeitstempel:</strong> ${new Date().toLocaleString('de-AT', {
+              timeZone: 'Europe/Vienna'
+            })}</p>
+            <p><strong>Status:</strong> Wartet auf Bestätigung</p>
+            <hr>
+            <p><em>Automatisch generiert von in.kinn.at</em></p>
+          `,
+        }),
+
+        // Opt-in confirmation to user
+        resend.emails.send({
+          from: (process.env.SENDER_EMAIL || 'Thomas @ KINN <thomas@kinn.at>').trim(),
+          to: email.trim(),
+          subject: 'Noch ein Klick: Deine Newsletter-Anmeldung bestätigen',
+          html: optInHtml,
+          text: optInText,
+          headers: {
+            'List-Unsubscribe': `<mailto:thomas@kinn.at?subject=Abmelden>, <https://kinn.at/pages/privacy.html>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+        }),
+      ]);
+
+      userEmail = confirmEmail;
+    }
 
     // [EH01] Log success
-    console.log(`[SIGNUP] Dual emails sent - Admin: ${adminEmail.id}, User: ${userEmail.id}`);
+    console.log(`[SIGNUP] Email sent - User email ID: ${userEmail.id}${userExists ? ' (magic link)' : ' (confirmation)'}`);
 
-    // Return success response
+    // Return success response (same message for both flows for security)
     return res.status(200).json({
       success: true,
-      message: 'Anmeldung erfolgreich! Check deine Inbox für die Bestätigung.',
-      emailIds: {
-        admin: adminEmail.id,
-        user: userEmail.id,
-      }
+      message: 'Check deine Inbox für den Login-Link.',
+      isReturningUser: userExists
     });
 
   } catch (error) {
