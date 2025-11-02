@@ -784,7 +784,7 @@
 
       await new Promise(resolve => setTimeout(resolve, 100))
 
-      await typeTerminalLine(1, '01: Sending signup request to server...', 30)
+      await typeTerminalLine(1, '01: Anfrage wird gschickt...', 30)
       await new Promise(resolve => setTimeout(resolve, 200))
 
       try {
@@ -804,23 +804,23 @@
 
         // Adaptive message based on whether user is new or returning
         const message = data.isReturningUser
-          ? '02: Welcome back! Check your inbox for login link.'
-          : '02: Email sent! Check your inbox for confirmation.';
+          ? '02: Servus zurück! Login-Link kommt ins Postfach.'
+          : '02: Email is unterwegs! Schau in dein Postfach.';
 
         await typeTerminalLine(2, message, 30)
         await new Promise(resolve => setTimeout(resolve, 200))
-        await typeTerminalLine(3, '03: Press R to add another email, or ESC to close.', 30)
+        await typeTerminalLine(3, '03: Drück R für noch eine Email, oder ESC zum Schließen.', 30)
 
-        showToast('Message Sent', 'success')
+        showToast('Passt!', 'success')
 
       } catch (error) {
         console.error('[FRONTEND] Signup error:', error)
 
-        await typeTerminalLine(2, `02: ERROR - ${error.message}`, 30)
+        await typeTerminalLine(2, `02: FEHLER - ${error.message}`, 30)
         await new Promise(resolve => setTimeout(resolve, 200))
-        await typeTerminalLine(3, '03: Press R to try again, or ESC to close.', 30)
+        await typeTerminalLine(3, '03: Drück R zum nochmal versuchen, oder ESC zum Schließen.', 30)
 
-        showToast('Error: ' + error.message, 'error')
+        showToast('Fehler: ' + error.message, 'error')
       }
     }
 
