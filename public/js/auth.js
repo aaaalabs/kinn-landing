@@ -106,8 +106,8 @@ export function clearSession() {
  */
 export function redirectToDashboard() {
   if (isSessionValid()) {
-    console.log('[AUTH] Valid session found - redirecting to dashboard');
-    window.location.href = '/pages/dashboard.html';
+    console.log('[AUTH] Valid session found - redirecting to user portal');
+    window.location.href = '/pages/profil.html';
     return true;
   }
   return false;

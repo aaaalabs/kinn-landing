@@ -183,11 +183,11 @@ export default async function handler(req, res) {
 
     console.log(`[LOGIN] Valid token for ${email}`);
 
-    // Redirect to dashboard with token in URL fragment (hash)
+    // Redirect to user portal (profil.html) with token in URL fragment (hash)
     // This keeps the token client-side only (not sent to server)
-    const dashboardUrl = `/pages/dashboard.html#token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+    const portalUrl = `/pages/profil.html#token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
 
-    return res.redirect(302, dashboardUrl);
+    return res.redirect(302, portalUrl);
 
   } catch (error) {
     console.error('[LOGIN] Error processing login:', error.message);
