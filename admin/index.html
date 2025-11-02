@@ -939,17 +939,28 @@
       }
 
       // Generate ISO8601 start/end timestamps for calendar feeds and email templates
+      // Note: We interpret the time as Vienna local time (Europe/Vienna)
       try {
-        const startDate = new Date(`${event.date}T${event.startTime}:00+01:00`);
-        const endDate = new Date(`${event.date}T${event.endTime}:00+01:00`);
+        // Create date in Vienna timezone
+        // Format: 2025-11-06T18:00:00
+        const localStart = `${event.date}T${event.startTime}:00`;
+        const localEnd = `${event.date}T${event.endTime}:00`;
+
+        // Parse as local time and convert to UTC
+        // This automatically handles CET/CEST (winter/summer time)
+        const startDate = new Date(localStart);
+        const endDate = new Date(localEnd);
 
         if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
           showMessage('Ungültiges Datum oder Uhrzeit!', 'error');
           return;
         }
 
+        // Store as ISO8601 UTC timestamps
         event.start = startDate.toISOString();
         event.end = endDate.toISOString();
+
+        console.log('[SAVE-EVENT] Vienna time:', localStart, '→ UTC:', event.start);
       } catch (error) {
         showMessage('Fehler beim Generieren der Zeitstempel!', 'error');
         return;

@@ -50,10 +50,12 @@ function generateEventInviteEmail(name, event, rsvpLinks) {
   // Format date/time nicely - with defensive fallbacks
   let eventDate;
   if (event.start) {
+    // Preferred: Use ISO8601 UTC timestamp
     eventDate = new Date(event.start);
   } else if (event.date && event.startTime) {
     // Fallback: construct from date + startTime fields
-    eventDate = new Date(`${event.date}T${event.startTime}:00+01:00`); // Vienna timezone
+    // Parse as local time (assumes server/admin is in Vienna timezone)
+    eventDate = new Date(`${event.date}T${event.startTime}:00`);
   } else {
     console.error('[EMAIL-TEMPLATE] Missing date fields:', { id: event.id, start: event.start, date: event.date, startTime: event.startTime });
     eventDate = new Date(); // Last resort fallback
@@ -65,15 +67,19 @@ function generateEventInviteEmail(name, event, rsvpLinks) {
     eventDate = new Date(); // Fallback to now
   }
 
+  // Format for Austria/Vienna timezone
+  // Note: toLocaleDateString automatically converts UTC to local time
   const dateStr = eventDate.toLocaleDateString('de-AT', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-    year: 'numeric'
+    year: 'numeric',
+    timeZone: 'Europe/Vienna'
   });
   const timeStr = eventDate.toLocaleTimeString('de-AT', {
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    timeZone: 'Europe/Vienna'
   });
 
   return `
@@ -178,7 +184,7 @@ function generateEventInviteEmailPlainText(name, event, rsvpLinks) {
   if (event.start) {
     eventDate = new Date(event.start);
   } else if (event.date && event.startTime) {
-    eventDate = new Date(`${event.date}T${event.startTime}:00+01:00`);
+    eventDate = new Date(`${event.date}T${event.startTime}:00`);
   } else {
     eventDate = new Date();
   }
@@ -191,11 +197,13 @@ function generateEventInviteEmailPlainText(name, event, rsvpLinks) {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-    year: 'numeric'
+    year: 'numeric',
+    timeZone: 'Europe/Vienna'
   });
   const timeStr = eventDate.toLocaleTimeString('de-AT', {
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    timeZone: 'Europe/Vienna'
   });
 
   return `
