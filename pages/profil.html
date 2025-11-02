@@ -1134,7 +1134,8 @@
     import {
       getSession,
       isSessionValid,
-      getSessionToken
+      getSessionToken,
+      saveSession
     } from '/public/js/auth.js';
 
     // Import Gravatar utilities
@@ -1288,7 +1289,7 @@
 
       try {
         // Fetch user profile (extended with supply/demand data)
-        const response = await fetch(`/api/profile?token=${encodeURIComponent(token)}`);
+        const response = await fetch(`/api/profile/extended?token=${encodeURIComponent(token)}`);
 
         if (!response.ok) {
           if (response.headers.get('content-type')?.includes('text/html')) {
@@ -1305,7 +1306,14 @@
         }
 
         const data = await response.json();
-        userProfile = data.preferences; // The API returns { preferences: {...} }
+        userProfile = data.profile || {}; // The API returns { profile: {...}, preferences: {...} }
+
+        // Save session to localStorage for persistence across page reloads
+        const email = data.preferences?.email || data.profile?.email;
+        if (email && token) {
+          saveSession(token, email);
+          console.log('[PROFILE] Session saved for:', email);
+        }
 
         // Handle URL hash for tab navigation
         window.addEventListener('hashchange', handleHashChange);
