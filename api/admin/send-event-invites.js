@@ -11,8 +11,24 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 function generateEventInviteEmail(name, event, rsvpLinks) {
   const { yesUrl, noUrl, maybeUrl } = rsvpLinks;
 
-  // Format date/time nicely
-  const eventDate = new Date(event.start);
+  // Format date/time nicely - with defensive fallbacks
+  let eventDate;
+  if (event.start) {
+    eventDate = new Date(event.start);
+  } else if (event.date && event.startTime) {
+    // Fallback: construct from date + startTime fields
+    eventDate = new Date(`${event.date}T${event.startTime}:00+01:00`); // Vienna timezone
+  } else {
+    console.error('[EMAIL-TEMPLATE] Missing date fields:', { id: event.id, start: event.start, date: event.date, startTime: event.startTime });
+    eventDate = new Date(); // Last resort fallback
+  }
+
+  // Check if date is valid
+  if (isNaN(eventDate.getTime())) {
+    console.error('[EMAIL-TEMPLATE] Invalid date for event:', event);
+    eventDate = new Date(); // Fallback to now
+  }
+
   const dateStr = eventDate.toLocaleDateString('de-AT', {
     weekday: 'long',
     day: 'numeric',
@@ -121,7 +137,20 @@ function generateEventInviteEmail(name, event, rsvpLinks) {
 function generateEventInviteEmailPlainText(name, event, rsvpLinks) {
   const { yesUrl, noUrl, maybeUrl } = rsvpLinks;
 
-  const eventDate = new Date(event.start);
+  // Format date/time nicely - with defensive fallbacks (same as HTML version)
+  let eventDate;
+  if (event.start) {
+    eventDate = new Date(event.start);
+  } else if (event.date && event.startTime) {
+    eventDate = new Date(`${event.date}T${event.startTime}:00+01:00`);
+  } else {
+    eventDate = new Date();
+  }
+
+  if (isNaN(eventDate.getTime())) {
+    eventDate = new Date();
+  }
+
   const dateStr = eventDate.toLocaleDateString('de-AT', {
     weekday: 'long',
     day: 'numeric',
