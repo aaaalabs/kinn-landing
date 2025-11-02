@@ -1077,15 +1077,15 @@
       });
     });
 
-    // Available skills for selection (147 skills in 24 categories)
+    // Available skills for selection (95 curated skills in 21 categories)
     const SKILLS_BY_CATEGORY = {
-      'GENERATIVE AI - IMAGE': ['Midjourney', 'DALL-E 3', 'Stable Diffusion', 'ComfyUI', 'Adobe Firefly', 'Imagen', 'Ideogram', 'Leonardo.ai', 'ControlNet', 'LoRA Training', 'Inpainting/Outpainting'],
-      'GENERATIVE AI - VIDEO': ['Runway Gen-3', 'Pika Labs', 'Sora', 'Google Veo', 'Stable Video', 'Luma AI', 'Kling AI', 'HeyGen', 'Synthesia', 'Lip Sync Technology'],
-      'GENERATIVE AI - AUDIO & MUSIC': ['Suno AI', 'Udio', 'ElevenLabs', 'Voice Cloning', 'Mubert', 'AIVA', 'Text-to-Speech', 'Speech-to-Text', 'Audio Enhancement', 'Music Separation'],
-      'GENERATIVE AI - 3D': ['TripoSR', 'Shap-E', 'Point-E', 'Meshy AI', 'Luma AI Genie', 'NeRF', 'Gaussian Splatting', '3D Asset Generation'],
-      'GENERATIVE AI - TEXT & CONTENT': ['ChatGPT', 'Claude', 'Gemini', 'Jasper AI', 'Copy.ai', 'Writesonic', 'Notion AI', 'Grammarly AI', 'Content Summarization', 'Blog Post Generation', 'SEO Content', 'Technical Writing'],
-      'AI CODING & DEVELOPMENT': ['GitHub Copilot', 'Cursor', 'Claude Code', 'v0', 'Windsurf', 'Devin', 'Bolt.new', 'Replit AI', 'Tabnine', 'Codeium', 'AI Code Review', 'Bug Detection', 'Code Refactoring', 'Test Generation', 'Documentation Generation'],
-      'LLMs': ['GPT-4', 'Claude 3.5 Sonnet', 'Gemini Pro', 'Llama 3', 'Mistral AI', 'DeepSeek', 'Phi-4', 'LLM Fine-Tuning', 'Few-Shot Learning', 'Zero-Shot Learning', 'In-Context Learning', 'Token Optimization', 'Model Selection'],
+      'GENERATIVE AI - IMAGE': ['Midjourney', 'DALL-E 3', 'Stable Diffusion', 'ComfyUI', 'Adobe Firefly', 'Imagen', 'ControlNet', 'LoRA Training', 'Inpainting/Outpainting'],
+      'GENERATIVE AI - VIDEO': ['Runway Gen-3', 'Pika Labs', 'Sora', 'Google Veo', 'Stable Video', 'Luma AI', 'HeyGen', 'Synthesia', 'Lip Sync Technology'],
+      'GENERATIVE AI - AUDIO & MUSIC': ['Suno AI', 'Udio', 'ElevenLabs', 'Voice Cloning', 'Text-to-Speech', 'Speech-to-Text', 'Audio Enhancement', 'Music Separation'],
+      'GENERATIVE AI - 3D': ['Meshy AI', 'Luma AI Genie', 'NeRF', '3D Asset Generation'],
+      'GENERATIVE AI - TEXT & CONTENT': ['ChatGPT', 'Claude', 'Gemini', 'Notion AI', 'Grammarly AI', 'Content Summarization'],
+      'AI CODING & DEVELOPMENT': ['GitHub Copilot', 'Cursor', 'Claude Code', 'v0', 'Windsurf', 'Devin', 'Bolt.new', 'Replit AI', 'AI Code Review', 'Bug Detection', 'Code Refactoring', 'Test Generation', 'Documentation Generation'],
+      'LLMs': ['GPT-4', 'Claude 3.5 Sonnet', 'Gemini Pro', 'Llama 3', 'Mistral AI', 'LLM Fine-Tuning', 'Few-Shot Learning', 'Zero-Shot Learning', 'In-Context Learning', 'Token Optimization', 'Model Selection'],
       'PROMPT ENGINEERING': ['Prompt Design', 'Context Window Management', 'Few-Shot Prompting', 'Zero-Shot Prompting', 'Chain-of-Thought', 'ReAct Prompting', 'Tree of Thoughts', 'Prompt Chaining', 'Role Prompting', 'Prompt Templates', 'System Prompts'],
       'AI AGENTS & AUTOMATION': ['LangChain', 'LangGraph', 'CrewAI', 'AutoGPT', 'AutoGen', 'BabyAGI', 'Agentic RAG', 'Tool Use/Function Calling', 'Agent Orchestration', 'Workflow Automation', 'Task Decomposition', 'Human-in-the-Loop'],
       'RAG & KNOWLEDGE SYSTEMS': ['RAG Architecture', 'Vector Databases', 'Embeddings', 'Semantic Search', 'Document Chunking', 'Hybrid Search', 'Knowledge Graphs', 'GraphRAG', 'Corrective RAG', 'Adaptive RAG', 'Multi-Vector Retrieval', 'Document Processing', 'Query Optimization'],
@@ -1094,11 +1094,8 @@
       'NLP': ['Transformers', 'BERT', 'Text Classification', 'Named Entity Recognition', 'Sentiment Analysis', 'Text Summarization', 'Question Answering', 'Machine Translation', 'Topic Modeling', 'Text Generation', 'Intent Classification', 'Speech Recognition'],
       'MLOPS & DEPLOYMENT': ['CI/CD for ML', 'Model Versioning', 'MLflow', 'Kubeflow', 'Docker', 'Kubernetes', 'Model Monitoring', 'A/B Testing', 'Feature Stores', 'Model Registry', 'Experiment Tracking', 'Model Serving', 'Model Drift Detection'],
       'DATA ENGINEERING': ['SQL', 'Data Warehousing', 'ETL/ELT Pipelines', 'Data Cleaning', 'Data Augmentation', 'Synthetic Data Generation', 'Data Labeling', 'Apache Spark', 'Apache Kafka', 'Data Lake Architecture', 'BigQuery/Snowflake', 'pandas/polars'],
-      'MARKETING AI': ['Campaign Optimization', 'Personalization Engines', 'Customer Segmentation', 'Predictive Analytics', 'Social Media AI', 'Ad Copy Generation', 'SEO Optimization'],
-      'SALES AI': ['Lead Scoring', 'Sales Forecasting', 'Email Automation', 'CRM AI', 'Conversation Intelligence', 'Deal Analytics'],
-      'CUSTOMER SERVICE AI': ['Chatbots', 'Conversational AI', 'Sentiment Analysis', 'Ticket Classification', 'Virtual Assistants', 'Voice Assistants'],
-      'HEALTHCARE AI': ['Medical Imaging', 'Drug Discovery', 'Clinical Decision Support', 'Patient Risk Prediction', 'Medical NLP', 'Genomics AI'],
-      'FINANCIAL AI': ['Algorithmic Trading', 'Fraud Detection', 'Credit Scoring', 'Robo-Advisors', 'Regulatory Compliance AI', 'Financial Forecasting'],
+      'MARKETING AI': ['Campaign Optimization', 'Personalization Engines', 'Customer Segmentation', 'Predictive Analytics'],
+      'CUSTOMER SERVICE AI': ['Chatbots', 'Conversational AI', 'Virtual Assistants', 'Voice Assistants'],
       'MULTIMODAL AI': ['Vision-Language Models', 'Text-to-Image Understanding', 'Visual Question Answering', 'Image Captioning', 'Audio-Visual Learning', 'Document Understanding', 'Video Understanding', 'Cross-Modal Retrieval'],
       'AI SAFETY & ETHICS': ['AI Ethics', 'Bias Detection', 'Fairness Metrics', 'Explainable AI', 'AI Alignment', 'Red Teaming', 'AI Auditing', 'Adversarial Robustness', 'Privacy-Preserving ML', 'Model Governance'],
       'CLOUD & INFRASTRUCTURE': ['AWS SageMaker', 'Google Cloud Vertex AI', 'Azure ML', 'Hugging Face', 'CUDA', 'GPU Optimization', 'Distributed Training', 'Model Quantization'],
@@ -1366,7 +1363,7 @@
                   <input
                     type="text"
                     id="skillSearch"
-                    placeholder="🔍 Suche in 147 Skills..."
+                    placeholder="🔍 Suche in 95 Skills..."
                     class="form-input"
                     style="width: 100%; padding: 0.875rem 1rem; font-size: 0.9375rem;"
                     oninput="filterSkills(this.value)"
@@ -1377,7 +1374,7 @@
               <!-- Domain Filters (Apple-inspired) -->
               <div class="domain-filters">
                 <button type="button" class="domain-chip ${activeDomains.includes('all') ? 'active' : ''}" data-domain="all" onclick="toggleDomainFilter('all')">
-                  All <span class="count">147</span>
+                  All <span class="count">95</span>
                 </button>
                 ${Object.entries(DOMAIN_MAPPING).map(([domainKey, domain]) => {
                   const skillCount = domain.categories.reduce((sum, cat) => {
