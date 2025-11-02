@@ -1602,64 +1602,91 @@
     // Skill chip toggle
     // Make globally accessible for inline onclick handlers
     window.toggleSkill = function(chip) {
+      const skillDataValue = chip.getAttribute('data-skill');
       const isCurrentlySelected = chip.classList.contains('selected');
-      const selectedSkills = document.querySelectorAll('.chip.selected');
 
-      // If trying to select and already at limit, show warning
-      if (!isCurrentlySelected && selectedSkills.length >= 20) {
-        alert('⚠️ Maximal 20 Skills erlaubt. Bitte entferne zuerst andere Skills.');
-        return;
+      if (isCurrentlySelected) {
+        // Deselect all chips with this skill (handles duplicates across categories)
+        document.querySelectorAll(`.chip[data-skill="${skillDataValue}"]`).forEach(c => {
+          c.classList.remove('selected');
+        });
+      } else {
+        // Check selection limit (count unique skills, not total chips)
+        const uniqueSelectedSkills = new Set(
+          Array.from(document.querySelectorAll('.chip.selected'))
+            .map(c => c.getAttribute('data-skill'))
+        );
+
+        if (uniqueSelectedSkills.size >= 20) {
+          alert('⚠️ Maximal 20 Skills erlaubt. Bitte entferne zuerst andere Skills.');
+          return;
+        }
+
+        // Select all chips with this skill (sync across duplicates)
+        document.querySelectorAll(`.chip[data-skill="${skillDataValue}"]`).forEach(c => {
+          c.classList.add('selected');
+        });
       }
 
-      chip.classList.toggle('selected');
       updateSkillCounter();
     }
 
     // Remove skill from selected bar
     window.removeSelectedSkill = function(skillDataValue) {
-      const chip = document.querySelector(`.chip[data-skill="${skillDataValue}"]`);
-      if (chip) {
+      // Remove all chips with this skill (handles duplicates across categories)
+      const chips = document.querySelectorAll(`.chip[data-skill="${skillDataValue}"]`);
+      chips.forEach(chip => {
         chip.classList.remove('selected');
-        updateSkillCounter();
-      }
+      });
+      updateSkillCounter();
     }
 
     function updateSkillCounter() {
-      const selectedCount = document.querySelectorAll('.chip.selected').length;
+      const selectedChips = document.querySelectorAll('.chip.selected');
       const counter = document.getElementById('skillCounter');
       const selectedBar = document.getElementById('selectedSkillsBar');
 
-      if (counter) {
-        counter.textContent = `${selectedCount}/20`;
+      // Count UNIQUE selected skills (not total chips - handles duplicates)
+      const uniqueSelectedSkills = new Set(
+        Array.from(selectedChips).map(chip => chip.getAttribute('data-skill'))
+      );
+      const uniqueCount = uniqueSelectedSkills.size;
 
-        // Apply color classes based on count
+      if (counter) {
+        counter.textContent = `${uniqueCount}/20`;
+
+        // Apply color classes based on unique count
         counter.classList.remove('low', 'medium', 'high');
-        if (selectedCount >= 19) {
+        if (uniqueCount >= 19) {
           counter.classList.add('high');
-        } else if (selectedCount >= 11) {
+        } else if (uniqueCount >= 11) {
           counter.classList.add('medium');
         } else {
           counter.classList.add('low');
         }
       }
 
-      // Populate selected skills bar
+      // Populate selected skills bar (deduplicated)
       if (selectedBar) {
-        const selectedChips = document.querySelectorAll('.chip.selected');
-
         if (selectedChips.length === 0) {
           selectedBar.innerHTML = '<span style="opacity: 0.7; font-size: 0.875rem;">✨ Wähle bis zu 20 Skills aus</span>';
         } else {
-          selectedBar.innerHTML = Array.from(selectedChips).map(chip => {
-            const skillName = chip.getAttribute('data-skill-label') || chip.textContent.trim();
+          // Deduplicate by data-skill value
+          const uniqueSkills = new Map();
+          selectedChips.forEach(chip => {
             const skillDataValue = chip.getAttribute('data-skill');
-            return `
-              <div class="chip selected" style="display: inline-flex; align-items: center; gap: 0.5rem; margin: 0.25rem;">
-                ${skillName}
-                <button class="chip-remove" onclick="removeSelectedSkill('${skillDataValue}')" title="Entfernen" style="background: none; border: none; color: #000; font-size: 1.25rem; line-height: 1; cursor: pointer; padding: 0; margin: 0;">×</button>
-              </div>
-            `;
-          }).join('');
+            if (!uniqueSkills.has(skillDataValue)) {
+              const skillName = chip.getAttribute('data-skill-label') || chip.textContent.trim();
+              uniqueSkills.set(skillDataValue, skillName);
+            }
+          });
+
+          selectedBar.innerHTML = Array.from(uniqueSkills.entries()).map(([skillValue, skillName]) => `
+            <div class="chip selected" style="display: inline-flex; align-items: center; gap: 0.5rem; margin: 0.25rem;">
+              ${skillName}
+              <button class="chip-remove" onclick="removeSelectedSkill('${skillValue}')" title="Entfernen" style="background: none; border: none; color: #000; font-size: 1.25rem; line-height: 1; cursor: pointer; padding: 0; margin: 0;">×</button>
+            </div>
+          `).join('');
         }
       }
     }
