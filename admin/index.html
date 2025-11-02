@@ -418,6 +418,35 @@
       <div id="subscribers-tab" class="tab-content">
         <h2 style="font-weight: 400; margin-bottom: 2rem;">Teilnehmer Liste</h2>
 
+        <!-- Invite Section -->
+        <div class="card" style="border-left: 4px solid #5ED9A6; margin-bottom: 2rem;">
+          <h3 style="font-weight: 500; margin-bottom: 0.5rem;">📨 User einladen</h3>
+          <p style="color: #666; margin-bottom: 1.5rem; font-size: 0.95rem;">
+            Lade jemanden ein, den du bei einem Event getroffen hast.
+          </p>
+
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Vorname *</label>
+            <input type="text" id="inviteName" placeholder="z.B. Sarah" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit;">
+          </div>
+
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Email *</label>
+            <input type="email" id="inviteEmail" placeholder="email@example.com" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit;">
+          </div>
+
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Eingeladen von (optional)</label>
+            <input type="text" id="invitedBy" placeholder="Thomas" value="Thomas" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit;">
+          </div>
+
+          <button class="btn" onclick="sendInvite()" style="margin-top: 0.5rem;">
+            Einladung senden
+          </button>
+
+          <div id="inviteResult" style="margin-top: 1rem;"></div>
+        </div>
+
         <div class="subscriber-count" id="subscriber-count">Lade...</div>
 
         <div id="subscribers-list" class="loading">Lade Teilnehmer...</div>
@@ -765,6 +794,57 @@
       } catch (error) {
         console.error('Failed to load subscribers:', error);
         container.innerHTML = `<div class="message error">Fehler beim Laden: ${error.message}</div>`;
+      }
+    }
+
+    // Send Invite
+    async function sendInvite() {
+      const nameInput = document.getElementById('inviteName');
+      const emailInput = document.getElementById('inviteEmail');
+      const invitedByInput = document.getElementById('invitedBy');
+      const resultDiv = document.getElementById('inviteResult');
+
+      const name = nameInput.value.trim();
+      const email = emailInput.value.trim();
+      const invitedBy = invitedByInput.value.trim() || 'Thomas';
+
+      if (!name || !email) {
+        resultDiv.innerHTML = '<div class="message error">❌ Bitte Name und Email eingeben</div>';
+        return;
+      }
+
+      // Show loading state
+      resultDiv.innerHTML = '<div class="message">⏳ Einladung wird versendet...</div>';
+
+      try {
+        const response = await fetch('/api/admin/invite', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${adminPassword}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, email, invitedBy })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          resultDiv.innerHTML = `<div class="message success">✅ ${data.message}</div>`;
+          // Clear form
+          nameInput.value = '';
+          emailInput.value = '';
+          invitedByInput.value = 'Thomas';
+
+          // Refresh subscriber list after a short delay
+          setTimeout(() => {
+            loadSubscribers();
+          }, 1000);
+        } else {
+          resultDiv.innerHTML = `<div class="message error">❌ ${data.message || data.error}</div>`;
+        }
+      } catch (error) {
+        console.error('[INVITE] Error:', error);
+        resultDiv.innerHTML = `<div class="message error">❌ Fehler: ${error.message}</div>`;
       }
     }
   </script>
