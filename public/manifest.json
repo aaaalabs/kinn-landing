@@ -27,6 +27,13 @@
   ],
   "screenshots": [
     {
+      "src": "/public/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "KINN - KI Treff Innsbruck"
+    },
+    {
       "src": "/public/screenshot-wide.png",
       "sizes": "1280x720",
       "type": "image/png",
