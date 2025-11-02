@@ -608,6 +608,35 @@
           </div>
         </div>
 
+        <!-- Invite Section -->
+        <div class="form-section" style="border-left: 4px solid #5ED9A6;">
+          <h2 style="margin-bottom: 0.5rem;">📨 User einladen</h2>
+          <p style="color: #666; margin-bottom: 1.5rem;">
+            Lade jemanden ein, den du bei einem Event getroffen hast.
+          </p>
+
+          <div class="form-group">
+            <label for="inviteName">Vorname *</label>
+            <input type="text" id="inviteName" placeholder="z.B. Sarah">
+          </div>
+
+          <div class="form-group">
+            <label for="inviteEmail">Email *</label>
+            <input type="email" id="inviteEmail" placeholder="email@example.com">
+          </div>
+
+          <div class="form-group">
+            <label for="invitedBy">Eingeladen von (optional)</label>
+            <input type="text" id="invitedBy" placeholder="Thomas" value="Thomas">
+          </div>
+
+          <button class="button" onclick="sendInvite()" style="margin-top: 0;">
+            Einladung senden
+          </button>
+
+          <div id="inviteResult" style="margin-top: 1rem;"></div>
+        </div>
+
         <!-- Incomplete Profiles Alert -->
         ${metrics.subscribers.incomplete > 0 ? `
           <div class="form-section" style="border-left: 4px solid #ff6b6b;">
@@ -621,6 +650,58 @@
           </div>
         ` : ''}
       `;
+    }
+
+    // Send Invite
+    async function sendInvite() {
+      const nameInput = document.getElementById('inviteName');
+      const emailInput = document.getElementById('inviteEmail');
+      const invitedByInput = document.getElementById('invitedBy');
+      const resultDiv = document.getElementById('inviteResult');
+      const apiKey = localStorage.getItem('kinn_admin_api_key');
+
+      if (!apiKey) {
+        resultDiv.innerHTML = '<div style="background: #fff3f3; border: 1px solid #ff6b6b; border-radius: 8px; padding: 1rem; color: #d63031;">❌ Please enter your Admin API Key in the Events tab first.</div>';
+        return;
+      }
+
+      const name = nameInput.value.trim();
+      const email = emailInput.value.trim();
+      const invitedBy = invitedByInput.value.trim() || 'Thomas';
+
+      if (!name || !email) {
+        resultDiv.innerHTML = '<div style="background: #fff3f3; border: 1px solid #ff6b6b; border-radius: 8px; padding: 1rem; color: #d63031;">❌ Bitte Name und Email eingeben</div>';
+        return;
+      }
+
+      // Show loading state
+      resultDiv.innerHTML = '<div style="background: #f0f0f0; border-radius: 8px; padding: 1rem; color: #666;">⏳ Einladung wird versendet...</div>';
+
+      try {
+        const response = await fetch('/api/admin/invite', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, email, invitedBy })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          resultDiv.innerHTML = `<div style="background: #d4edda; border-left: 4px solid #28a745; border-radius: 8px; padding: 1rem; color: #155724;">✅ ${data.message}</div>`;
+          // Clear form
+          nameInput.value = '';
+          emailInput.value = '';
+          invitedByInput.value = 'Thomas';
+        } else {
+          resultDiv.innerHTML = `<div style="background: #fff3f3; border: 1px solid #ff6b6b; border-radius: 8px; padding: 1rem; color: #d63031;">❌ ${data.message || data.error}</div>`;
+        }
+      } catch (error) {
+        console.error('[INVITE] Error:', error);
+        resultDiv.innerHTML = `<div style="background: #fff3f3; border: 1px solid #ff6b6b; border-radius: 8px; padding: 1rem; color: #d63031;">❌ Fehler: ${error.message}</div>`;
+      }
     }
 
     const form = document.getElementById('eventForm');
