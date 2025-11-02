@@ -9,6 +9,15 @@ const SUBSCRIBERS_KEY = 'subscribers:confirmed';
 const EVENTS_CONFIG_KEY = 'events:config';
 
 /**
+ * Get Redis client instance
+ * Used by endpoints that need direct Redis access
+ * @returns {Redis} Redis client instance
+ */
+export function getRedisClient() {
+  return redis;
+}
+
+/**
  * Adds a confirmed subscriber to Redis set
  * @param {string} email - Subscriber email address
  * @returns {Promise<boolean>} True if added, false if already exists
