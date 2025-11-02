@@ -296,12 +296,12 @@ export async function updateReverseIndexes(email, profile) {
 
     // 2. Index experience level (ALL levels, granular)
     if (profile.supply?.experience) {
-      await redis.sadd(`xp:${profile.supply.experience}`, normalizedEmail);
+      await redis.sadd(`level:${profile.supply.experience}`, normalizedEmail);
     }
 
-    // 3. Index status (availability)
+    // 3. Index work status (availability)
     if (profile.supply?.availability) {
-      await redis.sadd(`status:${profile.supply.availability}`, normalizedEmail);
+      await redis.sadd(`work:${profile.supply.availability}`, normalizedEmail);
     }
 
     // 4. Index location (mapped to simple values)
@@ -372,8 +372,8 @@ export async function getMatchHints(profile) {
     }
 
     // Match 3: Senior+ devs (combined count)
-    const seniorCount = await redis.scard('xp:senior');
-    const leadCount = await redis.scard('xp:lead');
+    const seniorCount = await redis.scard('level:senior');
+    const leadCount = await redis.scard('level:lead');
     const totalSeniorPlus = seniorCount + leadCount;
 
     if (totalSeniorPlus > 0 && profile.supply?.experience && !['senior', 'lead'].includes(profile.supply.experience)) {

@@ -6,6 +6,25 @@
 
 ---
 
+## 🔄 Recent Changes
+
+**2025-02-02:** Redis Schema v2.1 - Key Renaming for Clarity
+- `xp:*` → `level:*` (more professional, less gaming-associated)
+- `status:*` → `work:*` (more precise, avoids namespace collision)
+- Reason: Better naming = clearer code + future-proof
+
+**2025-02-02:** Redis Schema v2.0 - ULTRA-SIMPLE Architecture
+- Reduced from 7+ index types to 4 core types
+- Added: `level:`, `work:`, `loc:` indexes
+- Removed: Old `supply:senior+`, `demand:*`, `location:*` keys
+
+**2025-02-02:** Profile UX Optimization
+- Added Portfolio field to "Ich" tab
+- Removed redundant H2 from "Angebot" tab
+- Reorganized "Angebot" flow: Kontext → Value → Details
+
+---
+
 ## 📊 Current Status: MVP Phase 1 (LIVE)
 
 ### ✅ Core Features (DEPLOYED)
