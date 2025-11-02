@@ -7,13 +7,17 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
- * Generate Welcome Email - Simple, spam-safe version
- * Links to website instead of direct webcal:// links
- * @param {string} profileToken - JWT token for profile management
+ * Generate Welcome Email
+ * Optimized for deliverability based on German best practices:
+ * - Simple HTML structure
+ * - Personal greeting and sign-off
+ * - Maximum 2-3 links
+ * - Clear value proposition
+ * - DSGVO compliant with Impressum
  */
 function generateWelcomeEmail(profileToken) {
   const baseUrl = process.env.BASE_URL || 'https://kinn.at';
-  const calendarPageUrl = `${baseUrl}/pages/success.html?status=confirmed`;
+  const calendarPageUrl = `${baseUrl}/pages/success.html?status=confirmed&token=${profileToken}`;
   const profilePageUrl = `${baseUrl}/pages/profil.html?token=${profileToken}`;
 
   return `
@@ -23,91 +27,66 @@ function generateWelcomeEmail(profileToken) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Work Sans', system-ui, -apple-system, sans-serif; background-color: #ffffff;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; margin: 0 auto; padding: 40px 20px;">
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #ffffff; color: #333;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 20px;">
     <tr>
-      <td style="padding: 0 20px;">
-        <!-- Header -->
-        <h1 style="font-size: 26px; line-height: 1.3; font-weight: 600; color: #2C3E50; margin-bottom: 16px; letter-spacing: 0.02em;">
-          Willkommen beim KINN
-        </h1>
+      <td style="padding: 20px;">
 
-        <!-- Body -->
-        <p style="font-size: 16px; line-height: 1.6; color: #3A3A3A; margin-bottom: 16px;">
-          Deine Email-Adresse ist jetzt bestätigt.
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Hallo,</p>
+
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
+          <strong>deine E-Mail-Adresse ist jetzt bestätigt!</strong>
         </p>
 
-        <p style="font-size: 16px; line-height: 1.6; color: #3A3A3A; margin-bottom: 24px;">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
           Nächster Schritt: Abonniere den Event-Kalender, um keinen KI Treff in Innsbruck zu verpassen.
         </p>
 
-        <!-- CTA Button -->
-        <table width="100%" cellpadding="0" cellspacing="0" style="margin: 32px 0;">
-          <tr>
-            <td align="center">
-              <a href="${calendarPageUrl}" style="display: inline-block; padding: 14px 32px; background-color: #5ED9A6; color: #000; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 600; letter-spacing: 0.01em;">
-                Kalender-Abonnement einrichten
-              </a>
-            </td>
-          </tr>
-        </table>
-
-        <!-- Info -->
-        <p style="font-size: 14px; line-height: 1.6; color: #6B6B6B; margin-top: 24px; margin-bottom: 8px;">
-          <strong>Was ist eine Kalender-Subscription?</strong>
-        </p>
-        <p style="font-size: 14px; line-height: 1.6; color: #6B6B6B; margin-bottom: 32px;">
-          Neue Events erscheinen automatisch in deinem Kalender – keine weiteren Emails nötig. Funktioniert mit Google Calendar, Apple Kalender und Outlook.
-        </p>
-
-        <!-- Divider -->
-        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 32px 0;">
-
-        <!-- Profile CTA Section -->
-        <h2 style="font-size: 18px; line-height: 1.3; font-weight: 600; color: #2C3E50; margin-bottom: 12px; letter-spacing: 0.01em;">
-          Zeit sparen beim Stammtisch
-        </h2>
-
-        <p style="font-size: 14px; line-height: 1.6; color: #6B6B6B; margin-bottom: 16px;">
-          Füll dein KINN Profil vorab aus (5 Min) und ich kann dich schon vorher mit passenden Leuten matchen:
-        </p>
-
-        <ul style="font-size: 14px; line-height: 1.8; color: #6B6B6B; margin: 0 0 24px 20px; padding: 0;">
-          <li>Was du suchst (Jobs, Co-Founder, Projekte)</li>
-          <li>Was du anbietest (Skills, Experience, Verfügbarkeit)</li>
-        </ul>
-
-        <!-- Profile Button -->
+        <!-- Primary CTA -->
         <table width="100%" cellpadding="0" cellspacing="0" style="margin: 24px 0;">
           <tr>
-            <td align="center">
-              <a href="${profilePageUrl}#profil" style="display: inline-block; padding: 12px 28px; background-color: #ffffff; color: #2C3E50; border: 2px solid #5ED9A6; text-decoration: none; border-radius: 12px; font-size: 15px; font-weight: 600; letter-spacing: 0.01em;">
-                Profil ausfüllen
+            <td style="text-align: center;">
+              <a href="${calendarPageUrl}" style="background-color: #5ED9A6; color: #000; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px; padding: 14px 32px; display: inline-block;">
+                Kalender abonnieren
               </a>
             </td>
           </tr>
         </table>
 
-        <!-- Divider -->
+        <p style="font-size: 14px; line-height: 1.6; color: #666; margin: 24px 0;">
+          <strong>Was ist eine Kalender-Subscription?</strong><br>
+          Neue Events erscheinen automatisch in deinem Kalender – keine weiteren Emails nötig.
+        </p>
+
         <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 32px 0;">
 
-        <!-- Profile Settings Link -->
-        <p style="font-size: 13px; line-height: 1.6; color: #6B6B6B; text-align: center; margin-bottom: 16px;">
-          <a href="${profilePageUrl}" style="color: #5ED9A6; text-decoration: none; font-weight: 500;">Einstellungen verwalten</a> •
-          Email-Benachrichtigungen anpassen oder abmelden
+        <!-- Optional Profile Section -->
+        <p style="font-size: 14px; line-height: 1.6; color: #666; margin-bottom: 16px;">
+          Optional: Füll dein <a href="${profilePageUrl}" style="color: #5ED9A6; text-decoration: none; font-weight: 500;">KINN Profil</a> aus (5 Min), damit ich dich beim Stammtisch mit passenden Leuten matchen kann.
         </p>
 
-        <!-- Divider -->
-        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;">
-
-        <!-- Footer -->
-        <p style="font-size: 12px; line-height: 1.5; color: #999; text-align: center; margin-bottom: 8px;">
-          KINN – Wo Tiroler KI Profil bekommt
+        <p style="font-size: 16px; line-height: 1.6; margin-top: 32px;">
+          Viele Grüße,<br>
+          <strong>Thomas</strong><br>
+          KINN
         </p>
 
-        <p style="font-size: 11px; line-height: 1.5; color: #999; text-align: center;">
-          Bei Fragen: <a href="mailto:thomas@kinn.at" style="color: #999; text-decoration: none;">thomas@kinn.at</a> oder <a href="mailto:ki@in.kinn.at" style="color: #999; text-decoration: none;">ki@in.kinn.at</a>
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 32px 0;">
+
+        <!-- Impressum (DSGVO Requirement) -->
+        <p style="font-size: 12px; line-height: 1.5; color: #999;">
+          <strong>KINN – KI Treff Innsbruck</strong><br>
+          Thomas Seiger<br>
+          E-Mail: thomas@kinn.at<br>
+          Web: <a href="https://kinn.at" style="color: #999;">kinn.at</a>
         </p>
+
+        <p style="font-size: 11px; line-height: 1.5; color: #999; margin-top: 16px;">
+          <a href="https://kinn.at/pages/privacy.html" style="color: #999; text-decoration: none;">Datenschutz</a> |
+          <a href="https://kinn.at/pages/agb.html" style="color: #999; text-decoration: none;">Impressum</a> |
+          <a href="${profilePageUrl}" style="color: #999; text-decoration: none;">Abmelden</a>
+        </p>
+
       </td>
     </tr>
   </table>
@@ -215,9 +194,9 @@ export default async function handler(req, res) {
     // Send welcome email (wait for it to ensure it gets sent)
     try {
       const emailResult = await resend.emails.send({
-        from: (process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>').trim(),
+        from: (process.env.SENDER_EMAIL || 'Thomas (von KINN) <thomas@kinn.at>').trim(),
         to: email.trim(),
-        subject: 'Willkommen beim KINN – Kalender-Abonnement',
+        subject: 'Willkommen beim KINN',
         html: generateWelcomeEmail(profileToken),
       });
       console.log(`[CONFIRM] Welcome email sent: ${emailResult.id}`);

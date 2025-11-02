@@ -5,7 +5,15 @@ import { enforceRateLimit } from './utils/rate-limiter.js';
 // Initialize Resend client
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Opt-In Email Template (plain HTML for reliability)
+/**
+ * Opt-In Email Template
+ * Optimized for deliverability based on German best practices:
+ * - Simple HTML (no images, minimal styling)
+ * - No emojis (spam trigger in transactional emails)
+ * - Personal sender name
+ * - Clear CTA with explanation
+ * - DSGVO compliant with Impressum
+ */
 function generateOptInEmail(confirmUrl) {
   return `
 <!DOCTYPE html>
@@ -14,39 +22,60 @@ function generateOptInEmail(confirmUrl) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; background-color: #ffffff;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; margin: 0 auto; padding: 20px 0 48px;">
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #ffffff; color: #333;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 20px;">
     <tr>
-      <td style="padding: 40px;">
-        <h1 style="font-size: 24px; line-height: 1.3; font-weight: 300; color: #333; margin-bottom: 20px;">Servus! 👋</h1>
+      <td style="padding: 20px;">
 
-        <p style="font-size: 16px; line-height: 1.618; color: #000; margin-bottom: 16px;">
-          Du hast dich für den <strong>KINN KI Treff Innsbruck</strong> eingetragen.
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Hallo,</p>
+
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
+          vielen Dank für deine Anmeldung zum <strong>KINN KI Treff Innsbruck</strong>!
         </p>
 
-        <p style="font-size: 16px; line-height: 1.618; color: #000; margin-bottom: 16px;">
-          Ein Klick, und du bekommst alle KI-Events direkt in deinen Google Kalender – <strong>kein Newsletter, keine Spam-Mails</strong>.
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          <strong>Bitte bestätige deine E-Mail-Adresse:</strong>
         </p>
 
-        <table width="100%" cellpadding="0" cellspacing="0" style="text-align: center; margin: 32px 0;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin: 24px 0;">
           <tr>
-            <td>
-              <a href="${confirmUrl}" style="background-color: #E0EEE9; border-radius: 12px; color: #000; font-size: 14px; font-weight: 600; text-decoration: none; text-align: center; display: inline-block; padding: 12px 24px;">
-                Ja, ich bin dabei! 🧠
+            <td style="text-align: center;">
+              <a href="${confirmUrl}" style="background-color: #5ED9A6; color: #000; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px; padding: 14px 32px; display: inline-block;">
+                Ja, ich möchte den Newsletter erhalten
               </a>
             </td>
           </tr>
         </table>
 
-        <p style="font-size: 12px; line-height: 1.5; color: #666; text-align: center;">
-          Dieser Link ist 48 Stunden gültig.
+        <p style="font-size: 14px; line-height: 1.6; color: #666; margin: 24px 0;">
+          <strong>Warum dieser Schritt?</strong><br>
+          Damit stellen wir sicher, dass nur du Zugriff auf deine Anmeldung hast und niemand unbefugt deine E-Mail-Adresse verwendet.
+        </p>
+
+        <p style="font-size: 14px; line-height: 1.6; color: #666; margin-bottom: 32px;">
+          Dieser Bestätigungslink ist 48 Stunden gültig.
+        </p>
+
+        <p style="font-size: 16px; line-height: 1.6; margin-top: 32px;">
+          Viele Grüße,<br>
+          <strong>Thomas</strong><br>
+          KINN
         </p>
 
         <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 32px 0;">
 
-        <p style="font-size: 12px; line-height: 1.5; color: #ccc; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">
-          KINN – Wo Tiroler KI Profil bekommt
+        <p style="font-size: 12px; line-height: 1.5; color: #999;">
+          <strong>KINN – KI Treff Innsbruck</strong><br>
+          Thomas Seiger<br>
+          E-Mail: thomas@kinn.at<br>
+          Web: <a href="https://kinn.at" style="color: #999;">kinn.at</a>
         </p>
+
+        <p style="font-size: 11px; line-height: 1.5; color: #999; margin-top: 16px;">
+          <a href="https://kinn.at/pages/privacy.html" style="color: #999; text-decoration: none;">Datenschutz</a> |
+          <a href="https://kinn.at/pages/agb.html" style="color: #999; text-decoration: none;">Impressum</a>
+        </p>
+
       </td>
     </tr>
   </table>
@@ -166,11 +195,11 @@ export default async function handler(req, res) {
         `,
       }),
 
-      // 2. Opt-in confirmation to user with React Email template
+      // 2. Opt-in confirmation to user (optimized for deliverability)
       resend.emails.send({
-        from: (process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>').trim(),
+        from: (process.env.SENDER_EMAIL || 'Thomas (von KINN) <thomas@kinn.at>').trim(),
         to: email.trim(),
-        subject: 'Bestätige deine Anmeldung zum KINN KI Treff',
+        subject: 'Noch ein Klick: Deine Newsletter-Anmeldung bestätigen',
         html: optInHtml,
       }),
     ]);
