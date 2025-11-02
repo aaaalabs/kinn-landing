@@ -305,11 +305,11 @@ Following Jony Ive's philosophy:
 
 ### Admin: Event erstellen
 
-**Option A: Dashboard** (`/pages/dashboard.html` - Session-based)
+**Option A: User Profil** (`/pages/profil.html` - Session-based)
 1. Login via magic link → Session gespeichert
-2. Dashboard → "Events" Tab → "+ Neues Event"
-3. Event-Form ausfüllen (Titel, Typ, Location/Meeting-Link, Datum)
-4. Speichern → Event in Redis
+2. Profil → "Dashboard" Tab zeigt Events
+3. (Event-Erstellung aktuell nur via Admin-Seite)
+4. Events werden in Redis gespeichert
 
 **Option B: Admin-Seite** (`/pages/admin.html` - Password-based)
 1. Gehe zu `/pages/admin`
