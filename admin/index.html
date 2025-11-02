@@ -299,11 +299,77 @@
       color: #999;
     }
 
+    /* Dashboard Metrics */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .metric-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      border-left: 4px solid #5ED9A6;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .metric-card h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #6B6B6B;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+      font-size: 2.5rem;
+      font-weight: 300;
+      color: #000;
+      margin-bottom: 0.5rem;
+      line-height: 1;
+    }
+
+    .metric-subvalue {
+      font-size: 0.95rem;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .skill-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .skill-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .skill-item:last-child {
+      border-bottom: none;
+    }
+
+    .skill-name {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .skill-count {
+      color: #5ED9A6;
+      font-weight: 600;
+    }
+
     @media (max-width: 640px) {
       .logo h1 { font-size: 2rem; }
       .tab { padding: 0.75rem 1rem; font-size: 1rem; }
       .form-actions { flex-direction: column; }
       .btn { width: 100%; }
+      .metrics-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -332,6 +398,7 @@
     <div id="admin-dashboard" class="hidden">
       <!-- Tabs -->
       <div class="tabs">
+        <button class="tab" onclick="switchTab('dashboard')">Dashboard</button>
         <button class="tab active" onclick="switchTab('events')">Events</button>
         <button class="tab" onclick="switchTab('subscribers')">Teilnehmer</button>
         <button class="tab" onclick="logout()" style="margin-left: auto;">Logout</button>
@@ -339,6 +406,12 @@
 
       <!-- Messages -->
       <div id="message-container"></div>
+
+      <!-- Dashboard Tab -->
+      <div id="dashboard-tab" class="tab-content">
+        <h2 style="font-weight: 400; margin-bottom: 2rem;">Metrics & Insights</h2>
+        <div id="dashboard-content" class="loading">Lade Metrics...</div>
+      </div>
 
       <!-- Events Tab -->
       <div id="events-tab" class="tab-content active">
@@ -559,6 +632,8 @@
       // Load data if needed
       if (tabName === 'subscribers') {
         loadSubscribers();
+      } else if (tabName === 'dashboard') {
+        loadDashboard();
       }
     }
 
@@ -846,6 +921,113 @@
         console.error('[INVITE] Error:', error);
         resultDiv.innerHTML = `<div class="message error">❌ Fehler: ${error.message}</div>`;
       }
+    }
+
+    // === Dashboard Metrics ===
+
+    async function loadDashboard() {
+      const container = document.getElementById('dashboard-content');
+      container.innerHTML = '<div class="loading">Lade Dashboard Metrics...</div>';
+
+      try {
+        const response = await apiCall('/dashboard');
+        renderDashboard(response.data.metrics);
+      } catch (error) {
+        console.error('[DASHBOARD] Error:', error);
+        container.innerHTML = `<div class="message error">Fehler beim Laden: ${error.message}</div>`;
+      }
+    }
+
+    function renderDashboard(metrics) {
+      const container = document.getElementById('dashboard-content');
+
+      const html = `
+        <!-- Subscriber Metrics -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <h3>Total Subscribers</h3>
+            <div class="metric-value">${metrics.subscribers.total}</div>
+            <div class="metric-subvalue">
+              ✅ ${metrics.subscribers.complete} complete (${metrics.subscribers.completionRate}%)<br>
+              ⚠️ ${metrics.subscribers.incomplete} incomplete
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <h3>Upcoming Events</h3>
+            <div class="metric-value">${metrics.events.upcoming}</div>
+            <div class="metric-subvalue">
+              ${metrics.events.nextEvent ? `Next: ${metrics.events.nextEvent.title}` : 'No events scheduled'}
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <h3>Last Event RSVP</h3>
+            <div class="metric-value">${metrics.events.lastEvent ? metrics.events.lastEvent.rsvps.total : '—'}</div>
+            <div class="metric-subvalue">
+              ${metrics.events.lastEvent
+                ? `${metrics.events.lastEvent.rsvps.yes} Yes · ${metrics.events.lastEvent.rsvps.maybe} Maybe`
+                : 'No past events'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Skills -->
+        <div class="card">
+          <h3 style="margin-bottom: 1rem; font-weight: 500;">🔥 Top Skills (${metrics.skills.total} total)</h3>
+          <ul class="skill-list">
+            ${metrics.skills.top.slice(0, 10).map(skill => `
+              <li class="skill-item">
+                <span class="skill-name">${skill.skill}</span>
+                <span class="skill-count">${skill.count}</span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+
+        <!-- Distribution Stats -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <h3>Location Split</h3>
+            <div class="metric-subvalue">
+              📍 Tirol: ${metrics.location.tirol} (${Math.round(metrics.location.tirol / metrics.subscribers.total * 100)}%)<br>
+              🌐 Online: ${metrics.location.online} (${Math.round(metrics.location.online / metrics.subscribers.total * 100)}%)<br>
+              🔀 All: ${metrics.location.all} (${Math.round(metrics.location.all / metrics.subscribers.total * 100)}%)
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <h3>Work Status</h3>
+            <div class="metric-subvalue">
+              💼 Employed: ${metrics.work.employed}<br>
+              🚀 Freelancer: ${metrics.work.freelancer}<br>
+              🎓 Student: ${metrics.work.student}<br>
+              🔍 Between Jobs: ${metrics.work.betweenJobs}
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <h3>Experience Level</h3>
+            <div class="metric-subvalue">
+              🌱 Junior: ${metrics.level.junior}<br>
+              📈 Mid: ${metrics.level.mid}<br>
+              🎯 Senior: ${metrics.level.senior}<br>
+              ⭐ Lead: ${metrics.level.lead}
+            </div>
+          </div>
+        </div>
+
+        ${metrics.subscribers.incomplete > 0 ? `
+          <div class="card" style="border-left: 4px solid #ff6b6b;">
+            <h3 style="color: #ff6b6b; margin-bottom: 1rem;">⚠️ ${metrics.subscribers.incomplete} Incomplete Profiles</h3>
+            <p style="color: #666; margin-bottom: 1rem; font-size: 0.95rem;">
+              These users signed up but haven't completed their profile yet.
+            </p>
+          </div>
+        ` : ''}
+      `;
+
+      container.innerHTML = html;
     }
   </script>
 </body>
