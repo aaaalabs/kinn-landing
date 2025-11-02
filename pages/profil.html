@@ -490,12 +490,12 @@
       background: rgba(94, 217, 166, 0.08);
       border: 1px solid rgba(94, 217, 166, 0.3);
       border-radius: 8px;
-      padding: 0.75rem;
+      padding: 0.625rem; /* Noch weniger padding */
       margin-bottom: 1rem;
-      max-height: 160px; /* ~4-5 Zeilen max */
+      max-height: 140px; /* Etwas niedriger */
       display: flex;
       align-items: flex-start; /* Top-align für multi-line */
-      gap: 0.375rem; /* Kompaktere gaps */
+      gap: 0.25rem; /* Noch kompaktere gaps */
       flex-wrap: wrap;
       overflow-y: auto; /* Vertical scroll bei vielen Skills */
       -webkit-overflow-scrolling: touch; /* iOS momentum scroll */
@@ -554,24 +554,25 @@
       background: #5ED9A6;
       color: #000;
       font-weight: 600;
-      padding: 0.375rem 0.5rem 0.375rem 0.625rem; /* Kompakter */
-      font-size: 0.8125rem; /* Kleinere Schrift */
+      padding: 0.25rem 0.375rem; /* Viel kompakter */
+      font-size: 0.75rem; /* 12px - noch kleiner */
       display: flex;
       align-items: center;
-      gap: 0.375rem; /* Kompakterer gap zum × */
+      gap: 0.25rem; /* Minimal gap zum × */
       flex-shrink: 0; /* Prevent chips from shrinking */
-      border-radius: 6px; /* Etwas runder */
+      border-radius: 5px; /* Kompakter */
+      line-height: 1.2;
     }
 
     #selectedSkillsBar .chip-remove {
       background: rgba(0, 0, 0, 0.1);
       border-radius: 50%;
-      width: 16px; /* Kleiner */
-      height: 16px;
+      width: 14px; /* Noch kleiner */
+      height: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.75rem; /* Kleinere × */
+      font-size: 0.6875rem; /* 11px - kleinere × */
       line-height: 1;
       transition: all 0.2s ease;
       cursor: pointer;
