@@ -1444,7 +1444,8 @@
       }
     }
 
-    function dismissWelcome() {
+    // Make dismissWelcome available globally for onclick handlers
+    window.dismissWelcome = function() {
       // Set localStorage flag
       localStorage.setItem('kinn_dashboard_intro_dismissed', 'true');
 
@@ -1460,7 +1461,7 @@
           welcomeCard.remove();
         }, 300);
       }
-    }
+    };
 
     function renderDashboardTab() {
       // Check if profile is complete
