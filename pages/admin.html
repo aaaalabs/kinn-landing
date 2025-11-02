@@ -52,8 +52,48 @@
     .subtitle {
       text-align: center;
       color: #999;
-      margin-bottom: 3rem;
+      margin-bottom: 2rem;
       font-size: 0.9rem;
+    }
+
+    /* Tab Navigation */
+    .tab-nav {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .tab-btn {
+      padding: 0.75rem 1.5rem;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #666;
+      transition: all 0.2s ease;
+      margin-bottom: -2px;
+    }
+
+    .tab-btn:hover {
+      color: #333;
+    }
+
+    .tab-btn.active {
+      color: #000;
+      border-bottom-color: #5ED9A6;
+      font-weight: 600;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
     }
 
     .form-section {
@@ -193,6 +233,87 @@
         grid-template-columns: 1fr;
       }
     }
+    /* Dashboard Metrics */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .metric-card {
+      background: #f9f9f9;
+      border-radius: 12px;
+      padding: 1.5rem;
+      border-left: 4px solid #5ED9A6;
+    }
+
+    .metric-card h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+      font-size: 2.5rem;
+      font-weight: 300;
+      color: #000;
+      margin-bottom: 0.5rem;
+    }
+
+    .metric-label {
+      font-size: 0.875rem;
+      color: #999;
+    }
+
+    .metric-subvalue {
+      font-size: 1rem;
+      color: #666;
+      margin-top: 0.5rem;
+    }
+
+    .skill-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .skill-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .skill-item:last-child {
+      border-bottom: none;
+    }
+
+    .skill-name {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .skill-count {
+      color: #5ED9A6;
+      font-weight: 600;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: #999;
+    }
+
+    .error-state {
+      background: #fff3f3;
+      border: 1px solid #ff6b6b;
+      border-radius: 8px;
+      padding: 1.5rem;
+      color: #d63031;
+    }
   </style>
 </head>
 <body>
@@ -205,10 +326,26 @@
       </svg>
     </a>
 
-    <h1>Event Creator</h1>
-    <p class="subtitle">Erstelle KI Treff Events für alle verbundenen Kalender</p>
+    <h1>KINN Admin</h1>
+    <p class="subtitle">Event Management, Dashboard & User Tools</p>
 
-    <!-- Event Form -->
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+      <button class="tab-btn" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+      <button class="tab-btn active" data-tab="events" onclick="switchTab('events')">Events</button>
+      <button class="tab-btn" data-tab="users" onclick="switchTab('users')">Users</button>
+    </div>
+
+    <!-- Tab: Dashboard -->
+    <div class="tab-content" data-tab="dashboard">
+      <div id="dashboardContainer" class="loading">
+        Loading metrics...
+      </div>
+    </div>
+
+    <!-- Tab: Events (Event Creator Form) -->
+    <div class="tab-content active" data-tab="events">
+      <!-- Event Form -->
     <form id="eventForm" class="form-section">
       <!-- API Key Section (inside form to fix DOM warning) -->
       <div class="form-group">
@@ -315,9 +452,174 @@
       <h3 id="resultTitle"></h3>
       <pre id="resultDetails" class="result-details"></pre>
     </div>
+    </div>
+    <!-- End Tab: Events -->
+
+    <!-- Tab: Users -->
+    <div class="tab-content" data-tab="users">
+      <div id="usersContainer" class="loading">
+        Coming soon...
+      </div>
+    </div>
+    <!-- End Tab: Users -->
+
   </div>
 
   <script>
+    // Tab Switching
+    function switchTab(tabName) {
+      // Update button states
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.dataset.tab === tabName) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      // Update tab content
+      document.querySelectorAll('.tab-content').forEach(content => {
+        if (content.dataset.tab === tabName) {
+          content.classList.add('active');
+        } else {
+          content.classList.remove('active');
+        }
+      });
+
+      // Load dashboard data when switching to dashboard tab
+      if (tabName === 'dashboard') {
+        loadDashboard();
+      }
+    }
+
+    // Load Dashboard Metrics
+    async function loadDashboard() {
+      const container = document.getElementById('dashboardContainer');
+      const apiKey = localStorage.getItem('kinn_admin_api_key');
+
+      if (!apiKey) {
+        container.innerHTML = '<div class="error-state">Please enter your Admin API Key in the Events tab first.</div>';
+        return;
+      }
+
+      container.innerHTML = '<div class="loading">Loading dashboard metrics...</div>';
+
+      try {
+        const response = await fetch('/api/admin/dashboard', {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load dashboard');
+        }
+
+        const data = await response.json();
+        renderDashboard(data.metrics);
+
+      } catch (error) {
+        console.error('[DASHBOARD] Error:', error);
+        container.innerHTML = `<div class="error-state">Failed to load dashboard: ${error.message}</div>`;
+      }
+    }
+
+    // Render Dashboard UI
+    function renderDashboard(metrics) {
+      const container = document.getElementById('dashboardContainer');
+
+      container.innerHTML = `
+        <!-- Subscriber Metrics -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <h3>Total Subscribers</h3>
+            <div class="metric-value">${metrics.subscribers.total}</div>
+            <div class="metric-subvalue">
+              ✅ ${metrics.subscribers.complete} complete (${metrics.subscribers.completionRate}%)
+              <br>
+              ⚠️ ${metrics.subscribers.incomplete} incomplete
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <h3>Upcoming Events</h3>
+            <div class="metric-value">${metrics.events.upcoming}</div>
+            <div class="metric-label">
+              ${metrics.events.nextEvent ? `Next: ${metrics.events.nextEvent.title}` : 'No events scheduled'}
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <h3>Last Event RSVP</h3>
+            <div class="metric-value">${metrics.events.lastEvent ? metrics.events.lastEvent.rsvps.total : '—'}</div>
+            <div class="metric-label">
+              ${metrics.events.lastEvent
+                ? `${metrics.events.lastEvent.rsvps.yes} Yes · ${metrics.events.lastEvent.rsvps.maybe} Maybe · ${metrics.events.lastEvent.rsvps.no} No`
+                : 'No past events'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Skills -->
+        <div class="form-section">
+          <h2 style="margin-bottom: 1rem;">🔥 Top Skills (${metrics.skills.total} total)</h2>
+          <ul class="skill-list">
+            ${metrics.skills.top.slice(0, 10).map(skill => `
+              <li class="skill-item">
+                <span class="skill-name">${skill.skill}</span>
+                <span class="skill-count">${skill.count}</span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+
+        <!-- Distribution Stats -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <h3>Location Split</h3>
+            <div class="metric-subvalue">
+              📍 Tirol: ${metrics.location.tirol} (${Math.round(metrics.location.tirol / metrics.subscribers.total * 100)}%)<br>
+              🌐 Online: ${metrics.location.online} (${Math.round(metrics.location.online / metrics.subscribers.total * 100)}%)<br>
+              🔀 All: ${metrics.location.all} (${Math.round(metrics.location.all / metrics.subscribers.total * 100)}%)
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <h3>Work Status</h3>
+            <div class="metric-subvalue">
+              💼 Employed: ${metrics.work.employed}<br>
+              🚀 Freelancer: ${metrics.work.freelancer}<br>
+              🎓 Student: ${metrics.work.student}<br>
+              🔍 Between Jobs: ${metrics.work.betweenJobs}
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <h3>Experience Level</h3>
+            <div class="metric-subvalue">
+              🌱 Junior: ${metrics.level.junior}<br>
+              📈 Mid: ${metrics.level.mid}<br>
+              🎯 Senior: ${metrics.level.senior}<br>
+              ⭐ Lead: ${metrics.level.lead}
+            </div>
+          </div>
+        </div>
+
+        <!-- Incomplete Profiles Alert -->
+        ${metrics.subscribers.incomplete > 0 ? `
+          <div class="form-section" style="border-left: 4px solid #ff6b6b;">
+            <h3 style="color: #ff6b6b; margin-bottom: 1rem;">⚠️ ${metrics.subscribers.incomplete} Incomplete Profiles</h3>
+            <p style="color: #666; margin-bottom: 1rem;">
+              These users signed up but haven't completed their profile yet.
+            </p>
+            <button class="button" style="background: #ff6b6b; color: white;" onclick="alert('Reminder feature coming soon!')">
+              Send Reminder Email to All
+            </button>
+          </div>
+        ` : ''}
+      `;
+    }
+
     const form = document.getElementById('eventForm');
     const submitBtn = document.getElementById('submitBtn');
     const resultDiv = document.getElementById('result');
