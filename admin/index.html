@@ -704,7 +704,20 @@
           <div class="event-meta">${event.description}</div>
           ${event.url ? `<div class="event-meta"><a href="${event.url}" target="_blank" style="color: #5ED9A6;">${event.url}</a></div>` : ''}
           <div class="event-meta">Status: ${getStatusLabel(event.status)}</div>
+
+          ${event.rsvps ? `
+            <div class="event-meta" style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(94, 217, 166, 0.08); border-radius: 8px;">
+              <strong>RSVPs:</strong>
+              <span style="color: #059669;">✅ ${event.rsvps.yes?.length || 0}</span> •
+              <span style="color: #FFA500;">❓ ${event.rsvps.maybe?.length || 0}</span> •
+              <span style="color: #999;">❌ ${event.rsvps.no?.length || 0}</span>
+            </div>
+          ` : ''}
+
           <div class="event-actions">
+            <button class="btn btn-small" style="background: #5ED9A6; color: #000;" onclick="sendEventInvites('${event.id}', '${event.title}')">
+              📧 Send Invites
+            </button>
             <button class="btn btn-small btn-secondary" onclick="editEvent(${index})">Bearbeiten</button>
             <button class="btn btn-small btn-danger" onclick="deleteEvent(${index})">Löschen</button>
           </div>
@@ -937,6 +950,39 @@
       } catch (error) {
         console.error('[INVITE] Error:', error);
         resultDiv.innerHTML = `<div class="message error">❌ Fehler: ${error.message}</div>`;
+      }
+    }
+
+    // Send Event Invites to all subscribers
+    async function sendEventInvites(eventId, eventTitle) {
+      if (!confirm(`Event-Einladungen versenden?\n\n"${eventTitle}" an alle Subscriber?\n\nDies kann einige Sekunden dauern.`)) {
+        return;
+      }
+
+      try {
+        showMessage('📧 Versende Event-Einladungen...', 'info');
+
+        const response = await fetch('/api/admin/send-event-invites', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${adminPassword}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ eventId })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showMessage(`✅ Event-Einladungen versendet: ${data.stats.sent} erfolgreich, ${data.stats.failed} fehlgeschlagen`, 'success');
+          // Reload events to show updated RSVP counts
+          loadEvents();
+        } else {
+          showMessage(`❌ Fehler: ${data.message || data.error}`, 'error');
+        }
+      } catch (error) {
+        console.error('[SEND-EVENT-INVITES] Error:', error);
+        showMessage(`❌ Fehler beim Versenden: ${error.message}`, 'error');
       }
     }
 
