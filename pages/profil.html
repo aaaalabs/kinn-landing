@@ -853,7 +853,8 @@
       }
     }
 
-    function switchTab(tab) {
+    // Make switchTab globally accessible for inline onclick handlers
+    window.switchTab = function(tab) {
       activeTab = tab;
       window.location.hash = `#${tab}`;
       renderProfile();
@@ -1266,7 +1267,8 @@
     }
 
     // Skill chip toggle
-    function toggleSkill(chip) {
+    // Make globally accessible for inline onclick handlers
+    window.toggleSkill = function(chip) {
       const isCurrentlySelected = chip.classList.contains('selected');
       const selectedSkills = document.querySelectorAll('.chip.selected');
 
@@ -1316,7 +1318,8 @@
       });
     }
 
-    function toggleCategory(header) {
+    // Make globally accessible for inline onclick handlers
+    window.toggleCategory = function(header) {
       const category = header.parentElement;
       const chipsContainer = category.querySelector('.category-chips');
       const icon = header.querySelector('.category-icon');
@@ -1422,7 +1425,8 @@
       }
     }
 
-    async function handleToggleChange(checkbox) {
+    // Make globally accessible for inline onchange handlers
+    window.handleToggleChange = async function(checkbox) {
       if (isSaving) return;
 
       const newValue = checkbox.checked;
@@ -1466,7 +1470,8 @@
       }
     }
 
-    async function handleUnsubscribe() {
+    // Make globally accessible for inline onclick handlers
+    window.handleUnsubscribe = async function() {
       if (!confirm('Möchtest du dich wirklich komplett vom KINN KI Treff abmelden? Diese Aktion kann nicht rückgängig gemacht werden.')) {
         return;
       }
