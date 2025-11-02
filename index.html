@@ -802,14 +802,18 @@
           throw new Error(data.message || 'Email delivery failed')
         }
 
-        // Adaptive message based on whether user is new or returning
-        const message = data.isReturningUser
+        // Adaptive messages based on whether user is new or returning
+        const message2 = data.isReturningUser
           ? '02: Griaß di! Login-Link kommt ins Postfach.'
           : '02: Email is unterwegs! Schau in dein Postfach.';
 
-        await typeTerminalLine(2, message, 30)
+        const message3 = data.isReturningUser
+          ? '03: Schau ins Postfach und klick den Link. Drück ESC zum Schließen.'
+          : '03: Drück R für noch eine Email, oder ESC zum Schließen.';
+
+        await typeTerminalLine(2, message2, 30)
         await new Promise(resolve => setTimeout(resolve, 200))
-        await typeTerminalLine(3, '03: Drück R für noch eine Email, oder ESC zum Schließen.', 30)
+        await typeTerminalLine(3, message3, 30)
 
         showToast('Passt!', 'success')
 
