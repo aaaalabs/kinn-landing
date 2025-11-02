@@ -276,6 +276,111 @@ Following Jony Ive's philosophy:
 - Clear sender identity
 - Unsubscribe link in every email
 
+## Event Workflows (NEW - Nov 2025)
+
+### Admin: Event erstellen
+
+**Option A: Dashboard** (`/pages/dashboard.html` - Session-based)
+1. Login via magic link → Session gespeichert
+2. Dashboard → "Events" Tab → "+ Neues Event"
+3. Event-Form ausfüllen (Titel, Typ, Location/Meeting-Link, Datum)
+4. Speichern → Event in Redis
+
+**Option B: Admin-Seite** (`/pages/admin.html` - Password-based)
+1. Gehe zu `/pages/admin`
+2. Admin API Key eingeben (ADMIN_PASSWORD)
+3. Event-Form ausfüllen:
+   - **Event Type**: Präsenz / Online / Hybrid
+   - **Meeting Link**: (zeigt sich bei Online/Hybrid)
+   - **Max Capacity**: (zeigt sich bei Präsenz/Hybrid)
+4. Submit → Endpoint: `POST /api/events/create`
+
+**Was passiert beim Event-Create:**
+- Validation (type, meetingLink requirements, etc.)
+- Event ID generiert (`kinn-treff-12-1730123456`)
+- Event in Redis gespeichert (`events:config`)
+- RSVP-Arrays initialisiert: `{ yes: [], no: [], maybe: [] }`
+- ⚠️ **TODO**: Email-Notification an alle Subscriber (noch nicht implementiert!)
+
+### User: Auf Event RSVPen
+
+**Ablauf (wenn Email-Notifications implementiert sind):**
+1. User bekommt Email: "KINN Treff #12 - Do 15.2. | Online via Google Meet"
+2. Email enthält RSVP-Buttons: `[Zusagen ✓]` `[Absagen ✗]` `[Vielleicht ?]`
+3. Klick → `GET /api/rsvp?token=...&event=kinn-12&response=yes`
+4. RSVP gespeichert in Redis (`event.rsvps.yes.push(email)`)
+5. Success-Page: "Danke für deine Zusage! 29 Personen haben zugesagt"
+6. Optional: Phone-Nummer für WhatsApp-Reminder eingeben
+
+### Admin: Google Calendar Invites versenden
+
+**Workflow (Smart Hybrid - No API):**
+1. Dashboard → Event → "Teilnehmer" Tab
+2. RSVP-Statistik anzeigen:
+   ```
+   ✅ Ja: 29 (78%)
+   ❌ Nein: 3
+   ❓ Vielleicht: 8
+   ⚪ Keine Antwort: 45
+   ```
+3. Copy-Buttons:
+   - **"Copy All Emails (85)"** → Alle Subscriber
+   - **"Copy Yes Only (29)"** → Nur Zusagen
+   - **"Copy Yes + Maybe (37)"** → Zusagen + Vielleicht
+4. **Paste in Google Calendar:**
+   - Öffne Google Calendar
+   - Create Event
+   - Add Guests → Paste Emails
+   - Add Google Meet Link (automatisch)
+   - Send Invites
+5. **Done!** → Alle bekommen Calendar Invite mit Meet-Link
+
+### Admin: WhatsApp-Reminder versenden
+
+**Workflow (Template-Generator):**
+1. Dashboard → Event → "WhatsApp Reminder"
+2. Select:
+   - **Template**: "1 Tag vorher" / "2 Stunden vorher" / "Custom"
+   - **Filter**: "Yes only" / "Yes + Maybe" / "All"
+3. Click "Generate Messages"
+4. **Endpoint**: `POST /api/admin/whatsapp-template`
+   ```json
+   {
+     "eventId": "kinn-12",
+     "templateType": "1day",
+     "rsvpFilter": "yes"
+   }
+   ```
+5. **Response**: Array of messages:
+   ```json
+   {
+     "messages": [
+       {
+         "phone": "+43 664 123 4567",
+         "name": "Thomas",
+         "message": "Hey Thomas, morgen um 18:00 ist KINN Treff! 🤖\nMeeting: https://meet.google.com/xyz\nFreue mich auf dich!"
+       }
+     ],
+     "count": 29,
+     "missingPhone": ["user3@example.com"]
+   }
+   ```
+6. **Copy Messages** → Paste in WhatsApp Web → Manuell versenden
+
+### iCal Feed: Meeting-Links
+
+**Was sich geändert hat:**
+- `/api/calendar.ics` generiert jetzt:
+  ```ical
+  CONFERENCE:https://meet.google.com/xyz-abc-def
+  X-GOOGLE-CONFERENCE:https://meet.google.com/xyz-abc-def
+  X-MICROSOFT-SKYPETEAMSMEETINGURL:https://meet.google.com/xyz-abc-def
+  DESCRIPTION:...\n\nMeeting Link: https://meet.google.com/xyz-abc-def
+  ```
+- **Apple Calendar**: Zeigt Meeting-Link clickable an
+- **Google Calendar**: "Join with Google Meet" Button
+- **Outlook**: Meeting-Link in Description
+
 ## Code Style
 
 Apply Windsurf Coding Rules from global CLAUDE.md:
