@@ -47,34 +47,14 @@ function matchesEventType(eventType, userLocation) {
 function generateEventInviteEmail(name, event, rsvpLinks) {
   const { yesUrl, noUrl, maybeUrl } = rsvpLinks;
 
-  // Format date/time nicely - with defensive fallbacks
-  let eventDate;
-  if (event.start) {
-    // Preferred: Use ISO8601 UTC timestamp
-    eventDate = new Date(event.start);
-  } else if (event.date && event.startTime) {
-    // Fallback for legacy events WITHOUT proper start/end timestamps
-    // CRITICAL: Time is stored as Vienna local time, not UTC!
-    //
-    // Problem: new Date("2025-11-06T08:00:00") interprets as:
-    //   - Browser: Local timezone
-    //   - Vercel server: UTC
-    //
-    // Solution: Explicitly specify Vienna timezone offset
-    // November 2025 = Winterzeit = UTC+1 (CET)
-    const viennaOffset = '+01:00'; // TODO: Detect CET vs CEST based on date
-    const dateStr = `${event.date}T${event.startTime}:00${viennaOffset}`;
-    eventDate = new Date(dateStr);
-    console.log('[EMAIL-TEMPLATE] Legacy event parsed with Vienna offset:', event.id, dateStr);
-  } else {
-    console.error('[EMAIL-TEMPLATE] Missing date fields:', { id: event.id, start: event.start, date: event.date, startTime: event.startTime });
-    eventDate = new Date(); // Last resort fallback
-  }
+  // Parse event date from ISO8601 timestamp
+  // Events are stored as UTC, formatted for Vienna timezone
+  const eventDate = new Date(event.start);
 
-  // Check if date is valid
-  if (isNaN(eventDate.getTime())) {
-    console.error('[EMAIL-TEMPLATE] Invalid date for event:', event);
-    eventDate = new Date(); // Fallback to now
+  // Validate
+  if (!event.start || isNaN(eventDate.getTime())) {
+    console.error('[EMAIL-TEMPLATE] Invalid or missing event.start field:', event);
+    throw new Error(`Event ${event.id} has invalid start timestamp`);
   }
 
   // Format for Austria/Vienna timezone
@@ -189,21 +169,13 @@ function generateEventInviteEmail(name, event, rsvpLinks) {
 function generateEventInviteEmailPlainText(name, event, rsvpLinks) {
   const { yesUrl, noUrl, maybeUrl } = rsvpLinks;
 
-  // Format date/time nicely - with defensive fallbacks (same as HTML version)
-  let eventDate;
-  if (event.start) {
-    eventDate = new Date(event.start);
-  } else if (event.date && event.startTime) {
-    // Legacy events: Assume Vienna time
-    const viennaOffset = '+01:00'; // November 2025 = Winterzeit
-    const dateStr = `${event.date}T${event.startTime}:00${viennaOffset}`;
-    eventDate = new Date(dateStr);
-  } else {
-    eventDate = new Date();
-  }
+  // Parse event date from ISO8601 timestamp
+  const eventDate = new Date(event.start);
 
-  if (isNaN(eventDate.getTime())) {
-    eventDate = new Date();
+  // Validate
+  if (!event.start || isNaN(eventDate.getTime())) {
+    console.error('[EMAIL-TEMPLATE-PLAIN] Invalid event.start:', event);
+    throw new Error(`Event ${event.id} has invalid start timestamp`);
   }
 
   const dateStr = eventDate.toLocaleDateString('de-AT', {
