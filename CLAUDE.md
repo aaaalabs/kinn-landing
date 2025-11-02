@@ -15,8 +15,11 @@ KINN (KI Treff Innsbruck) landing page for event subscriptions with iCal feed in
 
 - Email subscription with double opt-in
 - iCal feed generation for calendar apps
+- **Event Types: Präsenz, Online (Google Meet), Hybrid** ✅ NEW
+- **RSVP-System mit Ja/Nein/Vielleicht** ✅ NEW (Backend ready)
+- **WhatsApp-Template Generator** ✅ NEW
 - Admin dashboard for event management
-- User profile management with preferences
+- User profile management with preferences (Supply/Demand matching)
 - No OAuth - simple token-based auth
 
 ## Brand Guidelines
@@ -114,45 +117,91 @@ See: **`POTENZIALE.md`** for comprehensive feature opportunities:
 ## API Endpoints
 
 ### Public Endpoints
-- `POST /api/subscribe` - Initial email subscription
+- `POST /api/signup` - Initial email subscription
 - `GET /api/confirm?token=...` - Email confirmation
-- `GET /api/calendar.ics` - iCal feed generation
+- `GET /api/calendar.ics` - iCal feed generation (with meeting links!)
 - `GET /api/profile?token=...` - Get user preferences
 - `PUT /api/profile/update` - Update user preferences
+- `PUT /api/profile/update-extended` - Update full profile (supply/demand)
 - `POST /api/profile/unsubscribe` - Complete unsubscribe
+- **`GET /api/rsvp?token=...&event=...&response=yes|no|maybe`** ✅ NEW - RSVP for events
+- `GET /api/events` - Get upcoming events (public)
 
-### Admin Endpoints (Basic Auth)
-- `POST /api/admin/login` - Admin authentication
+### Admin Endpoints (Bearer Auth via ADMIN_PASSWORD)
 - `GET /api/admin/events` - List all events
-- `POST /api/admin/events` - Create new event
-- `PUT /api/admin/events` - Update event
-- `DELETE /api/admin/events` - Delete event
-- `GET /api/admin/subscribers` - List subscribers
+- `PUT /api/admin/events` - Update events config (bulk)
+- **`POST /api/events/create`** ✅ NEW - Create single event with validation
+- **`GET /api/admin/subscribers?filter=yes&event=...&format=text`** ✅ NEW - Get filtered subscribers
+  - Filters: `all`, `yes`, `no`, `maybe`, `yes_maybe`, `none`
+  - Formats: `json` (default), `text` (comma-separated for copy-paste)
+- **`POST /api/admin/whatsapp-template`** ✅ NEW - Generate WhatsApp reminder messages
 
 ## Redis Data Structure
 
 ```javascript
-// Events
-"events:all" → Array<Event>
+// Events Config
+"events:config" → {
+  events: Array<Event>,
+  defaults: {
+    timezone: 'Europe/Vienna',
+    organizer: 'thomas@kinn.at',
+    categories: ['KI', 'AI', 'Networking', 'Innsbruck'],
+    reminder: '24h'
+  }
+}
+
+// Event Schema (NEW fields highlighted)
+Event {
+  id: string,
+  type: "online" | "in-person" | "hybrid", // ✅ NEW
+  title: string,
+  description: string,
+  location: string,
+  meetingLink?: string, // ✅ NEW (for online/hybrid)
+  maxCapacity?: number, // ✅ NEW (for in-person/hybrid)
+  date: "YYYY-MM-DD",
+  startTime: "HH:MM",
+  endTime: "HH:MM",
+  start: ISO8601,
+  end: ISO8601,
+  status: "confirmed" | "cancelled",
+  rsvps: { // ✅ NEW
+    yes: Array<email>,
+    no: Array<email>,
+    maybe: Array<email>
+  },
+  createdAt: ISO8601
+}
 
 // Subscribers
-"subscribers" → Set<email>
+"subscribers:confirmed" → Set<email>
 
-// User Preferences
-"user:preferences:{emailHash}" → {
+// User Preferences (basic)
+"user:preferences:{email}" → {
   email: string,
+  phone?: string, // ✅ NEW (for WhatsApp reminders)
+  whatsappReminders?: boolean, // ✅ NEW
   notifications: { enabled: boolean },
-  profileToken: string,
   subscribedAt: ISO8601,
   updatedAt: ISO8601
 }
 
-// Confirmation Tokens (temporary)
-"confirm:pending:{emailHash}" → {
+// User Profile (extended with supply/demand)
+"profile:{email}" → {
   email: string,
-  token: string,
-  expiresAt: timestamp
+  identity: { name, linkedIn, github, location },
+  supply: { skills, experience, availability, canOffer },
+  demand: { seeking, industries, activeSearch, interests },
+  preferences: { privacy: { showInDirectory, allowMatching } },
+  createdAt: ISO8601,
+  updatedAt: ISO8601
 }
+
+// Reverse Indexes (for matching)
+"skill:{skill}" → Set<email>
+"demand:{type}" → Set<email>
+"supply:{offer}" → Set<email>
+"location:{location}" → Set<email>
 ```
 
 ## Token Types
