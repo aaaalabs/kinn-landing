@@ -473,8 +473,108 @@
 
     .chip.selected {
       background: #5ED9A6;
-      border-color: #5ED9A6;
+      border-color: #4EC995;
       color: #000;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(94, 217, 166, 0.3);
+      transform: scale(1.02);
+    }
+
+    .chip.selected::before {
+      content: '✓ ';
+      font-weight: 700;
+    }
+
+    /* Selected Skills Bar */
+    #selectedSkillsBar {
+      background: rgba(94, 217, 166, 0.08);
+      border: 1px solid rgba(94, 217, 166, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    #selectedSkillsBar.empty {
+      opacity: 0.5;
+      font-size: 0.875rem;
+      color: #999;
+      justify-content: center;
+    }
+
+    #selectedSkillsBar .chip {
+      background: #5ED9A6;
+      color: #000;
+      font-weight: 600;
+      padding-right: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    #selectedSkillsBar .chip-remove {
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+      line-height: 1;
+      transition: all 0.2s ease;
+    }
+
+    #selectedSkillsBar .chip-remove:hover {
+      background: rgba(0, 0, 0, 0.2);
+      transform: scale(1.1);
+    }
+
+    /* Prominent Skill Counter */
+    #skillCounter {
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    #skillCounter.low {
+      background: rgba(94, 217, 166, 0.1);
+      color: #2C3E50;
+    }
+
+    #skillCounter.medium {
+      background: rgba(251, 191, 36, 0.15);
+      color: #d97706;
+    }
+
+    #skillCounter.high {
+      background: rgba(239, 68, 68, 0.15);
+      color: #dc2626;
+    }
+
+    /* Sticky Search Box */
+    .skills-search-container {
+      position: sticky;
+      top: 0;
+      background: linear-gradient(180deg, #ffffff 0%, #fafcfb 100%);
+      padding: 0.5rem 0 1rem 0;
+      margin: 0 -0.5rem;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+      z-index: 10;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .skills-search-container.scrolled {
+      border-bottom-color: rgba(0, 0, 0, 0.08);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .chip-remove {
@@ -902,6 +1002,11 @@
       // Initialize skill counter after rendering
       setTimeout(() => updateSkillCounter(), 0);
 
+      // Initialize sticky search scroll listener
+      if (activeTab === 'profil') {
+        setTimeout(() => initializeStickySearch(), 0);
+      }
+
       // Load events on initial dashboard render
       if (activeTab === 'dashboard') {
         setTimeout(() => loadEvents(), 100);
@@ -1029,26 +1134,37 @@
             <h2 style="margin-bottom: 1rem;">Was ich anbiete</h2>
 
             <div class="form-group">
-              <label class="form-label">
-                Skills (klicken zum auswählen)
-                <span id="skillCounter" style="color: #666; font-weight: 400; margin-left: 0.5rem;">0/20</span>
+              <label class="form-label" style="display: flex; align-items: center; justify-content: space-between;">
+                <span>Skills (klicken zum auswählen)</span>
+                <span id="skillCounter" class="low">0/20</span>
               </label>
 
-              <!-- Search Input -->
-              <div style="position: relative; margin-bottom: 1.5rem;">
-                <input
-                  type="text"
-                  id="skillSearch"
-                  placeholder="🔍 Suche in 147 Skills..."
-                  class="form-input"
-                  style="width: 100%; padding: 0.875rem 1rem; font-size: 0.9375rem;"
-                  oninput="filterSkills(this.value)"
-                />
+              <!-- Selected Skills Bar -->
+              <div id="selectedSkillsBar" class="empty">
+                <span style="opacity: 0.7;">✨ Wähle bis zu 20 Skills aus</span>
+              </div>
+
+              <!-- Sticky Search Container -->
+              <div class="skills-search-container">
+                <div style="position: relative;">
+                  <input
+                    type="text"
+                    id="skillSearch"
+                    placeholder="🔍 Suche in 147 Skills..."
+                    class="form-input"
+                    style="width: 100%; padding: 0.875rem 1rem; font-size: 0.9375rem;"
+                    oninput="filterSkills(this.value)"
+                  />
+                </div>
               </div>
 
               <!-- Skills by Category -->
               <div id="skillsContainer">
-                ${Object.entries(SKILLS_BY_CATEGORY).map(([category, skills]) => `
+                ${Object.entries(SKILLS_BY_CATEGORY).map(([category, skills], index) => {
+                  const isFirstCategory = index === 0;
+                  const iconRotation = isFirstCategory ? 'rotate(0deg)' : 'rotate(-90deg)';
+                  const iconSymbol = isFirstCategory ? '▼' : '▶';
+                  return `
                   <div class="skill-category" data-category="${category}">
                     <div
                       class="category-header"
@@ -1071,11 +1187,11 @@
                       onmouseover="this.style.background='rgba(94, 217, 166, 0.1)'; this.style.borderColor='rgba(94, 217, 166, 0.3)'"
                       onmouseout="this.style.background='rgba(94, 217, 166, 0.05)'; this.style.borderColor='rgba(94, 217, 166, 0.15)'"
                     >
-                      <span class="category-icon" style="margin-right: 0.5rem; transition: transform 0.2s;">▼</span>
+                      <span class="category-icon" style="margin-right: 0.5rem; transition: transform 0.2s; transform: ${iconRotation};">${iconSymbol}</span>
                       <span class="category-name">${category}</span>
                       <span style="color: #999; margin-left: 0.5rem; font-weight: 400;">(${skills.length})</span>
                     </div>
-                    <div class="chip-container category-chips">
+                    <div class="chip-container category-chips" style="${isFirstCategory ? '' : 'display: none;'}"}
                       ${skills.map(skill => `
                         <div
                           class="chip ${(supply.skills || []).includes(skill.toLowerCase()) ? 'selected' : ''}"
@@ -1088,7 +1204,8 @@
                       `).join('')}
                     </div>
                   </div>
-                `).join('')}
+                `;
+                }).join('')}
               </div>
             </div>
 
@@ -1282,20 +1399,82 @@
       updateSkillCounter();
     }
 
+    // Remove skill from selected bar
+    window.removeSelectedSkill = function(skillDataValue) {
+      const chip = document.querySelector(`.chip[data-skill="${skillDataValue}"]`);
+      if (chip) {
+        chip.classList.remove('selected');
+        updateSkillCounter();
+      }
+    }
+
     function updateSkillCounter() {
       const selectedCount = document.querySelectorAll('.chip.selected').length;
       const counter = document.getElementById('skillCounter');
+      const selectedBar = document.getElementById('selectedSkillsBar');
+
       if (counter) {
         counter.textContent = `${selectedCount}/20`;
-        // Visual feedback when approaching limit
-        if (selectedCount >= 20) {
-          counter.style.color = '#E74C3C'; // Red when at limit
-        } else if (selectedCount >= 15) {
-          counter.style.color = '#F39C12'; // Orange when close
+
+        // Apply color classes based on count
+        counter.classList.remove('low', 'medium', 'high');
+        if (selectedCount >= 19) {
+          counter.classList.add('high');
+        } else if (selectedCount >= 11) {
+          counter.classList.add('medium');
         } else {
-          counter.style.color = '#666'; // Gray default
+          counter.classList.add('low');
         }
       }
+
+      // Populate selected skills bar
+      if (selectedBar) {
+        const selectedChips = document.querySelectorAll('.chip.selected');
+
+        if (selectedChips.length === 0) {
+          selectedBar.innerHTML = '<span style="opacity: 0.7; font-size: 0.875rem;">✨ Wähle bis zu 20 Skills aus</span>';
+        } else {
+          selectedBar.innerHTML = Array.from(selectedChips).map(chip => {
+            const skillName = chip.getAttribute('data-skill-label') || chip.textContent.trim();
+            const skillDataValue = chip.getAttribute('data-skill');
+            return `
+              <div class="chip selected" style="display: inline-flex; align-items: center; gap: 0.5rem; margin: 0.25rem;">
+                ${skillName}
+                <button class="chip-remove" onclick="removeSelectedSkill('${skillDataValue}')" title="Entfernen" style="background: none; border: none; color: #000; font-size: 1.25rem; line-height: 1; cursor: pointer; padding: 0; margin: 0;">×</button>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    }
+
+    function initializeStickySearch() {
+      const searchContainer = document.querySelector('.skills-search-container');
+      if (!searchContainer) return;
+
+      // Track initial position
+      const initialTop = searchContainer.getBoundingClientRect().top + window.scrollY;
+
+      // Add scroll event listener
+      const handleScroll = () => {
+        const scrollTop = window.scrollY;
+
+        if (scrollTop > initialTop) {
+          // Add sticky styling when scrolled past initial position
+          searchContainer.style.borderColor = 'rgba(94, 217, 166, 0.3)';
+          searchContainer.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)';
+        } else {
+          // Remove sticky styling when at or above initial position
+          searchContainer.style.borderColor = 'transparent';
+          searchContainer.style.boxShadow = 'none';
+        }
+      };
+
+      // Initial check
+      handleScroll();
+
+      // Attach listener
+      window.addEventListener('scroll', handleScroll);
     }
 
     function filterSkills(searchTerm) {
