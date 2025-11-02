@@ -1032,6 +1032,43 @@
       padding: 3rem 2rem;
       color: #999;
     }
+
+    /* Profile Sub-Tabs */
+    .profile-sub-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid rgba(0,0,0,0.08);
+    }
+
+    .profile-sub-tab {
+      background: none;
+      border: none;
+      padding: 0.875rem 1.5rem;
+      font-family: 'Work Sans', sans-serif;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: #6B6B6B;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .profile-sub-tab:hover {
+      color: #3A3A3A;
+    }
+
+    .profile-sub-tab.active {
+      color: #2C3E50;
+      font-weight: 600;
+      border-bottom-color: #5ED9A6;
+    }
+
+    .profile-tab-section.hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -1312,6 +1349,12 @@
           initializeStickySearch();
           initializeKeyboardShortcuts();
           applySkillFilters(); // Apply initial domain filter (Progressive Disclosure)
+
+          // Restore active profile sub-tab from localStorage
+          const savedTab = localStorage.getItem('kinn_profile_active_tab');
+          if (savedTab && ['ich', 'angebot', 'suche'].includes(savedTab)) {
+            switchProfileSubTab(savedTab);
+          }
         }, 0);
       }
 
@@ -1408,7 +1451,22 @@
           <h2>Zeit sparen beim Stammtisch</h2>
           <p>Füll dein Profil aus und ich kann dich schon vorab mit passenden Leuten matchen.</p>
 
+          <!-- Profile Sub-Tabs -->
+          <div class="profile-sub-tabs">
+            <button type="button" class="profile-sub-tab active" data-tab="ich" onclick="switchProfileSubTab('ich')">
+              Ich
+            </button>
+            <button type="button" class="profile-sub-tab" data-tab="angebot" onclick="switchProfileSubTab('angebot')">
+              Angebot
+            </button>
+            <button type="button" class="profile-sub-tab" data-tab="suche" onclick="switchProfileSubTab('suche')">
+              Suche
+            </button>
+          </div>
+
           <form id="profileForm" onsubmit="handleProfileSubmit(event)">
+            <!-- Tab: Ich -->
+            <div class="profile-tab-section" data-tab="ich">
             <!-- Section: Basis-Info -->
             <div class="form-group">
               <label class="form-label">Name</label>
@@ -1566,7 +1624,11 @@
                 </div>
               </div>
             </div>
+            </div>
+            <!-- End Tab: Ich -->
 
+            <!-- Tab: Angebot -->
+            <div class="profile-tab-section hidden" data-tab="angebot">
             <div class="form-group">
               <label class="form-label">Ich biete an</label>
               <div class="checkbox-group">
@@ -1588,12 +1650,11 @@
                 </div>
               </div>
             </div>
+            </div>
+            <!-- End Tab: Angebot -->
 
-            <hr class="section-divider">
-
-            <!-- Section: Was ich suche (Demand) -->
-            <h2 style="margin-bottom: 1rem;">Was ich suche</h2>
-
+            <!-- Tab: Suche -->
+            <div class="profile-tab-section hidden" data-tab="suche">
             <div class="form-group">
               <label class="form-label">Offen für</label>
               <div class="checkbox-group">
@@ -1658,8 +1719,10 @@
                 <label for="privacy-matching">Automatisches Matching erlauben</label>
               </div>
             </div>
+            </div>
+            <!-- End Tab: Suche -->
 
-            <!-- Submit Button -->
+            <!-- Submit Button (always visible) -->
             <button type="submit" class="cta-button" style="margin-top: 2rem;">
               Profil speichern
             </button>
@@ -1718,6 +1781,30 @@
       updateSkillCounter();
       autoSaveSkills(); // Auto-save nach Entfernen
     }
+
+    // Profile sub-tab switching
+    window.switchProfileSubTab = function(tabName) {
+      // Update button states
+      document.querySelectorAll('.profile-sub-tab').forEach(btn => {
+        if (btn.getAttribute('data-tab') === tabName) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      // Show/hide tab sections
+      document.querySelectorAll('.profile-tab-section').forEach(section => {
+        if (section.getAttribute('data-tab') === tabName) {
+          section.classList.remove('hidden');
+        } else {
+          section.classList.add('hidden');
+        }
+      });
+
+      // Save to localStorage
+      localStorage.setItem('kinn_profile_active_tab', tabName);
+    };
 
     // Auto-save skills to Redis (instant save, no form submit needed)
     async function autoSaveSkills() {
