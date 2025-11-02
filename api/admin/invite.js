@@ -182,11 +182,13 @@ export default async function handler(req, res) {
     }
 
     // Generate confirmation token (7 days expiry for invites)
-    const confirmToken = generateConfirmToken(normalizedEmail, '7d');
+    const confirmToken = generateConfirmToken(normalizedEmail);
 
     // Build confirmation URL
     const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
     const confirmUrl = `${baseUrl}/api/confirm?token=${confirmToken}`;
+
+    console.log('[INVITE] Generated token for:', normalizedEmail, 'URL:', confirmUrl.substring(0, 80) + '...');
 
     // Send personalized invite email
     const emailResult = await resend.emails.send({
