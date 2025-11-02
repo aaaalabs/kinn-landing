@@ -30,7 +30,7 @@ function generateOptInEmail(confirmUrl) {
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Hallo,</p>
 
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
-          vielen Dank für deine Anmeldung zum <strong>KINN KI Treff Innsbruck</strong>!
+          vielen Dank für deine Anmeldung zum <strong>KI Treff Innsbruck</strong>!
         </p>
 
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
@@ -92,7 +92,7 @@ function generateOptInEmailPlainText(confirmUrl) {
   return `
 Hallo,
 
-vielen Dank für deine Anmeldung zum KINN KI Treff Innsbruck!
+vielen Dank für deine Anmeldung zum KI Treff Innsbruck!
 
 Bitte bestätige deine E-Mail-Adresse:
 
