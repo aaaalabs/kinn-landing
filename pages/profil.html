@@ -997,7 +997,8 @@
     }
 
     // Active domain filters (for skills filtering)
-    let activeDomains = ['all']; // Start with 'all' selected
+    // Progressive Disclosure: Start with Creative domain (41 skills) instead of All (147)
+    let activeDomains = ['creative'];
 
     // Domain mapping for color-coded filters (Jony Ive inspired UX)
     const DOMAIN_MAPPING = {
@@ -1220,6 +1221,7 @@
         setTimeout(() => {
           initializeStickySearch();
           initializeKeyboardShortcuts();
+          applySkillFilters(); // Apply initial domain filter (Progressive Disclosure)
         }, 0);
       }
 
@@ -1376,16 +1378,17 @@
 
               <!-- Domain Filters (Apple-inspired) -->
               <div class="domain-filters">
-                <button class="domain-chip active" data-domain="all" onclick="toggleDomainFilter('all')">
+                <button class="domain-chip ${activeDomains.includes('all') ? 'active' : ''}" data-domain="all" onclick="toggleDomainFilter('all')">
                   All <span class="count">147</span>
                 </button>
                 ${Object.entries(DOMAIN_MAPPING).map(([domainKey, domain]) => {
                   const skillCount = domain.categories.reduce((sum, cat) => {
                     return sum + (SKILLS_BY_CATEGORY[cat]?.length || 0);
                   }, 0);
+                  const isActive = activeDomains.includes(domainKey);
                   return `
                     <button
-                      class="domain-chip"
+                      class="domain-chip ${isActive ? 'active' : ''}"
                       data-domain="${domainKey}"
                       style="--domain-color: ${domain.color}"
                       onclick="toggleDomainFilter('${domainKey}')"
@@ -1784,7 +1787,7 @@
     }
 
     // Profile form submission
-    async function handleProfileSubmit(event) {
+    window.handleProfileSubmit = async function(event) {
       event.preventDefault();
 
       if (isSaving) return;
