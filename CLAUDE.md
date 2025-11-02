@@ -189,7 +189,16 @@ Event {
 // User Profile (extended with supply/demand)
 "profile:{email}" → {
   email: string,
-  identity: { name, linkedIn, github, location },
+  identity: {
+    name,
+    linkedIn,
+    github,
+    location // Event preference: "in-person" | "online" | "all"
+             // in-person = Präsenz in Tirol (gets in-person + hybrid events)
+             // online = Online/Remote (gets online + hybrid events)
+             // all = Beides/Flexibel (gets all events)
+             // Legacy values: "ibk"/"tirol" → "in-person", "remote" → "online", "hybrid" → "all"
+  },
   supply: { skills, experience, availability, canOffer },
   demand: { seeking, industries, activeSearch, interests },
   preferences: { privacy: { showInDirectory, allowMatching } },

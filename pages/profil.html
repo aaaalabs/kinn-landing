@@ -1061,12 +1061,7 @@
         label: 'Research',
         color: '#FBBF24',
         categories: [
-          'AI SAFETY & ALIGNMENT',
-          'REINFORCEMENT LEARNING',
-          'EXPLAINABLE AI',
-          'SYNTHETIC DATA',
-          'AI FOR SCIENCE',
-          'EMERGING AI'
+          'AI SAFETY & ETHICS'
         ]
       }
     };
@@ -1337,13 +1332,15 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Location Präferenz</label>
+              <label class="form-label">Event-Präferenz</label>
+              <p class="form-help" style="font-size: 0.875rem; color: #6B6B6B; margin-top: 0.25rem; margin-bottom: 0.75rem;">
+                Welche Events möchtest du besuchen?
+              </p>
               <select class="form-select" name="location">
                 <option value="">Bitte wählen...</option>
-                <option value="ibk" ${identity.location === 'ibk' ? 'selected' : ''}>Innsbruck</option>
-                <option value="tirol" ${identity.location === 'tirol' ? 'selected' : ''}>Tirol</option>
-                <option value="hybrid" ${identity.location === 'hybrid' ? 'selected' : ''}>Hybrid</option>
-                <option value="remote" ${identity.location === 'remote' ? 'selected' : ''}>Remote</option>
+                <option value="in-person" ${['ibk', 'tirol', 'in-person'].includes(identity.location) ? 'selected' : ''}>Präsenz in Tirol</option>
+                <option value="online" ${identity.location === 'online' || identity.location === 'remote' ? 'selected' : ''}>Online / Remote</option>
+                <option value="all" ${identity.location === 'hybrid' || identity.location === 'all' ? 'selected' : ''}>Beides (flexibel)</option>
               </select>
             </div>
 
@@ -1834,8 +1831,10 @@
           location: formData.get('location')
         },
         supply: {
-          skills: Array.from(document.querySelectorAll('#skillsContainer .chip.selected'))
-            .map(chip => chip.dataset.skill),
+          skills: [...new Set(
+            Array.from(document.querySelectorAll('#skillsContainer .chip.selected'))
+              .map(chip => chip.dataset.skill)
+          )],
           experience: formData.get('experience'),
           availability: formData.get('availability'),
           canOffer: formData.getAll('canOffer')
