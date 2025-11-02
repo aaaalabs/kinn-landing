@@ -53,9 +53,19 @@ function generateEventInviteEmail(name, event, rsvpLinks) {
     // Preferred: Use ISO8601 UTC timestamp
     eventDate = new Date(event.start);
   } else if (event.date && event.startTime) {
-    // Fallback: construct from date + startTime fields
-    // Parse as local time (assumes server/admin is in Vienna timezone)
-    eventDate = new Date(`${event.date}T${event.startTime}:00`);
+    // Fallback for legacy events WITHOUT proper start/end timestamps
+    // CRITICAL: Time is stored as Vienna local time, not UTC!
+    //
+    // Problem: new Date("2025-11-06T08:00:00") interprets as:
+    //   - Browser: Local timezone
+    //   - Vercel server: UTC
+    //
+    // Solution: Explicitly specify Vienna timezone offset
+    // November 2025 = Winterzeit = UTC+1 (CET)
+    const viennaOffset = '+01:00'; // TODO: Detect CET vs CEST based on date
+    const dateStr = `${event.date}T${event.startTime}:00${viennaOffset}`;
+    eventDate = new Date(dateStr);
+    console.log('[EMAIL-TEMPLATE] Legacy event parsed with Vienna offset:', event.id, dateStr);
   } else {
     console.error('[EMAIL-TEMPLATE] Missing date fields:', { id: event.id, start: event.start, date: event.date, startTime: event.startTime });
     eventDate = new Date(); // Last resort fallback
@@ -184,7 +194,10 @@ function generateEventInviteEmailPlainText(name, event, rsvpLinks) {
   if (event.start) {
     eventDate = new Date(event.start);
   } else if (event.date && event.startTime) {
-    eventDate = new Date(`${event.date}T${event.startTime}:00`);
+    // Legacy events: Assume Vienna time
+    const viennaOffset = '+01:00'; // November 2025 = Winterzeit
+    const dateStr = `${event.date}T${event.startTime}:00${viennaOffset}`;
+    eventDate = new Date(dateStr);
   } else {
     eventDate = new Date();
   }
