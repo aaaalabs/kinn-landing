@@ -738,8 +738,11 @@
 
         if (!response.ok) {
           if (response.headers.get('content-type')?.includes('text/html')) {
-            // Branded error page
-            content.innerHTML = await response.text();
+            // Branded error page - replace entire page
+            const errorHTML = await response.text();
+            document.open();
+            document.write(errorHTML);
+            document.close();
           } else {
             const error = await response.json();
             showError('Fehler beim Laden', error.message || 'Profil konnte nicht geladen werden.');
