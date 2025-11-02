@@ -848,6 +848,23 @@
         }
       }
 
+      // Generate ISO8601 start/end timestamps for calendar feeds and email templates
+      try {
+        const startDate = new Date(`${event.date}T${event.startTime}:00+01:00`);
+        const endDate = new Date(`${event.date}T${event.endTime}:00+01:00`);
+
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          showMessage('Ungültiges Datum oder Uhrzeit!', 'error');
+          return;
+        }
+
+        event.start = startDate.toISOString();
+        event.end = endDate.toISOString();
+      } catch (error) {
+        showMessage('Fehler beim Generieren der Zeitstempel!', 'error');
+        return;
+      }
+
       // Update or add
       const events = [...eventsConfig.events];
       if (editingEventIndex !== null) {
