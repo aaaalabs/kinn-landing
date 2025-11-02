@@ -683,10 +683,30 @@
     </div>
   </div>
 
-  <script>
-    // Extract token from URL
+  <script type="module">
+    // Import auth utilities for session support
+    import {
+      getSession,
+      isSessionValid,
+      getSessionToken,
+      redirectToLanding
+    } from '/public/js/auth.js';
+
+    // Extract token from URL (for direct links from emails)
     const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
+    let token = params.get('token');
+
+    // If no URL token, try session token (for dashboard redirects)
+    if (!token) {
+      const session = getSession();
+      if (isSessionValid()) {
+        token = getSessionToken();
+        console.log('[PROFILE] Using session token');
+      }
+    } else {
+      console.log('[PROFILE] Using URL token');
+    }
+
     const content = document.getElementById('content');
 
     // State
@@ -728,7 +748,7 @@
     // Initialize
     (async function init() {
       if (!token) {
-        showError('Kein Token gefunden', 'Der Profil-Link ist ungültig. Bitte verwende den Link aus deiner Email.');
+        showError('Nicht eingeloggt', 'Bitte melde dich über die Startseite an oder verwende den Link aus deiner Email.');
         return;
       }
 

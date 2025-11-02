@@ -622,13 +622,12 @@
     async function loadProfile() {
       try {
         const token = getSessionToken();
-        const session = getSession();
 
-        if (!token || !session?.email) {
-          throw new Error('No session');
+        if (!token) {
+          throw new Error('No session token');
         }
 
-        const response = await fetch(`/api/profile/get?email=${encodeURIComponent(session.email)}`);
+        const response = await fetch(`/api/profile/extended?token=${encodeURIComponent(token)}`);
 
         if (!response.ok) {
           throw new Error('Failed to load profile');
