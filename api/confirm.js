@@ -1,4 +1,4 @@
-import { verifyConfirmToken, generateProfileToken, generateSessionToken } from './utils/tokens.js';
+import { verifyConfirmToken, generateProfileToken } from './utils/tokens.js';
 import { addSubscriber, isSubscribed, updateUserPreferences, getUserPreferences } from './utils/redis.js';
 import { generateBrandedError, ErrorTemplates } from './utils/branded-error.js';
 import { Resend } from 'resend';
@@ -217,9 +217,8 @@ export default async function handler(req, res) {
       return res.redirect(`/pages/success.html?status=already-subscribed&email=${encodeURIComponent(email)}`);
     }
 
-    // Generate tokens for user
-    const profileToken = generateProfileToken(email); // For email links (30 days)
-    const sessionToken = generateSessionToken(email); // For browser session (24 hours)
+    // Generate single auth token (30 days) - used for both email links and dashboard sessions
+    const profileToken = generateProfileToken(email);
 
     // Create initial user preferences in Redis
     await updateUserPreferences(email, {
@@ -256,9 +255,9 @@ export default async function handler(req, res) {
       console.error('[CONFIRM] Welcome email failed:', emailError.message);
     }
 
-    // Redirect to success page with both tokens
-    // Session token will be stored in localStorage for auto-login
-    return res.redirect(`/pages/success.html?status=confirmed&email=${encodeURIComponent(email)}&token=${profileToken}&sessionToken=${sessionToken}`);
+    // Redirect to success page with auth token (30 days)
+    // Token will be stored in localStorage for auto-login to dashboard
+    return res.redirect(`/pages/success.html?status=confirmed&email=${encodeURIComponent(email)}&token=${profileToken}`);
 
   } catch (error) {
     // [EH01] Contextual logging

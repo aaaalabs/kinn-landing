@@ -1,9 +1,9 @@
-import { verifySessionToken } from '../utils/tokens.js';
+import { verifyProfileToken } from '../utils/tokens.js';
 import { enforceRateLimit } from '../utils/rate-limiter.js';
 
 /**
  * Magic Link Login Endpoint
- * Verifies session token from email and redirects to dashboard
+ * Verifies auth token from email and redirects to dashboard
  *
  * Flow:
  * 1. User clicks magic link in email (/api/auth/login?token=xxx)
@@ -13,8 +13,8 @@ import { enforceRateLimit } from '../utils/rate-limiter.js';
  *
  * Security:
  * - Rate limited to prevent brute force attacks
- * - Tokens expire after 24 hours
- * - One-time use recommended (future enhancement)
+ * - Tokens expire after 30 days
+ * - Single token type for simplicity
  */
 export default async function handler(req, res) {
   // Only accept GET requests (magic links are GET)
@@ -103,10 +103,10 @@ export default async function handler(req, res) {
       `);
     }
 
-    // Verify session token
-    const decoded = verifySessionToken(token);
+    // Verify auth token (profile token - valid for 30 days)
+    const email = verifyProfileToken(token);
 
-    if (!decoded) {
+    if (!email) {
       console.log('[LOGIN] Invalid or expired token');
       return res.status(401).send(`
         <!DOCTYPE html>
@@ -172,7 +172,7 @@ export default async function handler(req, res) {
         <body>
           <div class="container">
             <h1>⏰ Login-Link abgelaufen</h1>
-            <p>Dieser Login-Link ist abgelaufen oder wurde bereits verwendet. Links sind 24 Stunden gültig.</p>
+            <p>Dieser Login-Link ist abgelaufen oder wurde bereits verwendet. Links sind 30 Tage gültig.</p>
             <p>Gib deine Email-Adresse erneut ein, um einen neuen Login-Link zu erhalten.</p>
             <a href="/">Neuen Link anfordern</a>
           </div>
@@ -181,11 +181,11 @@ export default async function handler(req, res) {
       `);
     }
 
-    console.log(`[LOGIN] Valid token for ${decoded.email}`);
+    console.log(`[LOGIN] Valid token for ${email}`);
 
     // Redirect to dashboard with token in URL fragment (hash)
     // This keeps the token client-side only (not sent to server)
-    const dashboardUrl = `/pages/dashboard.html#token=${encodeURIComponent(token)}&email=${encodeURIComponent(decoded.email)}`;
+    const dashboardUrl = `/pages/dashboard.html#token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
 
     return res.redirect(302, dashboardUrl);
 

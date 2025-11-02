@@ -688,22 +688,18 @@
     import {
       getSession,
       isSessionValid,
-      getSessionToken,
-      redirectToLanding
+      getSessionToken
     } from '/public/js/auth.js';
 
-    // Extract token from URL (for direct links from emails)
+    // Extract token from URL (for direct links from emails) or session (for dashboard redirects)
+    // Both use the same token type (30 days validity)
     const params = new URLSearchParams(window.location.search);
     let token = params.get('token');
 
-    // If no URL token, try session token (for dashboard redirects)
-    if (!token) {
-      const session = getSession();
-      if (isSessionValid()) {
-        token = getSessionToken();
-        console.log('[PROFILE] Using session token');
-      }
-    } else {
+    if (!token && isSessionValid()) {
+      token = getSessionToken();
+      console.log('[PROFILE] Using session token');
+    } else if (token) {
       console.log('[PROFILE] Using URL token');
     }
 

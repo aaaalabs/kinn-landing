@@ -4,7 +4,7 @@ import { updateProfileExtended, getMatchHints } from '../utils/redis.js';
 /**
  * Updates extended user profile with supply/demand data
  *
- * [CP01] KISS: Simple request/response pattern
+ * [CP01] KISS: Single token type (30 days) for simplicity
  * [EH02] User-friendly error messages
  * [SC02] Input validation
  */
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // Verify token and extract email
+    // Verify auth token (30 days validity)
     const email = verifyProfileToken(token);
 
     if (!email) {

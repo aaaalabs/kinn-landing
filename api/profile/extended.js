@@ -1,12 +1,11 @@
 import { verifyProfileToken } from '../utils/tokens.js';
 import { getProfile, getUserPreferences, isSubscribed } from '../utils/redis.js';
-import { generateBrandedError, ErrorTemplates } from '../utils/branded-error.js';
 
 /**
  * Extended Profile endpoint - returns full profile including supply/demand
  * GET /api/profile/extended?token=...
  *
- * [CP01] KISS: Simple token verification → fetch → return
+ * [CP01] KISS: Single token type (30 days) for simplicity
  * [EH02] User-friendly error messages
  */
 export default async function handler(req, res) {
@@ -29,7 +28,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // Verify token and extract email
+    // Verify auth token (30 days validity)
     const email = verifyProfileToken(token);
 
     if (!email) {

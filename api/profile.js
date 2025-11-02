@@ -6,7 +6,7 @@ import { generateBrandedError, ErrorTemplates } from './utils/branded-error.js';
  * Profile endpoint for fetching user preferences
  * GET /api/profile?token=...
  *
- * [CP01] KISS: Simple token verification → fetch → return
+ * [CP01] KISS: Single token type (30 days) for simplicity
  * [EH02] User-friendly error messages
  */
 export default async function handler(req, res) {
@@ -33,9 +33,9 @@ export default async function handler(req, res) {
     }
 
     // [EH01] Log for debugging
-    console.log('[PROFILE] Verifying profile token...');
+    console.log('[PROFILE] Verifying token...');
 
-    // Verify token and extract email
+    // Verify auth token (30 days validity)
     const email = verifyProfileToken(token);
 
     if (!email) {
