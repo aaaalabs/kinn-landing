@@ -199,8 +199,23 @@ Event {
              // all = Beides/Flexibel (gets all events)
              // Legacy values: "ibk"/"tirol" → "in-person", "remote" → "online", "hybrid" → "all"
   },
-  supply: { skills, experience, availability, canOffer },
-  demand: { seeking, industries, activeSearch, interests },
+  supply: {
+    skills: Array<string>,           // UI: Multi-select skill badges
+    experience: string,              // junior|mid|senior|lead
+    availability: string,            // UI Label: "Meine aktuelle Situation"
+                                     // Values: fulltime|freelance|sideproject|passive
+    canOffer: Array<string>          // UI Label: "Ich biete an"
+                                     // Values: mentoring|code-review|workshop|projects
+  },
+  demand: {
+    seeking: Array<string>,          // UI Label: "Offen für"
+                                     // Values: job|freelance|cofounder|collaboration|learning
+    industries: Array<string>,       // startup|corporate|agency|research|opensource
+    activeSearch: boolean,           // UI Label: "Wie aktiv?"
+                                     // true = "Ja, aktiv auf Suche"
+                                     // false = "Passiv offen / Nur Networking"
+    interests: string                // Free-text field
+  },
   preferences: { privacy: { showInDirectory, allowMatching } },
   createdAt: ISO8601,
   updatedAt: ISO8601

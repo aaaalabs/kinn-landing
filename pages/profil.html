@@ -1442,7 +1442,10 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Verfügbarkeit</label>
+              <label class="form-label">Meine aktuelle Situation</label>
+              <p class="form-help" style="font-size: 0.875rem; color: #6B6B6B; margin-top: 0.25rem; margin-bottom: 0.75rem;">
+                Beschreib wo du gerade stehst. Was du suchst kommt weiter unten.
+              </p>
               <div class="radio-group">
                 <div class="radio-option">
                   <input type="radio" id="avail-fulltime" name="availability" value="fulltime" ${supply.availability === 'fulltime' ? 'checked' : ''}>
@@ -1464,7 +1467,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Was ich teilen kann</label>
+              <label class="form-label">Ich biete an</label>
               <div class="checkbox-group">
                 <div class="checkbox-option">
                   <input type="checkbox" id="offer-mentoring" name="canOffer" value="mentoring" ${(supply.canOffer || []).includes('mentoring') ? 'checked' : ''}>
@@ -1491,7 +1494,7 @@
             <h2 style="margin-bottom: 1rem;">Was ich suche</h2>
 
             <div class="form-group">
-              <label class="form-label">Interesse an</label>
+              <label class="form-label">Offen für</label>
               <div class="checkbox-group">
                 <div class="checkbox-option">
                   <input type="checkbox" id="seek-job" name="seeking" value="job" ${(demand.seeking || []).includes('job') ? 'checked' : ''}>
@@ -1543,7 +1546,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Aktiv suchend?</label>
+              <label class="form-label">Wie aktiv?</label>
               <div class="radio-group">
                 <div class="radio-option">
                   <input type="radio" id="search-active" name="activeSearch" value="true" ${demand.activeSearch === true ? 'checked' : ''}>
