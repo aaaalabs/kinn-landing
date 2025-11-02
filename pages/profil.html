@@ -1008,11 +1008,11 @@
         label: 'Creative',
         color: '#9B87F5',
         categories: [
-          'GENERATIVE AI - IMAGE',
-          'GENERATIVE AI - VIDEO',
-          'GENERATIVE AI - AUDIO & MUSIC',
-          'GENERATIVE AI - 3D',
-          'GENERATIVE AI - TEXT & CONTENT'
+          'GENERATIVE KI - BILD',
+          'GENERATIVE KI - VIDEO',
+          'GENERATIVE KI - AUDIO & MUSIK',
+          'GENERATIVE KI - 3D',
+          'GENERATIVE KI - TEXT & CONTENT'
         ]
       },
       'language': {
@@ -1021,8 +1021,9 @@
         color: '#5ED9A6',
         categories: [
           'LLMs',
-          'RAG & KNOWLEDGE SYSTEMS',
-          'NLP'
+          'RAG & WISSENSSYSTEME',
+          'NLP',
+          'PROMPT ENGINEERING'
         ]
       },
       'vision': {
@@ -1031,7 +1032,7 @@
         color: '#4A90E2',
         categories: [
           'COMPUTER VISION',
-          'MULTIMODAL AI'
+          'MULTIMODALE KI'
         ]
       },
       'engineering': {
@@ -1040,9 +1041,11 @@
         color: '#6B7280',
         categories: [
           'MLOPS & DEPLOYMENT',
-          'AI INFRASTRUCTURE',
-          'AI FOR CODE',
-          'EDGE & MOBILE AI'
+          'DATA ENGINEERING',
+          'CLOUD & INFRASTRUKTUR',
+          'PROGRAMMIERUNG',
+          'KI-CODING & ENTWICKLUNG',
+          'MACHINE LEARNING'
         ]
       },
       'applied': {
@@ -1050,10 +1053,9 @@
         label: 'Applied',
         color: '#FF6B6B',
         categories: [
-          'MARKETING AI',
-          'CUSTOMER SERVICE AI',
-          'AI AGENTS & AUTOMATION',
-          'ROBOTICS & EMBODIED AI'
+          'MARKETING KI',
+          'CUSTOMER SERVICE KI',
+          'KI-AGENTEN & AUTOMATION'
         ]
       },
       'research': {
@@ -1061,7 +1063,7 @@
         label: 'Research',
         color: '#FBBF24',
         categories: [
-          'AI SAFETY & ETHICS'
+          'KI-SICHERHEIT & ETHIK'
         ]
       }
     };
@@ -1079,27 +1081,27 @@
 
     // Available skills for selection (95 curated skills in 21 categories)
     const SKILLS_BY_CATEGORY = {
-      'GENERATIVE AI - IMAGE': ['Midjourney', 'DALL-E 3', 'Stable Diffusion', 'ComfyUI', 'Adobe Firefly', 'Imagen', 'ControlNet', 'LoRA-Training', 'Inpainting/Outpainting'],
-      'GENERATIVE AI - VIDEO': ['Runway Gen-3', 'Pika Labs', 'Sora', 'Google Veo', 'Stable Video', 'Luma AI', 'HeyGen', 'Synthesia', 'Lippensynchronisation'],
-      'GENERATIVE AI - AUDIO & MUSIC': ['Suno AI', 'Udio', 'ElevenLabs', 'Voice Cloning', 'Text-to-Speech', 'Speech-to-Text', 'Audio Enhancement', 'Stem Separation'],
-      'GENERATIVE AI - 3D': ['Meshy AI', 'Luma AI Genie', 'NeRF', '3D-Asset-Generierung'],
-      'GENERATIVE AI - TEXT & CONTENT': ['ChatGPT', 'Claude', 'Gemini', 'Notion AI', 'Grammarly AI', 'Inhalts-Zusammenfassung'],
-      'AI CODING & DEVELOPMENT': ['GitHub Copilot', 'Cursor', 'Claude Code', 'v0', 'Windsurf', 'Devin', 'Bolt.new', 'Replit AI', 'KI-Code-Review', 'Fehler-Erkennung', 'Code-Refactoring', 'Test-Generierung', 'Doku-Generierung'],
-      'LLMs': ['GPT-4', 'Claude 3.5 Sonnet', 'Gemini Pro', 'Llama 3', 'Mistral AI', 'LLM-Fine-Tuning', 'Few-Shot-Learning', 'Zero-Shot-Learning', 'In-Context-Learning', 'Token-Optimierung', 'Modell-Auswahl'],
-      'PROMPT ENGINEERING': ['Prompt-Design', 'Context-Window-Management', 'Few-Shot-Prompting', 'Zero-Shot-Prompting', 'Chain-of-Thought', 'ReAct-Prompting', 'Tree-of-Thoughts', 'Prompt-Chaining', 'Rollen-Prompting', 'Prompt-Templates', 'System-Prompts'],
-      'AI AGENTS & AUTOMATION': ['LangChain', 'LangGraph', 'CrewAI', 'AutoGPT', 'AutoGen', 'BabyAGI', 'Agentic RAG', 'Tool-Use/Function-Calling', 'Agenten-Orchestrierung', 'Workflow-Automatisierung', 'Task-Zerlegung', 'Human-in-the-Loop'],
-      'RAG & KNOWLEDGE SYSTEMS': ['RAG-Architektur', 'Vector-Datenbanken', 'Embeddings', 'Semantische Suche', 'Dokument-Chunking', 'Hybrid-Suche', 'Knowledge-Graphs', 'GraphRAG', 'Corrective RAG', 'Adaptive RAG', 'Multi-Vector-Retrieval', 'Dokument-Verarbeitung', 'Query-Optimierung'],
-      'MACHINE LEARNING': ['Überwachtes Lernen', 'Unüberwachtes Lernen', 'Verstärkendes Lernen', 'Deep Learning', 'Neuronale Netze', 'Modell-Training', 'Feature-Engineering', 'Modell-Evaluierung', 'Transfer-Learning', 'Hyperparameter-Tuning', 'Ensemble-Methoden', 'Gradient-Descent'],
-      'COMPUTER VISION': ['OpenCV', 'YOLO', 'Objekt-Erkennung', 'Bild-Segmentierung', 'Semantische Segmentierung', 'Pose-Schätzung', 'Gesichtserkennung', 'OCR', 'Bild-Klassifizierung', 'Action-Recognition', 'Tiefen-Schätzung', 'Bild-Beschriftung'],
-      'NLP': ['Transformers', 'BERT', 'Text-Klassifizierung', 'Named-Entity-Recognition', 'Sentiment-Analyse', 'Text-Zusammenfassung', 'Frage-Antwort-Systeme', 'Maschinen-Übersetzung', 'Topic-Modeling', 'Text-Generierung', 'Intent-Klassifizierung', 'Spracherkennung'],
-      'MLOPS & DEPLOYMENT': ['CI/CD für ML', 'Modell-Versionierung', 'MLflow', 'Kubeflow', 'Docker', 'Kubernetes', 'Modell-Monitoring', 'A/B-Testing', 'Feature-Stores', 'Modell-Registry', 'Experiment-Tracking', 'Modell-Serving', 'Modell-Drift-Erkennung'],
-      'DATA ENGINEERING': ['SQL', 'Data-Warehousing', 'ETL/ELT-Pipelines', 'Daten-Bereinigung', 'Daten-Augmentierung', 'Synthetische-Daten-Generierung', 'Daten-Labeling', 'Apache Spark', 'Apache Kafka', 'Data-Lake-Architektur', 'BigQuery/Snowflake', 'pandas/polars'],
-      'MARKETING AI': ['Kampagnen-Optimierung', 'Personalisierungs-Engines', 'Kunden-Segmentierung', 'Predictive-Analytics'],
-      'CUSTOMER SERVICE AI': ['Chatbots', 'Conversational AI', 'Virtuelle Assistenten', 'Sprach-Assistenten'],
-      'MULTIMODAL AI': ['Vision-Language-Modelle', 'Text-zu-Bild-Verstehen', 'Visual-Question-Answering', 'Bild-Beschriftung', 'Audio-Visual-Learning', 'Dokument-Verstehen', 'Video-Verstehen', 'Cross-Modal-Retrieval'],
-      'AI SAFETY & ETHICS': ['KI-Ethik', 'Bias-Erkennung', 'Fairness-Metriken', 'Erklärbare KI', 'KI-Alignment', 'Red-Teaming', 'KI-Auditing', 'Adversarial-Robustheit', 'Privacy-Preserving ML', 'Modell-Governance'],
-      'CLOUD & INFRASTRUCTURE': ['AWS SageMaker', 'Google Cloud Vertex AI', 'Azure ML', 'Hugging Face', 'CUDA', 'GPU-Optimierung', 'Verteiltes Training', 'Modell-Quantisierung'],
-      'PROGRAMMING': ['Python', 'PyTorch', 'TensorFlow', 'JAX', 'scikit-learn', 'Hugging Face Transformers', 'Keras', 'NumPy']
+      'GENERATIVE KI - BILD': ['Midjourney', 'DALL-E 3', 'Stable Diffusion', 'ComfyUI', 'Adobe Firefly', 'Imagen', 'ControlNet', 'LoRA Training', 'Inpainting/Outpainting'],
+      'GENERATIVE KI - VIDEO': ['Runway Gen-3', 'Pika Labs', 'Sora', 'Google Veo', 'Stable Video', 'Luma AI', 'HeyGen', 'Synthesia', 'Lip Sync'],
+      'GENERATIVE KI - AUDIO & MUSIK': ['Suno AI', 'Udio', 'ElevenLabs', 'Voice Cloning', 'Text-to-Speech', 'Speech-to-Text', 'Audio Enhancement', 'Stem Separation'],
+      'GENERATIVE KI - 3D': ['Meshy AI', 'Luma AI Genie', 'NeRF', '3D Asset Generation'],
+      'GENERATIVE KI - TEXT & CONTENT': ['ChatGPT', 'Claude', 'Gemini', 'Notion AI', 'Grammarly AI', 'Content Summarization'],
+      'KI-CODING & ENTWICKLUNG': ['GitHub Copilot', 'Cursor', 'Claude Code', 'v0', 'Windsurf', 'Devin', 'Bolt.new', 'Replit AI', 'Code Review', 'Bug Detection', 'Code Refactoring', 'Test Generation', 'Documentation Generation'],
+      'LLMs': ['GPT-4', 'Claude 3.5 Sonnet', 'Gemini Pro', 'Llama 3', 'Mistral AI', 'LLM Fine-Tuning', 'Few-Shot Learning', 'Zero-Shot Learning', 'In-Context Learning', 'Token Optimization', 'Model Selection'],
+      'PROMPT ENGINEERING': ['Prompt Design', 'Context Window Management', 'Few-Shot Prompting', 'Zero-Shot Prompting', 'Chain-of-Thought', 'ReAct Prompting', 'Tree of Thoughts', 'Prompt Chaining', 'Role Prompting', 'Prompt Templates', 'System Prompts'],
+      'KI-AGENTEN & AUTOMATION': ['LangChain', 'LangGraph', 'CrewAI', 'AutoGPT', 'AutoGen', 'BabyAGI', 'Agentic RAG', 'Tool Use/Function Calling', 'Agent Orchestration', 'Workflow Automation', 'Task Decomposition', 'Human-in-the-Loop'],
+      'RAG & WISSENSSYSTEME': ['RAG Architecture', 'Vector Databases', 'Embeddings', 'Semantic Search', 'Document Chunking', 'Hybrid Search', 'Knowledge Graphs', 'GraphRAG', 'Corrective RAG', 'Adaptive RAG', 'Multi-Vector Retrieval', 'Document Processing', 'Query Optimization'],
+      'MACHINE LEARNING': ['Supervised Learning', 'Unsupervised Learning', 'Reinforcement Learning', 'Deep Learning', 'Neural Networks', 'Model Training', 'Feature Engineering', 'Model Evaluation', 'Transfer Learning', 'Hyperparameter Tuning', 'Ensemble Methods', 'Gradient Descent'],
+      'COMPUTER VISION': ['OpenCV', 'YOLO', 'Object Detection', 'Image Segmentation', 'Semantic Segmentation', 'Pose Estimation', 'Facial Recognition', 'OCR', 'Image Classification', 'Action Recognition', 'Depth Estimation', 'Image Captioning'],
+      'NLP': ['Transformers', 'BERT', 'Text Classification', 'Named Entity Recognition', 'Sentiment Analysis', 'Text Summarization', 'Question Answering', 'Machine Translation', 'Topic Modeling', 'Text Generation', 'Intent Classification', 'Speech Recognition'],
+      'MLOPS & DEPLOYMENT': ['CI/CD for ML', 'Model Versioning', 'MLflow', 'Kubeflow', 'Docker', 'Kubernetes', 'Model Monitoring', 'A/B Testing', 'Feature Stores', 'Model Registry', 'Experiment Tracking', 'Model Serving', 'Model Drift Detection'],
+      'DATA ENGINEERING': ['SQL', 'Data Warehousing', 'ETL/ELT Pipelines', 'Data Cleaning', 'Data Augmentation', 'Synthetic Data Generation', 'Data Labeling', 'Apache Spark', 'Apache Kafka', 'Data Lake Architecture', 'BigQuery/Snowflake', 'pandas/polars'],
+      'MARKETING KI': ['Campaign Optimization', 'Personalization Engines', 'Customer Segmentation', 'Predictive Analytics'],
+      'CUSTOMER SERVICE KI': ['Chatbots', 'Conversational AI', 'Virtual Assistants', 'Voice Assistants'],
+      'MULTIMODALE KI': ['Vision-Language Models', 'Text-to-Image Understanding', 'Visual Question Answering', 'Image Captioning', 'Audio-Visual Learning', 'Document Understanding', 'Video Understanding', 'Cross-Modal Retrieval'],
+      'KI-SICHERHEIT & ETHIK': ['AI Ethics', 'Bias Detection', 'Fairness Metrics', 'Explainable AI', 'AI Alignment', 'Red Teaming', 'AI Auditing', 'Adversarial Robustness', 'Privacy-Preserving ML', 'Model Governance'],
+      'CLOUD & INFRASTRUKTUR': ['AWS SageMaker', 'Google Cloud Vertex AI', 'Azure ML', 'Hugging Face', 'CUDA', 'GPU Optimization', 'Distributed Training', 'Model Quantization'],
+      'PROGRAMMIERUNG': ['Python', 'PyTorch', 'TensorFlow', 'JAX', 'scikit-learn', 'Hugging Face Transformers', 'Keras', 'NumPy']
     };
 
     // Flatten for easy iteration (backwards compatibility)
