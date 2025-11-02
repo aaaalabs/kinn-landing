@@ -222,11 +222,11 @@ Event {
   updatedAt: ISO8601
 }
 
-// Reverse Indexes (for matching)
-"skill:{skill}" → Set<email>
-"demand:{type}" → Set<email>
-"supply:{offer}" → Set<email>
-"location:{location}" → Set<email>
+// Reverse Indexes (for matching) - ULTRA-SIMPLE v2
+"skill:{skill}"    → Set<email>  // python, react, machine-learning, ...
+"xp:{level}"       → Set<email>  // junior, mid, senior, lead
+"status:{type}"    → Set<email>  // employed, freelancer, student, between-jobs, side-projects
+"loc:{place}"      → Set<email>  // tirol, online, all
 ```
 
 ## Token Types

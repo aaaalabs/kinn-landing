@@ -277,8 +277,8 @@ export async function updateProfileExtended(email, profileData) {
 }
 
 /**
- * Updates reverse indexes for efficient matching
- * [CP01] KISS: Simple SADD operations for each category
+ * Updates reverse indexes for efficient matching - ULTRA-SIMPLE (v2)
+ * [CP01] KISS: Only 4 index types, no cleanup logic (YAGNI)
  * @param {string} email - User email address
  * @param {Object} profile - Full profile object
  * @returns {Promise<void>}
@@ -287,38 +287,42 @@ export async function updateReverseIndexes(email, profile) {
   try {
     const normalizedEmail = email.toLowerCase();
 
-    // Index skills
+    // 1. Index skills (unchanged)
     if (profile.supply?.skills && Array.isArray(profile.supply.skills)) {
       for (const skill of profile.supply.skills) {
         await redis.sadd(`skill:${skill.toLowerCase()}`, normalizedEmail);
       }
     }
 
-    // Index demand types
-    if (profile.demand?.seeking && Array.isArray(profile.demand.seeking)) {
-      for (const type of profile.demand.seeking) {
-        await redis.sadd(`demand:${type.toLowerCase()}`, normalizedEmail);
-      }
+    // 2. Index experience level (ALL levels, granular)
+    if (profile.supply?.experience) {
+      await redis.sadd(`xp:${profile.supply.experience}`, normalizedEmail);
     }
 
-    // Index supply offers
-    if (profile.supply?.canOffer && Array.isArray(profile.supply.canOffer)) {
-      for (const offer of profile.supply.canOffer) {
-        await redis.sadd(`supply:${offer.toLowerCase()}`, normalizedEmail);
-      }
+    // 3. Index status (availability)
+    if (profile.supply?.availability) {
+      await redis.sadd(`status:${profile.supply.availability}`, normalizedEmail);
     }
 
-    // Index location
+    // 4. Index location (mapped to simple values)
     if (profile.identity?.location) {
-      await redis.sadd(`location:${profile.identity.location.toLowerCase()}`, normalizedEmail);
+      const locationMap = {
+        'in-person': 'tirol',
+        'online': 'online',
+        'all': 'all',
+        // Legacy values (backward compat)
+        'ibk': 'tirol',
+        'tirol': 'tirol',
+        'remote': 'online',
+        'hybrid': 'all'
+      };
+      const loc = locationMap[profile.identity.location.toLowerCase()];
+      if (loc) {
+        await redis.sadd(`loc:${loc}`, normalizedEmail);
+      }
     }
 
-    // Index experience level (senior+)
-    if (profile.supply?.experience && ['senior', 'lead', 'expert'].includes(profile.supply.experience)) {
-      await redis.sadd('supply:senior+', normalizedEmail);
-    }
-
-    console.log('[REDIS] Reverse indexes updated:', normalizedEmail);
+    console.log('[REDIS] Reverse indexes updated (SIMPLE v2):', normalizedEmail);
   } catch (error) {
     console.error('[REDIS] Failed to update reverse indexes:', error.message);
     // Don't throw - indexing is not critical
@@ -326,7 +330,7 @@ export async function updateReverseIndexes(email, profile) {
 }
 
 /**
- * Gets match hints for a profile
+ * Gets match hints for a profile - ULTRA-SIMPLE (v2)
  * @param {Object} profile - User profile object
  * @returns {Promise<Object>} Match hints with count and messages
  */
@@ -335,42 +339,45 @@ export async function getMatchHints(profile) {
     const hints = [];
     let totalMatches = 0;
 
-    // Match 1: People with similar skills in same location
-    if (profile.supply?.skills && profile.supply.skills.length > 0 && profile.identity?.location) {
+    // Match 1: People with similar skills
+    if (profile.supply?.skills && profile.supply.skills.length > 0) {
       const topSkill = profile.supply.skills[0];
       const skillMatches = await redis.scard(`skill:${topSkill.toLowerCase()}`);
-      const locationMatches = await redis.scard(`location:${profile.identity.location.toLowerCase()}`);
 
       if (skillMatches > 1) {
-        hints.push(`${skillMatches - 1} andere Devs mit ${topSkill} Experience`);
+        hints.push(`${skillMatches - 1} andere KINN'der mit ${topSkill}`);
         totalMatches += skillMatches - 1;
       }
+    }
 
-      if (locationMatches > 1 && profile.identity.location === 'ibk') {
-        hints.push(`${locationMatches - 1} AI Devs in Innsbruck`);
+    // Match 2: Same location
+    if (profile.identity?.location) {
+      const locationMap = {
+        'in-person': 'tirol',
+        'online': 'online',
+        'all': 'all',
+        'ibk': 'tirol',
+        'tirol': 'tirol',
+        'remote': 'online',
+        'hybrid': 'all'
+      };
+      const loc = locationMap[profile.identity.location.toLowerCase()];
+
+      if (loc === 'tirol') {
+        const locationMatches = await redis.scard('loc:tirol');
+        if (locationMatches > 1) {
+          hints.push(`${locationMatches - 1} KINN'der in Tirol`);
+        }
       }
     }
 
-    // Match 2: Active job seekers
-    if (profile.demand?.activeSearch) {
-      const activeSearchers = await redis.scard('demand:job');
-      if (activeSearchers > 0) {
-        hints.push(`${activeSearchers} andere aktiv auf Jobsuche`);
-      }
-    }
+    // Match 3: Senior+ devs (combined count)
+    const seniorCount = await redis.scard('xp:senior');
+    const leadCount = await redis.scard('xp:lead');
+    const totalSeniorPlus = seniorCount + leadCount;
 
-    // Match 3: People offering mentoring
-    if (profile.demand?.seeking?.includes('learning')) {
-      const mentors = await redis.scard('supply:mentoring');
-      if (mentors > 0) {
-        hints.push(`${mentors} Personen bieten Mentoring an`);
-      }
-    }
-
-    // Match 4: Senior+ devs
-    const seniorCount = await redis.scard('supply:senior+');
-    if (seniorCount > 0 && profile.supply?.experience && !['senior', 'lead', 'expert'].includes(profile.supply.experience)) {
-      hints.push(`${seniorCount} Senior+ Devs im Netzwerk`);
+    if (totalSeniorPlus > 0 && profile.supply?.experience && !['senior', 'lead'].includes(profile.supply.experience)) {
+      hints.push(`${totalSeniorPlus} Senior+ Devs im Netzwerk`);
     }
 
     return {
