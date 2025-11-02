@@ -708,6 +708,48 @@
       gap: 0.625rem;
       margin-top: 1rem;
       animation: fadeInGrid 0.4s ease-out;
+      max-height: 600px; /* ~12-15 Zeilen sichtbar */
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch; /* iOS smooth scroll */
+      position: relative;
+      padding-bottom: 24px; /* Space for fade gradient */
+    }
+
+    /* Smooth scrollbar for skills grid */
+    .skills-grid {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(94, 217, 166, 0.3) transparent;
+    }
+
+    .skills-grid::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .skills-grid::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .skills-grid::-webkit-scrollbar-thumb {
+      background: rgba(94, 217, 166, 0.3);
+      border-radius: 4px;
+    }
+
+    .skills-grid::-webkit-scrollbar-thumb:hover {
+      background: rgba(94, 217, 166, 0.5);
+    }
+
+    /* Fade gradient at bottom (Apple-style "there's more" indicator) */
+    .skills-grid::after {
+      content: '';
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 32px;
+      background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.95));
+      pointer-events: none;
+      z-index: 1;
     }
 
     @keyframes fadeInGrid {
@@ -724,6 +766,7 @@
     @media (max-width: 768px) {
       .skills-grid {
         gap: 0.5rem;
+        max-height: 500px; /* Etwas kleiner auf Mobile */
       }
     }
 
