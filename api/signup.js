@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import { generateConfirmToken, generateSessionToken } from './utils/tokens.js';
+import { generateConfirmToken, generateAuthToken } from './utils/tokens.js';
 import { enforceRateLimit } from './utils/rate-limiter.js';
 import { isSubscribed } from './utils/redis.js';
 
@@ -304,7 +304,7 @@ export default async function handler(req, res) {
       // Returning user - send magic link instead of confirmation
       console.log(`[SIGNUP] Returning user detected - sending magic link`);
 
-      const sessionToken = generateSessionToken(email);
+      const sessionToken = generateAuthToken(email);
       const loginUrl = `${process.env.BASE_URL || 'https://kinn.at'}/api/auth/login?token=${sessionToken}`;
 
       const magicLinkHtml = generateMagicLinkEmail(loginUrl);
