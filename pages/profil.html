@@ -244,9 +244,20 @@
       cursor: pointer;
       transition: all 0.2s ease;
       letter-spacing: 0.01em;
+      /* Mobile-First: Full-width für optimale Thumb-Erreichbarkeit */
       width: 100%;
-      max-width: 360px;
+      max-width: none;
       margin: 0 auto 1rem;
+    }
+
+    /* Desktop: Right-align für visuelle Balance */
+    @media (min-width: 768px) {
+      .cta-button {
+        width: auto;
+        min-width: 240px;
+        max-width: 360px;
+        margin: 0 0 1rem auto;
+      }
     }
 
     .cta-button:hover:not(:disabled) {
