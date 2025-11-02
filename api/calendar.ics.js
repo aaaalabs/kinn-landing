@@ -63,8 +63,9 @@ function generateICalFeed(events, defaults = {}) {
     'PRODID:-//KINN//KI Treff Innsbruck//DE\r\n' +
     'CALSCALE:GREGORIAN\r\n' +
     'METHOD:PUBLISH\r\n' +
-    'X-WR-CALNAME:KINN - KI Treff Innsbruck\r\n' +
-    'X-WR-CALDESC:Monatlicher KI-Austausch in Innsbruck\r\n' +
+    'NAME:KINN Events\r\n' +
+    'X-WR-CALNAME:KINN Events\r\n' +
+    'X-WR-CALDESC:Monatliche KI-Treffs in Innsbruck\r\n' +
     `X-WR-TIMEZONE:${timezone}\r\n` +
     'REFRESH-INTERVAL;VALUE=DURATION:PT1H\r\n'; // Refresh every hour
 
