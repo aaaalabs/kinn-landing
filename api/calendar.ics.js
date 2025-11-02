@@ -98,16 +98,32 @@ function generateICalEvent(event, timestamp, defaults = {}) {
   // Build UID from event ID or generate one
   const uid = event.uid || event.id + '@kinn.at';
 
-  return (
-    'BEGIN:VEVENT\r\n' +
+  // Build iCal event string
+  let icalEvent = 'BEGIN:VEVENT\r\n' +
     'UID:' + uid + '\r\n' +
     'DTSTAMP:' + timestamp + '\r\n' +
     `DTSTART;TZID=${timezone}:` + startDate + '\r\n' +
     `DTEND;TZID=${timezone}:` + endDate + '\r\n' +
     'SUMMARY:' + escapeICalText(event.title) + '\r\n' +
     'DESCRIPTION:' + escapeICalText(event.description) + '\r\n' +
-    'LOCATION:' + escapeICalText(event.location) + '\r\n' +
-    'URL:' + (event.url || 'https://kinn.at') + '\r\n' +
+    'LOCATION:' + escapeICalText(event.location) + '\r\n';
+
+  // Add meeting link for online/hybrid events
+  if (event.meetingLink && (event.type === 'online' || event.type === 'hybrid')) {
+    // CONFERENCE property for modern calendar clients (Apple Calendar, Google Calendar)
+    icalEvent += 'CONFERENCE:' + event.meetingLink + '\r\n';
+    // X-properties for better compatibility
+    icalEvent += 'X-GOOGLE-CONFERENCE:' + event.meetingLink + '\r\n';
+    icalEvent += 'X-MICROSOFT-SKYPETEAMSMEETINGURL:' + event.meetingLink + '\r\n';
+    // Add to description as fallback
+    const descriptionWithLink = escapeICalText(event.description + '\\n\\nMeeting Link: ' + event.meetingLink);
+    icalEvent = icalEvent.replace(
+      'DESCRIPTION:' + escapeICalText(event.description),
+      'DESCRIPTION:' + descriptionWithLink
+    );
+  }
+
+  icalEvent += 'URL:' + (event.url || 'https://kinn.at') + '\r\n' +
     'ORGANIZER;CN=KINN:mailto:' + organizer + '\r\n' +
     'CATEGORIES:' + categories.join(',') + '\r\n' +
     'STATUS:' + (event.status || 'CONFIRMED').toUpperCase() + '\r\n' +
@@ -117,8 +133,9 @@ function generateICalEvent(event, timestamp, defaults = {}) {
     'ACTION:DISPLAY\r\n' +
     'DESCRIPTION:KINN Event morgen um ' + new Date(event.start || event.date + 'T' + event.startTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: timezone }) + ' Uhr\r\n' +
     'END:VALARM\r\n' +
-    'END:VEVENT\r\n'
-  );
+    'END:VEVENT\r\n';
+
+  return icalEvent;
 }
 
 /**

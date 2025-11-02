@@ -949,5 +949,17 @@
       });
     }
   </script>
+
+  <!-- Auth Module: Auto-redirect if session exists -->
+  <script type="module">
+    import { redirectToDashboard, trackVisit } from '/public/js/auth.js';
+
+    // Track visit for PWA install prompts
+    trackVisit();
+
+    // Check for valid session and auto-redirect to dashboard
+    // This runs on every landing page visit
+    redirectToDashboard();
+  </script>
 </body>
 </html>

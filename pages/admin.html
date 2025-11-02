@@ -74,7 +74,7 @@
       color: #333;
     }
 
-    input, textarea {
+    input, textarea, select {
       width: 100%;
       padding: 12px;
       border: 1px solid #ddd;
@@ -88,7 +88,17 @@
       resize: vertical;
     }
 
-    input:focus, textarea:focus {
+    select {
+      cursor: pointer;
+      background-color: #fff;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+      appearance: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
       outline: none;
       border-color: #E0EEE9;
       box-shadow: 0 0 0 3px rgba(224, 238, 233, 0.3);
@@ -234,6 +244,15 @@
       </div>
 
       <div class="form-group">
+        <label for="eventType">Event Type *</label>
+        <select id="eventType" required>
+          <option value="in-person">Präsenz (In-Person)</option>
+          <option value="online">Online (Google Meet/Zoom)</option>
+          <option value="hybrid">Hybrid (Präsenz + Online)</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="locationGroup">
         <label for="location">Location</label>
         <input
           type="text"
@@ -241,6 +260,27 @@
           placeholder="z.B. KINN Office, Maria-Theresien-Straße 18, Innsbruck"
           value="Innsbruck, Tirol"
         >
+      </div>
+
+      <div class="form-group" id="meetingLinkGroup" style="display: none;">
+        <label for="meetingLink">Meeting Link</label>
+        <input
+          type="url"
+          id="meetingLink"
+          placeholder="https://meet.google.com/xyz-abc-def"
+        >
+        <div class="example">Für Online/Hybrid Events: Google Meet, Zoom, etc.</div>
+      </div>
+
+      <div class="form-group" id="maxCapacityGroup">
+        <label for="maxCapacity">Max. Teilnehmer (optional)</label>
+        <input
+          type="number"
+          id="maxCapacity"
+          placeholder="z.B. 20"
+          min="1"
+        >
+        <div class="example">Leer lassen für unbegrenzte Teilnehmerzahl</div>
       </div>
 
       <div class="datetime-group">
@@ -291,14 +331,42 @@
       apiKeyInput.value = savedApiKey;
     }
 
+    // Conditional form fields based on event type
+    const eventTypeSelect = document.getElementById('eventType');
+    const locationGroup = document.getElementById('locationGroup');
+    const meetingLinkGroup = document.getElementById('meetingLinkGroup');
+    const maxCapacityGroup = document.getElementById('maxCapacityGroup');
+
+    eventTypeSelect.addEventListener('change', () => {
+      const type = eventTypeSelect.value;
+
+      // Show/hide fields based on event type
+      if (type === 'online') {
+        locationGroup.style.display = 'none';
+        meetingLinkGroup.style.display = 'block';
+        maxCapacityGroup.style.display = 'none';
+      } else if (type === 'hybrid') {
+        locationGroup.style.display = 'block';
+        meetingLinkGroup.style.display = 'block';
+        maxCapacityGroup.style.display = 'block';
+      } else { // in-person
+        locationGroup.style.display = 'block';
+        meetingLinkGroup.style.display = 'none';
+        maxCapacityGroup.style.display = 'block';
+      }
+    });
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       // Get values
       const apiKey = apiKeyInput.value.trim();
+      const eventType = document.getElementById('eventType').value;
       const summary = document.getElementById('summary').value.trim();
       const description = document.getElementById('description').value.trim();
       const location = document.getElementById('location').value.trim();
+      const meetingLink = document.getElementById('meetingLink').value.trim();
+      const maxCapacity = document.getElementById('maxCapacity').value;
       const start = document.getElementById('start').value;
       const end = document.getElementById('end').value;
 
@@ -324,9 +392,12 @@
             'Authorization': `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
+            type: eventType,
             summary,
             description,
             location,
+            meetingLink: meetingLink || undefined,
+            maxCapacity: maxCapacity ? parseInt(maxCapacity) : undefined,
             start: startISO,
             end: endISO,
           }),

@@ -578,5 +578,38 @@
       }, 500);
     }
   </script>
+
+  <!-- Session Storage: Auto-login after confirmation -->
+  <script type="module">
+    import { saveSession } from '/public/js/auth.js';
+
+    // Get sessionToken from URL params (added by confirm.js)
+    const params = new URLSearchParams(window.location.search);
+    const sessionToken = params.get('sessionToken');
+    const email = params.get('email');
+    const status = params.get('status');
+
+    // If we have a session token, save it to localStorage and redirect to dashboard
+    if (sessionToken && email && status === 'confirmed') {
+      console.log('[SUCCESS] Saving session and redirecting to dashboard...');
+
+      // Save session
+      const saved = saveSession(sessionToken, email);
+
+      if (saved) {
+        // Show "Redirecting..." message
+        const content = document.getElementById('content');
+        const redirectMessage = document.createElement('p');
+        redirectMessage.style.cssText = 'margin-top: 2rem; padding: 1rem; background: rgba(94, 217, 166, 0.1); border-radius: 8px; color: #2C3E50; font-weight: 500;';
+        redirectMessage.textContent = 'Du wirst zum Dashboard weitergeleitet...';
+        content.appendChild(redirectMessage);
+
+        // Redirect to dashboard after 2 seconds
+        setTimeout(() => {
+          window.location.href = '/pages/dashboard.html';
+        }, 2000);
+      }
+    }
+  </script>
 </body>
 </html>
