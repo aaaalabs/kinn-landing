@@ -2384,8 +2384,10 @@
           button.disabled = true;
         }
 
-        const googleCalUrl = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(icsUrl)}`;
-        console.log('[CALENDAR] Opening Google Calendar add URL');
+        // Google Calendar requires webcal:// protocol for subscription
+        const webcalUrl = icsUrl.replace('https://', 'webcal://');
+        const googleCalUrl = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcalUrl)}`;
+        console.log('[CALENDAR] Opening Google Calendar add URL with webcal://');
 
         const newWindow = window.open(googleCalUrl, '_blank');
 
