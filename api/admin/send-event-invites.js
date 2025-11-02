@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import { generateAuthToken } from '../utils/tokens.js';
-import { getAllSubscribers, getEventsConfig, getUserProfile } from '../utils/redis.js';
+import { getAllSubscribers, getEventsConfig, getProfile } from '../utils/redis.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -248,7 +248,7 @@ export default async function handler(req, res) {
         batch.map(async (email) => {
           try {
             // Get user profile for name (fallback to email)
-            const profile = await getUserProfile(email);
+            const profile = await getProfile(email);
             const name = profile?.identity?.name || email.split('@')[0];
 
             // Generate RSVP token (30 days validity)
