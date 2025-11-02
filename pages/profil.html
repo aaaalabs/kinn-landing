@@ -1425,7 +1425,7 @@
           <p class="meta" style="margin-bottom: 1.5rem;">
             Funktioniert mit Google Calendar, Apple Kalender und Outlook
           </p>
-          <button onclick="subscribeToCalendar()" class="cta-button" style="border: none; cursor: pointer;">
+          <button onclick="subscribeToCalendar(event)" class="cta-button" style="border: none; cursor: pointer;">
             Kalender abonnieren
           </button>
         </div>
@@ -1466,7 +1466,7 @@
           <p class="meta">Google Calendar, Apple Kalender und Outlook</p>
         </div>
 
-        <button onclick="subscribeToCalendar()" class="cta-button" style="border: none; cursor: pointer;">
+        <button onclick="subscribeToCalendar(event)" class="cta-button" style="border: none; cursor: pointer;">
           Kalender abonnieren
         </button>
 
@@ -2348,47 +2348,113 @@
     }
 
     /**
-     * Smart Calendar Subscription
-     * Detects device and uses the best method:
-     * - Android/Chrome: Google Calendar add URL
-     * - iOS/macOS: webcal:// protocol
-     * - Windows/Other: Direct .ics download
+     * Smart Calendar Subscription with Visual Feedback
+     * Priority-based device detection:
+     * - Chrome (any OS) → Google Calendar add URL
+     * - Safari (iOS/Mac) → webcal:// protocol
+     * - Other → .ics download with instructions
      */
-    window.subscribeToCalendar = function() {
+    window.subscribeToCalendar = function(event) {
+      const button = event?.target || event?.currentTarget || document.activeElement;
+      const originalText = button ? button.textContent : 'Kalender abonnieren';
       const icsUrl = 'https://kinn.at/api/calendar.ics';
       const userAgent = navigator.userAgent.toLowerCase();
+
       const isAndroid = /android/.test(userAgent);
       const isIOS = /iphone|ipad|ipod/.test(userAgent);
       const isMac = /macintosh|mac os x/.test(userAgent);
-      const isChrome = /chrome|chromium|crios/.test(userAgent);
+      const isChrome = /chrome|chromium|crios/.test(userAgent) && !/edg/.test(userAgent);
+      const isSafari = /safari/.test(userAgent) && !isChrome;
+      const isWindows = /windows|win32|win64/.test(userAgent);
 
       console.log('[CALENDAR] Device detected:', {
         isAndroid,
         isIOS,
         isMac,
         isChrome,
+        isSafari,
+        isWindows,
         userAgent: userAgent.substring(0, 100)
       });
 
-      // Android or Chrome: Use Google Calendar add URL
-      if (isAndroid || (isChrome && !isMac && !isIOS)) {
+      // Priority 1: Chrome/Chromium on ANY platform → Google Calendar
+      if (isChrome) {
+        if (button) {
+          button.textContent = 'Öffne Google Calendar...';
+          button.disabled = true;
+        }
+
         const googleCalUrl = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(icsUrl)}`;
         console.log('[CALENDAR] Opening Google Calendar add URL');
-        window.open(googleCalUrl, '_blank');
+
+        const newWindow = window.open(googleCalUrl, '_blank');
+
+        // Reset button after 2 seconds
+        setTimeout(() => {
+          if (button) {
+            button.textContent = originalText;
+            button.disabled = false;
+
+            // If popup was blocked, show message
+            if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+              alert('Popup wurde blockiert! Bitte erlaube Popups für diese Seite und versuche es erneut.');
+            }
+          }
+        }, 2000);
         return;
       }
 
-      // iOS or macOS: Try webcal:// protocol first
-      if (isIOS || isMac) {
-        const webcalUrl = 'webcal://kinn.at/api/calendar.ics';
-        console.log('[CALENDAR] Opening webcal:// protocol');
-        window.location.href = webcalUrl;
+      // Priority 2: Safari on iOS/macOS → webcal:// protocol
+      if (isSafari && (isIOS || isMac)) {
+        if (button) {
+          button.textContent = 'Öffne Kalender App...';
+          button.disabled = true;
+        }
+
+        console.log('[CALENDAR] Opening webcal:// protocol for Safari');
+
+        // Try webcal:// - Safari handles this well
+        window.location.href = 'webcal://kinn.at/api/calendar.ics';
+
+        // Reset button after 3 seconds
+        setTimeout(() => {
+          if (button) {
+            button.textContent = originalText;
+            button.disabled = false;
+          }
+        }, 3000);
         return;
       }
 
-      // Fallback: Direct download of .ics file
-      console.log('[CALENDAR] Fallback: Direct .ics download');
-      window.open(icsUrl, '_blank');
+      // Priority 3: Everything else → Download .ics with instructions
+      if (button) {
+        button.textContent = 'Download startet...';
+        button.disabled = true;
+      }
+
+      console.log('[CALENDAR] Downloading .ics file');
+
+      // Create and trigger download
+      const link = document.createElement('a');
+      link.href = icsUrl;
+      link.download = 'kinn-events.ics';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Show helpful message
+      setTimeout(() => {
+        if (button) {
+          button.textContent = '✓ Datei heruntergeladen';
+
+          // Reset button after 3 seconds
+          setTimeout(() => {
+            button.textContent = originalText;
+            button.disabled = false;
+          }, 3000);
+        }
+      }, 500);
     }
   </script>
 </body>
