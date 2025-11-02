@@ -218,12 +218,11 @@ export default async function handler(req, res) {
     }
 
     // Generate single auth token (30 days) - used for both email links and dashboard sessions
-    const profileToken = generateProfileToken(email);
+    const authToken = generateProfileToken(email);
 
-    // Create initial user preferences in Redis
+    // Create initial user preferences in Redis (no need to store token - JWT is self-contained)
     await updateUserPreferences(email, {
       email,
-      profileToken,
       notifications: {
         enabled: true // Default: notifications enabled
       },
@@ -242,10 +241,10 @@ export default async function handler(req, res) {
         from: (process.env.SENDER_EMAIL || 'Thomas @ KINN <thomas@kinn.at>').trim(),
         to: email.trim(),
         subject: 'Willkommen beim KINN',
-        html: generateWelcomeEmail(profileToken),
-        text: generateWelcomeEmailPlainText(profileToken),
+        html: generateWelcomeEmail(authToken),
+        text: generateWelcomeEmailPlainText(authToken),
         headers: {
-          'List-Unsubscribe': `<mailto:thomas@kinn.at?subject=Abmelden>, <${process.env.BASE_URL || 'https://kinn.at'}/pages/profil.html?token=${profileToken}>`,
+          'List-Unsubscribe': `<mailto:thomas@kinn.at?subject=Abmelden>, <${process.env.BASE_URL || 'https://kinn.at'}/pages/profil.html?token=${authToken}>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         },
       });
@@ -257,7 +256,7 @@ export default async function handler(req, res) {
 
     // Redirect to success page with auth token (30 days)
     // Token will be stored in localStorage for auto-login to dashboard
-    return res.redirect(`/pages/success.html?status=confirmed&email=${encodeURIComponent(email)}&token=${profileToken}`);
+    return res.redirect(`/pages/success.html?status=confirmed&email=${encodeURIComponent(email)}&token=${authToken}`);
 
   } catch (error) {
     // [EH01] Contextual logging

@@ -56,85 +56,47 @@ export function verifyConfirmToken(token) {
 }
 
 /**
- * Generates a profile token for user preference management
+ * Generates an auth token for all authenticated operations
+ * Used for: email links, dashboard sessions, profile management, API access
  * @param {string} email - User email address
  * @returns {string} JWT token valid for 30 days
  */
-export function generateProfileToken(email) {
+export function generateAuthToken(email) {
   return jwt.sign(
     {
       email,
-      type: 'profile',
+      type: 'auth',
       timestamp: Date.now()
     },
     SECRET,
-    { expiresIn: '30d' } // 30 days expiration for security
+    { expiresIn: '30d' }
   );
 }
 
 /**
- * Verifies and decodes a profile token
+ * Verifies and decodes an auth token
  * @param {string} token - JWT token to verify
- * @returns {string|null} Email address if valid, null if invalid
+ * @returns {string|null} Email address if valid, null if invalid/expired
  */
-export function verifyProfileToken(token) {
+export function verifyAuthToken(token) {
   try {
     const decoded = jwt.verify(token, SECRET);
 
-    // Ensure it's a profile token
-    if (decoded.type !== 'profile') {
+    // Accept both 'auth' (new) and 'profile'/'session' (legacy from development)
+    // This allows seamless transition during MVP development
+    const validTypes = ['auth', 'profile', 'session'];
+    if (!validTypes.includes(decoded.type)) {
       console.error('[TOKENS] Invalid token type:', decoded.type);
       return null;
     }
 
     return decoded.email;
   } catch (error) {
-    // Invalid signature or malformed token
-    console.error('[TOKENS] Profile token verification failed:', error.message);
+    console.error('[TOKENS] Token verification failed:', error.message);
     return null;
   }
 }
 
-/**
- * Generates a session token for authenticated dashboard access
- * @param {string} email - User email address
- * @returns {string} JWT token valid for 24 hours
- */
-export function generateSessionToken(email) {
-  return jwt.sign(
-    {
-      email,
-      type: 'session',
-      timestamp: Date.now()
-    },
-    SECRET,
-    { expiresIn: '24h' } // 24 hours for security
-  );
-}
-
-/**
- * Verifies and decodes a session token
- * @param {string} token - JWT token to verify
- * @returns {Object|null} Decoded token payload if valid, null if invalid/expired
- */
-export function verifySessionToken(token) {
-  try {
-    const decoded = jwt.verify(token, SECRET);
-
-    // Ensure it's a session token
-    if (decoded.type !== 'session') {
-      console.error('[TOKENS] Invalid token type:', decoded.type);
-      return null;
-    }
-
-    return {
-      email: decoded.email,
-      timestamp: decoded.timestamp,
-      exp: decoded.exp
-    };
-  } catch (error) {
-    // Token expired, invalid signature, or malformed
-    console.error('[TOKENS] Session token verification failed:', error.message);
-    return null;
-  }
-}
+// Backwards compatible exports (will be removed after full migration)
+export const generateProfileToken = generateAuthToken;
+export const verifyProfileToken = verifyAuthToken;
