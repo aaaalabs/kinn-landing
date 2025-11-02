@@ -475,7 +475,7 @@
      * Smart Calendar Subscription
      * Detects device and uses the best method:
      * - Android/Chrome: Google Calendar add URL
-     * - iOS/macOS: webcal:// protocol
+     * - iOS/macOS: webcal:// protocol with download fallback
      * - Windows/Other: Direct .ics download
      */
     function subscribeToCalendar() {
@@ -485,12 +485,14 @@
       const isIOS = /iphone|ipad|ipod/.test(userAgent);
       const isMac = /macintosh|mac os x/.test(userAgent);
       const isChrome = /chrome|chromium|crios/.test(userAgent);
+      const isSafari = /safari/.test(userAgent) && !/chrome/.test(userAgent);
 
       console.log('[CALENDAR] Device detected:', {
         isAndroid,
         isIOS,
         isMac,
         isChrome,
+        isSafari,
         userAgent: userAgent.substring(0, 100)
       });
 
@@ -502,17 +504,43 @@
         return;
       }
 
-      // iOS or macOS: Try webcal:// protocol first
+      // iOS or macOS: Try webcal:// protocol with fallback
       if (isIOS || isMac) {
-        const webcalUrl = 'webcal://kinn.at/api/calendar.ics';
-        console.log('[CALENDAR] Opening webcal:// protocol');
-        window.location.href = webcalUrl;
+        console.log('[CALENDAR] Trying webcal:// protocol');
+
+        // Create hidden iframe to try webcal:// without blocking
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = 'webcal://kinn.at/api/calendar.ics';
+        document.body.appendChild(iframe);
+
+        // Fallback: Download .ics file after 2 seconds if webcal:// didn't work
+        setTimeout(() => {
+          console.log('[CALENDAR] Fallback: Downloading .ics file');
+          // Create download link
+          const link = document.createElement('a');
+          link.href = icsUrl;
+          link.download = 'kinn-events.ics';
+          link.target = '_blank';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          // Clean up iframe
+          document.body.removeChild(iframe);
+        }, 2000);
         return;
       }
 
       // Fallback: Direct download of .ics file
       console.log('[CALENDAR] Fallback: Direct .ics download');
-      window.open(icsUrl, '_blank');
+      const link = document.createElement('a');
+      link.href = icsUrl;
+      link.download = 'kinn-events.ics';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   </script>
 </body>
