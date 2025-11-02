@@ -721,11 +721,16 @@
 
       container.innerHTML = events.map((event, index) => `
         <div class="event-card">
-          <h3>${event.title}</h3>
+          <h3>
+            ${event.title}
+            ${getEventTypeBadge(event.type)}
+          </h3>
           <div class="event-meta">
             ${formatDate(event.date)} • ${event.startTime} - ${event.endTime}
           </div>
-          <div class="event-meta">${event.location}</div>
+          ${event.meetingLink ? `<div class="event-meta">💻 <a href="${event.meetingLink}" target="_blank" style="color: #5ED9A6;">Meeting Link</a></div>` : ''}
+          <div class="event-meta">📍 ${event.location}</div>
+          ${event.maxCapacity ? `<div class="event-meta">👥 Max ${event.maxCapacity} Personen</div>` : ''}
           <div class="event-meta">${event.description}</div>
           ${event.url ? `<div class="event-meta"><a href="${event.url}" target="_blank" style="color: #5ED9A6;">${event.url}</a></div>` : ''}
           <div class="event-meta">Status: ${getStatusLabel(event.status)}</div>
@@ -767,6 +772,15 @@
         cancelled: 'Abgesagt'
       };
       return labels[status] || status;
+    }
+
+    function getEventTypeBadge(type) {
+      const badges = {
+        'online': '<span style="display: inline-block; padding: 4px 12px; background: #3B82F6; color: white; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem;">Online</span>',
+        'in-person': '<span style="display: inline-block; padding: 4px 12px; background: #059669; color: white; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem;">Präsenz</span>',
+        'hybrid': '<span style="display: inline-block; padding: 4px 12px; background: #8B5CF6; color: white; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem;">Hybrid</span>'
+      };
+      return badges[type] || '<span style="display: inline-block; padding: 4px 12px; background: #999; color: white; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem;">Präsenz</span>';
     }
 
     function showEventForm(event = null) {
