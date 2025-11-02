@@ -802,7 +802,12 @@
           throw new Error(data.message || 'Email delivery failed')
         }
 
-        await typeTerminalLine(2, '02: Email sent successfully! Check your inbox.', 30)
+        // Adaptive message based on whether user is new or returning
+        const message = data.isReturningUser
+          ? '02: Welcome back! Check your inbox for login link.'
+          : '02: Email sent! Check your inbox for confirmation.';
+
+        await typeTerminalLine(2, message, 30)
         await new Promise(resolve => setTimeout(resolve, 200))
         await typeTerminalLine(3, '03: Press R to add another email, or ESC to close.', 30)
 
