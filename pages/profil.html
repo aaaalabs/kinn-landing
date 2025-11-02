@@ -1477,7 +1477,7 @@
       window.addEventListener('scroll', handleScroll);
     }
 
-    function filterSkills(searchTerm) {
+    window.filterSkills = function(searchTerm) {
       const term = searchTerm.toLowerCase().trim();
       const categories = document.querySelectorAll('.skill-category');
 
