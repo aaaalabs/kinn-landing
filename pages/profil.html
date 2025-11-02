@@ -592,6 +592,135 @@
       line-height: 1;
     }
 
+    /* Domain Filters (Apple-inspired) */
+    .domain-filters {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 1rem 0;
+      margin-bottom: 1.5rem;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    }
+
+    .domain-filters::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .domain-filters::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
+    }
+
+    .domain-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.625rem 1rem;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1.5px solid rgba(0, 0, 0, 0.12);
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #2C3E50;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .domain-chip:hover {
+      background: rgba(255, 255, 255, 1);
+      border-color: var(--domain-color, rgba(94, 217, 166, 0.4));
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .domain-chip.active {
+      background: var(--domain-color, #5ED9A6);
+      border-color: var(--domain-color, #4EC995);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+      transform: scale(1.02);
+    }
+
+    .domain-chip .count {
+      opacity: 0.7;
+      font-size: 0.8125rem;
+    }
+
+    .domain-chip.active .count {
+      opacity: 0.9;
+    }
+
+    /* Flat Skills Grid (replacing accordion) */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.625rem;
+      margin-top: 1rem;
+      animation: fadeInGrid 0.4s ease-out;
+    }
+
+    @keyframes fadeInGrid {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .skills-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.5rem;
+      }
+    }
+
+    /* Color dot indicator for skills */
+    .skills-grid .chip {
+      position: relative;
+      padding-left: 1.5rem;
+      justify-content: flex-start;
+    }
+
+    .skills-grid .chip::before {
+      content: '';
+      position: absolute;
+      left: 0.625rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--domain-color, #6B7280);
+      opacity: 0.6;
+      transition: all 0.2s ease;
+    }
+
+    .skills-grid .chip.selected::before {
+      opacity: 1;
+      width: 7px;
+      height: 7px;
+      box-shadow: 0 0 8px var(--domain-color);
+    }
+
+    .skills-grid .chip:hover::before {
+      opacity: 0.9;
+      transform: translateY(-50%) scale(1.2);
+    }
+
+    /* Hide skill chips when filtered out */
+    .skills-grid .chip.hidden {
+      display: none;
+    }
+
     /* Radio Group */
     .radio-group {
       display: flex;
@@ -867,6 +996,90 @@
       activeTab = hash;
     }
 
+    // Active domain filters (for skills filtering)
+    let activeDomains = ['all']; // Start with 'all' selected
+
+    // Domain mapping for color-coded filters (Jony Ive inspired UX)
+    const DOMAIN_MAPPING = {
+      'creative': {
+        emoji: '🎨',
+        label: 'Creative',
+        color: '#9B87F5',
+        categories: [
+          'GENERATIVE AI - IMAGE',
+          'GENERATIVE AI - VIDEO',
+          'GENERATIVE AI - AUDIO & MUSIC',
+          'GENERATIVE AI - 3D',
+          'GENERATIVE AI - TEXT & CONTENT'
+        ]
+      },
+      'language': {
+        emoji: '💬',
+        label: 'Language',
+        color: '#5ED9A6',
+        categories: [
+          'LLMs',
+          'RAG & KNOWLEDGE SYSTEMS',
+          'NLP'
+        ]
+      },
+      'vision': {
+        emoji: '👁️',
+        label: 'Vision',
+        color: '#4A90E2',
+        categories: [
+          'COMPUTER VISION',
+          'MULTIMODAL AI'
+        ]
+      },
+      'engineering': {
+        emoji: '⚙️',
+        label: 'Engineering',
+        color: '#6B7280',
+        categories: [
+          'MLOPS & DEPLOYMENT',
+          'AI INFRASTRUCTURE',
+          'AI FOR CODE',
+          'EDGE & MOBILE AI'
+        ]
+      },
+      'applied': {
+        emoji: '🎯',
+        label: 'Applied',
+        color: '#FF6B6B',
+        categories: [
+          'MARKETING AI',
+          'CUSTOMER SERVICE AI',
+          'AI AGENTS & AUTOMATION',
+          'ROBOTICS & EMBODIED AI'
+        ]
+      },
+      'research': {
+        emoji: '🔬',
+        label: 'Research',
+        color: '#FBBF24',
+        categories: [
+          'AI SAFETY & ALIGNMENT',
+          'REINFORCEMENT LEARNING',
+          'EXPLAINABLE AI',
+          'SYNTHETIC DATA',
+          'AI FOR SCIENCE',
+          'EMERGING AI'
+        ]
+      }
+    };
+
+    // Reverse lookup: category → domain
+    const CATEGORY_TO_DOMAIN = {};
+    Object.entries(DOMAIN_MAPPING).forEach(([domainKey, domainData]) => {
+      domainData.categories.forEach(category => {
+        CATEGORY_TO_DOMAIN[category] = {
+          key: domainKey,
+          ...domainData
+        };
+      });
+    });
+
     // Available skills for selection (147 skills in 24 categories)
     const SKILLS_BY_CATEGORY = {
       'GENERATIVE AI - IMAGE': ['Midjourney', 'DALL-E 3', 'Stable Diffusion', 'ComfyUI', 'Adobe Firefly', 'Imagen', 'Ideogram', 'Leonardo.ai', 'ControlNet', 'LoRA Training', 'Inpainting/Outpainting'],
@@ -1002,9 +1215,12 @@
       // Initialize skill counter after rendering
       setTimeout(() => updateSkillCounter(), 0);
 
-      // Initialize sticky search scroll listener
+      // Initialize sticky search scroll listener and keyboard shortcuts
       if (activeTab === 'profil') {
-        setTimeout(() => initializeStickySearch(), 0);
+        setTimeout(() => {
+          initializeStickySearch();
+          initializeKeyboardShortcuts();
+        }, 0);
       }
 
       // Load events on initial dashboard render
@@ -1158,53 +1374,48 @@
                 </div>
               </div>
 
-              <!-- Skills by Category -->
-              <div id="skillsContainer">
-                ${Object.entries(SKILLS_BY_CATEGORY).map(([category, skills], index) => {
-                  const isFirstCategory = index === 0;
-                  const iconRotation = isFirstCategory ? 'rotate(0deg)' : 'rotate(-90deg)';
-                  const iconSymbol = isFirstCategory ? '▼' : '▶';
+              <!-- Domain Filters (Apple-inspired) -->
+              <div class="domain-filters">
+                <button class="domain-chip active" data-domain="all" onclick="toggleDomainFilter('all')">
+                  All <span class="count">147</span>
+                </button>
+                ${Object.entries(DOMAIN_MAPPING).map(([domainKey, domain]) => {
+                  const skillCount = domain.categories.reduce((sum, cat) => {
+                    return sum + (SKILLS_BY_CATEGORY[cat]?.length || 0);
+                  }, 0);
                   return `
-                  <div class="skill-category" data-category="${category}">
-                    <div
-                      class="category-header"
-                      onclick="toggleCategory(this)"
-                      style="
-                        display: flex;
-                        align-items: center;
-                        padding: 0.75rem 1rem;
-                        cursor: pointer;
-                        user-select: none;
-                        color: #2C3E50;
-                        font-weight: 600;
-                        font-size: 0.875rem;
-                        border-radius: 0.5rem;
-                        margin-bottom: 0.75rem;
-                        background: rgba(94, 217, 166, 0.05);
-                        border: 1px solid rgba(94, 217, 166, 0.15);
-                        transition: all 0.2s ease;
-                      "
-                      onmouseover="this.style.background='rgba(94, 217, 166, 0.1)'; this.style.borderColor='rgba(94, 217, 166, 0.3)'"
-                      onmouseout="this.style.background='rgba(94, 217, 166, 0.05)'; this.style.borderColor='rgba(94, 217, 166, 0.15)'"
+                    <button
+                      class="domain-chip"
+                      data-domain="${domainKey}"
+                      style="--domain-color: ${domain.color}"
+                      onclick="toggleDomainFilter('${domainKey}')"
                     >
-                      <span class="category-icon" style="margin-right: 0.5rem; transition: transform 0.2s; transform: ${iconRotation};">${iconSymbol}</span>
-                      <span class="category-name">${category}</span>
-                      <span style="color: #999; margin-left: 0.5rem; font-weight: 400;">(${skills.length})</span>
+                      ${domain.emoji} ${domain.label} <span class="count">${skillCount}</span>
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+
+              <!-- Flat Skill Grid -->
+              <div id="skillsContainer" class="skills-grid">
+                ${Object.entries(SKILLS_BY_CATEGORY).map(([category, skills]) => {
+                  const domainInfo = CATEGORY_TO_DOMAIN[category];
+                  const domainColor = domainInfo?.color || '#6B7280';
+                  const domainKey = domainInfo?.key || 'other';
+
+                  return skills.map(skill => `
+                    <div
+                      class="chip ${(supply.skills || []).includes(skill.toLowerCase()) ? 'selected' : ''}"
+                      data-skill="${skill.toLowerCase()}"
+                      data-skill-label="${skill}"
+                      data-domain="${domainKey}"
+                      data-category="${category}"
+                      style="--domain-color: ${domainColor}"
+                      onclick="toggleSkill(this)"
+                    >
+                      ${skill}
                     </div>
-                    <div class="chip-container category-chips" style="${isFirstCategory ? '' : 'display: none;'}"}
-                      ${skills.map(skill => `
-                        <div
-                          class="chip ${(supply.skills || []).includes(skill.toLowerCase()) ? 'selected' : ''}"
-                          data-skill="${skill.toLowerCase()}"
-                          data-skill-label="${skill}"
-                          onclick="toggleSkill(this)"
-                        >
-                          ${skill}
-                        </div>
-                      `).join('')}
-                    </div>
-                  </div>
-                `;
+                  `).join('');
                 }).join('')}
               </div>
             </div>
@@ -1477,43 +1688,99 @@
       window.addEventListener('scroll', handleScroll);
     }
 
-    window.filterSkills = function(searchTerm) {
-      const term = searchTerm.toLowerCase().trim();
-      const categories = document.querySelectorAll('.skill-category');
+    // Keyboard shortcuts (Apple-inspired)
+    function initializeKeyboardShortcuts() {
+      document.addEventListener('keydown', (e) => {
+        // ESC: Clear all filters
+        if (e.key === 'Escape') {
+          const searchInput = document.getElementById('skillSearch');
+          if (searchInput && searchInput.value) {
+            searchInput.value = '';
+            applySkillFilters();
+          }
+          if (!activeDomains.includes('all')) {
+            toggleDomainFilter('all');
+          }
+        }
 
-      categories.forEach(category => {
-        const chips = category.querySelectorAll('.chip');
-        let visibleChipsCount = 0;
-
-        chips.forEach(chip => {
-          const skillLabel = chip.getAttribute('data-skill-label') || chip.textContent;
-          const matches = skillLabel.toLowerCase().includes(term);
-          chip.style.display = matches ? '' : 'none';
-          if (matches) visibleChipsCount++;
-        });
-
-        // Hide category if no chips match
-        category.style.display = visibleChipsCount > 0 ? '' : 'none';
+        // CMD/CTRL + K: Focus search
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          const searchInput = document.getElementById('skillSearch');
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+          }
+        }
       });
     }
 
-    // Make globally accessible for inline onclick handlers
-    window.toggleCategory = function(header) {
-      const category = header.parentElement;
-      const chipsContainer = category.querySelector('.category-chips');
-      const icon = header.querySelector('.category-icon');
+    // Domain filter toggle (Apple-inspired interaction)
+    window.toggleDomainFilter = function(domainKey) {
+      const allDomainChips = document.querySelectorAll('.domain-chip');
 
-      const isCollapsed = chipsContainer.style.display === 'none';
-
-      if (isCollapsed) {
-        chipsContainer.style.display = '';
-        icon.textContent = '▼';
-        icon.style.transform = 'rotate(0deg)';
+      if (domainKey === 'all') {
+        // Select 'all' - deselect everything else
+        activeDomains = ['all'];
       } else {
-        chipsContainer.style.display = 'none';
-        icon.textContent = '▶';
-        icon.style.transform = 'rotate(-90deg)';
+        // Toggle specific domain
+        if (activeDomains.includes('all')) {
+          // If 'all' was selected, replace it with this domain
+          activeDomains = [domainKey];
+        } else if (activeDomains.includes(domainKey)) {
+          // Deselect this domain
+          activeDomains = activeDomains.filter(d => d !== domainKey);
+          // If nothing selected, revert to 'all'
+          if (activeDomains.length === 0) {
+            activeDomains = ['all'];
+          }
+        } else {
+          // Add this domain to selection
+          activeDomains.push(domainKey);
+        }
       }
+
+      // Update UI: active states on domain chips
+      allDomainChips.forEach(chip => {
+        const chipDomain = chip.getAttribute('data-domain');
+        if (activeDomains.includes(chipDomain)) {
+          chip.classList.add('active');
+        } else {
+          chip.classList.remove('active');
+        }
+      });
+
+      // Apply domain filtering to skills
+      applySkillFilters();
+    }
+
+    // Apply both search and domain filters
+    function applySkillFilters() {
+      const searchInput = document.getElementById('skillSearch');
+      const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      const allSkillChips = document.querySelectorAll('.skills-grid .chip');
+
+      allSkillChips.forEach(chip => {
+        const skillLabel = (chip.getAttribute('data-skill-label') || chip.textContent).toLowerCase();
+        const chipDomain = chip.getAttribute('data-domain');
+
+        // Check search match
+        const matchesSearch = !searchTerm || skillLabel.includes(searchTerm);
+
+        // Check domain match
+        const matchesDomain = activeDomains.includes('all') || activeDomains.includes(chipDomain);
+
+        // Show chip only if it matches both filters
+        if (matchesSearch && matchesDomain) {
+          chip.classList.remove('hidden');
+        } else {
+          chip.classList.add('hidden');
+        }
+      });
+    }
+
+    window.filterSkills = function(searchTerm) {
+      applySkillFilters();
     }
 
     // Profile form submission
