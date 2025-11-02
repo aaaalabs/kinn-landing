@@ -454,6 +454,31 @@
           </div>
 
           <div class="form-group">
+            <label>Event Typ *</label>
+            <select id="event-type" onchange="toggleEventTypeFields()" style="width: 100%; padding: 12px 16px; font-size: 1rem; border: 2px solid #e0e0e0; border-radius: 8px; font-family: inherit;">
+              <option value="in-person">Präsenz (vor Ort in Tirol)</option>
+              <option value="online">Online (Google Meet / Zoom)</option>
+              <option value="hybrid">Hybrid (Präsenz + Online)</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="meeting-link-group" style="display: none;">
+            <label>Meeting Link (für Online/Hybrid) *</label>
+            <input type="url" id="event-meeting-link" placeholder="https://meet.google.com/abc-defg-hij" />
+            <small style="display: block; margin-top: 0.5rem; color: #6B6B6B; font-size: 0.875rem;">
+              Google Meet, Zoom, oder andere Video-Conferencing URL
+            </small>
+          </div>
+
+          <div class="form-group" id="max-capacity-group" style="display: none;">
+            <label>Max. Teilnehmer (für Präsenz/Hybrid)</label>
+            <input type="number" id="event-max-capacity" placeholder="20" min="1" />
+            <small style="display: block; margin-top: 0.5rem; color: #6B6B6B; font-size: 0.875rem;">
+              Optional: Maximale Anzahl für physische Location
+            </small>
+          </div>
+
+          <div class="form-group">
             <label>Datum *</label>
             <input type="date" id="event-date" onchange="generateEventId()" />
           </div>
@@ -751,6 +776,7 @@
         // Edit mode
         document.getElementById('event-id').value = event.id;
         document.getElementById('event-title').value = event.title;
+        document.getElementById('event-type').value = event.type || 'in-person';
         document.getElementById('event-date').value = event.date;
         document.getElementById('event-start-time').value = event.startTime;
         document.getElementById('event-end-time').value = event.endTime;
@@ -758,6 +784,11 @@
         document.getElementById('event-description').value = event.description;
         document.getElementById('event-url').value = event.url || '';
         document.getElementById('event-status').value = event.status || 'confirmed';
+        document.getElementById('event-meeting-link').value = event.meetingLink || '';
+        document.getElementById('event-max-capacity').value = event.maxCapacity || '';
+
+        // Show/hide conditional fields based on type
+        toggleEventTypeFields();
       } else {
         // Add mode
         clearEventForm();
@@ -782,6 +813,7 @@
     function clearEventForm() {
       document.getElementById('event-id').value = '';
       document.getElementById('event-title').value = '';
+      document.getElementById('event-type').value = 'in-person';
       document.getElementById('event-date').value = '';
       document.getElementById('event-start-time').value = '';
       document.getElementById('event-end-time').value = '';
@@ -789,11 +821,36 @@
       document.getElementById('event-description').value = '';
       document.getElementById('event-url').value = 'https://kinn.at';
       document.getElementById('event-status').value = 'confirmed';
+      document.getElementById('event-meeting-link').value = '';
+      document.getElementById('event-max-capacity').value = '';
 
       // Set default date to today and generate ID
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('event-date').value = today;
       generateEventId();
+
+      // Reset conditional fields visibility
+      toggleEventTypeFields();
+    }
+
+    function toggleEventTypeFields() {
+      const eventType = document.getElementById('event-type').value;
+      const meetingLinkGroup = document.getElementById('meeting-link-group');
+      const maxCapacityGroup = document.getElementById('max-capacity-group');
+
+      // Show meeting link for online & hybrid
+      if (eventType === 'online' || eventType === 'hybrid') {
+        meetingLinkGroup.style.display = 'block';
+      } else {
+        meetingLinkGroup.style.display = 'none';
+      }
+
+      // Show max capacity for in-person & hybrid
+      if (eventType === 'in-person' || eventType === 'hybrid') {
+        maxCapacityGroup.style.display = 'block';
+      } else {
+        maxCapacityGroup.style.display = 'none';
+      }
     }
 
     function cancelEventForm() {
@@ -827,9 +884,11 @@
 
     async function saveEvent() {
       // Get form values
+      const eventType = document.getElementById('event-type').value;
       const event = {
         id: document.getElementById('event-id').value.trim(),
         title: document.getElementById('event-title').value.trim(),
+        type: eventType,
         date: document.getElementById('event-date').value,
         startTime: document.getElementById('event-start-time').value,
         endTime: document.getElementById('event-end-time').value,
@@ -839,8 +898,25 @@
         status: document.getElementById('event-status').value
       };
 
+      // Add conditional fields based on type
+      if (eventType === 'online' || eventType === 'hybrid') {
+        const meetingLink = document.getElementById('event-meeting-link').value.trim();
+        if (!meetingLink) {
+          showMessage('Meeting Link ist erforderlich für Online/Hybrid Events!', 'error');
+          return;
+        }
+        event.meetingLink = meetingLink;
+      }
+
+      if (eventType === 'in-person' || eventType === 'hybrid') {
+        const maxCapacity = document.getElementById('event-max-capacity').value;
+        if (maxCapacity) {
+          event.maxCapacity = parseInt(maxCapacity, 10);
+        }
+      }
+
       // Validate
-      const required = ['id', 'title', 'date', 'startTime', 'endTime', 'location', 'description'];
+      const required = ['id', 'title', 'type', 'date', 'startTime', 'endTime', 'location', 'description'];
       for (const field of required) {
         if (!event[field]) {
           showMessage(`Bitte ${field} ausfüllen!`, 'error');
