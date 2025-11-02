@@ -1408,11 +1408,50 @@
     }
 
     function renderDashboardTab() {
-      return `
+      // Check if profile is complete
+      const hasName = userProfile.identity?.name && userProfile.identity.name.trim() !== '';
+      const hasSkills = userProfile.supply?.skills && userProfile.supply.skills.length > 0;
+      const hasExperience = userProfile.supply?.experience;
+      const isComplete = hasName && hasSkills && hasExperience;
+
+      const userName = userProfile.identity?.name || userProfile.email.split('@')[0];
+
+      // Onboarding Card (context-dependent)
+      const onboardingCard = isComplete ? `
         <div class="card">
-          <h2>Willkommen zurück!</h2>
-          <p>Du bist jetzt eingeloggt und kannst alle KINN Features nutzen.</p>
+          <h2>🎉 Profil komplett!</h2>
+          <p style="margin-bottom: 1rem;">Was du jetzt tun kannst:</p>
+          <div style="color: #666; line-height: 1.8;">
+            → Kommende Events ansehen<br>
+            → Kalender abonnieren<br>
+            → Bald: Passende KINN'der finden
+          </div>
         </div>
+      ` : `
+        <div class="card" style="border-left: 4px solid #5ED9A6;">
+          <h2>👋 Hey ${userName}!</h2>
+          <p style="margin-bottom: 1.5rem;">Damit ich dich mit den richtigen Leuten matchen kann, füll bitte dein Profil aus:</p>
+
+          <div style="background: rgba(94, 217, 166, 0.08); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <div style="margin-bottom: 0.5rem; color: ${hasName ? '#059669' : '#666'};">
+              ${hasName ? '✅' : '☐'} Name & LinkedIn
+            </div>
+            <div style="margin-bottom: 0.5rem; color: ${hasSkills ? '#059669' : '#666'};">
+              ${hasSkills ? '✅' : '☐'} Skills auswählen (bis zu 20)
+            </div>
+            <div style="color: ${hasExperience ? '#059669' : '#666'};">
+              ${hasExperience ? '✅' : '☐'} Erfahrung & Situation
+            </div>
+          </div>
+
+          <button onclick="switchTab('profil')" class="cta-button" style="border: none; cursor: pointer;">
+            Profil jetzt ausfüllen →
+          </button>
+        </div>
+      `;
+
+      return `
+        ${onboardingCard}
 
         <div class="card">
           <h2>Kommende Events</h2>
@@ -1500,7 +1539,7 @@
       return `
         <div class="card">
           <h2>Zeit sparen beim Stammtisch</h2>
-          <p>Füll dein Profil aus und ich kann dich schon vorab mit passenden Leuten matchen.</p>
+          <p>Füll dein Profil aus und wir können dich schon vorab mit passenden Leuten matchen.</p>
 
           <!-- Profile Sub-Tabs -->
           <div class="profile-sub-tabs">
