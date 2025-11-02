@@ -18,7 +18,7 @@
     "resend": "6.4.0-canary.0"
   },
   "devDependencies": {
-    "vercel": "^37.0.0",
-    "playwright": "^1.48.0"
+    "playwright": "^1.56.1",
+    "vercel": "^37.0.0"
   }
 }
