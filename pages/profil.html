@@ -1503,6 +1503,85 @@
             <h2 style="margin-bottom: 1rem;">Was ich anbiete</h2>
 
             <div class="form-group">
+              <label class="form-label">Erfahrung</label>
+              <div class="radio-group">
+                <div class="radio-option">
+                  <input type="radio" id="exp-junior" name="experience" value="junior" ${supply.experience === 'junior' ? 'checked' : ''}>
+                  <label for="exp-junior">Junior</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="exp-mid" name="experience" value="mid" ${supply.experience === 'mid' ? 'checked' : ''}>
+                  <label for="exp-mid">Mid-Level</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="exp-senior" name="experience" value="senior" ${supply.experience === 'senior' ? 'checked' : ''}>
+                  <label for="exp-senior">Senior</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="exp-lead" name="experience" value="lead" ${supply.experience === 'lead' ? 'checked' : ''}>
+                  <label for="exp-lead">Lead / Expert</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Meine aktuelle Situation</label>
+              <p class="form-help" style="font-size: 0.875rem; color: #6B6B6B; margin-top: 0.25rem; margin-bottom: 0.75rem;">
+                Beschreib wo du gerade stehst. Was du suchst kommt weiter unten.
+              </p>
+              <div class="radio-group">
+                <div class="radio-option">
+                  <input type="radio" id="avail-employed" name="availability" value="employed" ${['fulltime', 'employed', 'passive'].includes(supply.availability) ? 'checked' : ''}>
+                  <label for="avail-employed">Vollzeit angestellt</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="avail-freelancer" name="availability" value="freelancer" ${['freelance', 'freelancer'].includes(supply.availability) ? 'checked' : ''}>
+                  <label for="avail-freelancer">Freelancer / Selbstständig</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="avail-student" name="availability" value="student" ${supply.availability === 'student' ? 'checked' : ''}>
+                  <label for="avail-student">Student / Lernend</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="avail-between-jobs" name="availability" value="between-jobs" ${supply.availability === 'between-jobs' ? 'checked' : ''}>
+                  <label for="avail-between-jobs">Zwischen Jobs</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="avail-side-projects" name="availability" value="side-projects" ${['sideproject', 'side-projects'].includes(supply.availability) ? 'checked' : ''}>
+                  <label for="avail-side-projects">Side Projects / Hobbies</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Ich biete an</label>
+              <div class="checkbox-group">
+                <div class="checkbox-option">
+                  <input type="checkbox" id="offer-mentoring" name="canOffer" value="mentoring" ${(supply.canOffer || []).includes('mentoring') ? 'checked' : ''}>
+                  <label for="offer-mentoring">Mentoring</label>
+                </div>
+                <div class="checkbox-option">
+                  <input type="checkbox" id="offer-codereview" name="canOffer" value="code-review" ${(supply.canOffer || []).includes('code-review') ? 'checked' : ''}>
+                  <label for="offer-codereview">Code Review</label>
+                </div>
+                <div class="checkbox-option">
+                  <input type="checkbox" id="offer-workshop" name="canOffer" value="workshop" ${(supply.canOffer || []).includes('workshop') ? 'checked' : ''}>
+                  <label for="offer-workshop">Workshop halten</label>
+                </div>
+                <div class="checkbox-option">
+                  <input type="checkbox" id="offer-projects" name="canOffer" value="projects" ${(supply.canOffer || []).includes('projects') ? 'checked' : ''}>
+                  <label for="offer-projects">Projekte vorstellen</label>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin: 2rem 0; padding: 1rem; background: rgba(94, 217, 166, 0.08); border-radius: 8px;">
+              <p style="margin: 0; color: #2C3E50; font-weight: 500;">
+                💡 Fast geschafft! Wähle jetzt deine Top-Skills aus, damit wir dich mit den richtigen Leuten matchen können.
+              </p>
+            </div>
+
+            <div class="form-group">
               <label class="form-label" style="display: flex; align-items: center; justify-content: space-between;">
                 <span>Skills (klicken zum auswählen)</span>
                 <span id="skillCounter" class="low">0/20</span>
@@ -1572,81 +1651,6 @@
                     </div>
                   `).join('');
                 }).join('')}
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Erfahrung</label>
-              <div class="radio-group">
-                <div class="radio-option">
-                  <input type="radio" id="exp-junior" name="experience" value="junior" ${supply.experience === 'junior' ? 'checked' : ''}>
-                  <label for="exp-junior">Junior</label>
-                </div>
-                <div class="radio-option">
-                  <input type="radio" id="exp-mid" name="experience" value="mid" ${supply.experience === 'mid' ? 'checked' : ''}>
-                  <label for="exp-mid">Mid-Level</label>
-                </div>
-                <div class="radio-option">
-                  <input type="radio" id="exp-senior" name="experience" value="senior" ${supply.experience === 'senior' ? 'checked' : ''}>
-                  <label for="exp-senior">Senior</label>
-                </div>
-                <div class="radio-option">
-                  <input type="radio" id="exp-lead" name="experience" value="lead" ${supply.experience === 'lead' ? 'checked' : ''}>
-                  <label for="exp-lead">Lead / Expert</label>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Meine aktuelle Situation</label>
-              <p class="form-help" style="font-size: 0.875rem; color: #6B6B6B; margin-top: 0.25rem; margin-bottom: 0.75rem;">
-                Beschreib wo du gerade stehst. Was du suchst kommt weiter unten.
-              </p>
-              <div class="radio-group">
-                <div class="radio-option">
-                  <input type="radio" id="avail-employed" name="availability" value="employed" ${['fulltime', 'employed', 'passive'].includes(supply.availability) ? 'checked' : ''}>
-                  <label for="avail-employed">Vollzeit angestellt</label>
-                </div>
-                <div class="radio-option">
-                  <input type="radio" id="avail-freelancer" name="availability" value="freelancer" ${['freelance', 'freelancer'].includes(supply.availability) ? 'checked' : ''}>
-                  <label for="avail-freelancer">Freelancer / Selbstständig</label>
-                </div>
-                <div class="radio-option">
-                  <input type="radio" id="avail-student" name="availability" value="student" ${supply.availability === 'student' ? 'checked' : ''}>
-                  <label for="avail-student">Student / Lernend</label>
-                </div>
-                <div class="radio-option">
-                  <input type="radio" id="avail-between-jobs" name="availability" value="between-jobs" ${supply.availability === 'between-jobs' ? 'checked' : ''}>
-                  <label for="avail-between-jobs">Zwischen Jobs</label>
-                </div>
-                <div class="radio-option">
-                  <input type="radio" id="avail-side-projects" name="availability" value="side-projects" ${['sideproject', 'side-projects'].includes(supply.availability) ? 'checked' : ''}>
-                  <label for="avail-side-projects">Side Projects / Hobbies</label>
-                </div>
-              </div>
-            </div>
-
-            <hr class="section-divider">
-
-            <div class="form-group">
-              <label class="form-label">Ich biete an</label>
-              <div class="checkbox-group">
-                <div class="checkbox-option">
-                  <input type="checkbox" id="offer-mentoring" name="canOffer" value="mentoring" ${(supply.canOffer || []).includes('mentoring') ? 'checked' : ''}>
-                  <label for="offer-mentoring">Mentoring</label>
-                </div>
-                <div class="checkbox-option">
-                  <input type="checkbox" id="offer-codereview" name="canOffer" value="code-review" ${(supply.canOffer || []).includes('code-review') ? 'checked' : ''}>
-                  <label for="offer-codereview">Code Review</label>
-                </div>
-                <div class="checkbox-option">
-                  <input type="checkbox" id="offer-workshop" name="canOffer" value="workshop" ${(supply.canOffer || []).includes('workshop') ? 'checked' : ''}>
-                  <label for="offer-workshop">Workshop halten</label>
-                </div>
-                <div class="checkbox-option">
-                  <input type="checkbox" id="offer-projects" name="canOffer" value="projects" ${(supply.canOffer || []).includes('projects') ? 'checked' : ''}>
-                  <label for="offer-projects">Projekte vorstellen</label>
-                </div>
               </div>
             </div>
             </div>
