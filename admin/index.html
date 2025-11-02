@@ -931,7 +931,7 @@
 
       try {
         const response = await apiCall('/dashboard');
-        renderDashboard(response.data.metrics);
+        renderDashboard(response.metrics);
       } catch (error) {
         console.error('[DASHBOARD] Error:', error);
         container.innerHTML = `<div class="message error">Fehler beim Laden: ${error.message}</div>`;
