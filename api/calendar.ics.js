@@ -69,6 +69,9 @@ function generateICalFeed(events, defaults = {}) {
     `X-WR-TIMEZONE:${timezone}\r\n` +
     'REFRESH-INTERVAL;VALUE=DURATION:PT1H\r\n'; // Refresh every hour
 
+  // Add VTIMEZONE definition for Europe/Vienna
+  ical += generateVTimezone(timezone);
+
   // Add each event
   events.forEach(event => {
     ical += generateICalEvent(event, timestamp, defaults);
@@ -77,6 +80,39 @@ function generateICalFeed(events, defaults = {}) {
   ical += 'END:VCALENDAR\r\n';
 
   return ical;
+}
+
+/**
+ * Generate VTIMEZONE component for Europe/Vienna
+ * @param {string} timezone - Timezone identifier (e.g., 'Europe/Vienna')
+ * @returns {string} - iCal formatted VTIMEZONE component
+ */
+function generateVTimezone(timezone) {
+  if (timezone !== 'Europe/Vienna') {
+    // Only generate VTIMEZONE for Europe/Vienna
+    // Other timezones would need their own definitions
+    return '';
+  }
+
+  return (
+    'BEGIN:VTIMEZONE\r\n' +
+    'TZID:Europe/Vienna\r\n' +
+    'BEGIN:DAYLIGHT\r\n' +
+    'TZOFFSETFROM:+0100\r\n' +
+    'TZOFFSETTO:+0200\r\n' +
+    'DTSTART:19700329T020000\r\n' +
+    'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\r\n' +
+    'TZNAME:CEST\r\n' +
+    'END:DAYLIGHT\r\n' +
+    'BEGIN:STANDARD\r\n' +
+    'TZOFFSETFROM:+0200\r\n' +
+    'TZOFFSETTO:+0100\r\n' +
+    'DTSTART:19701025T030000\r\n' +
+    'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\r\n' +
+    'TZNAME:CET\r\n' +
+    'END:STANDARD\r\n' +
+    'END:VTIMEZONE\r\n'
+  );
 }
 
 /**
@@ -140,18 +176,30 @@ function generateICalEvent(event, timestamp, defaults = {}) {
 
 /**
  * Format date for iCal (YYYYMMDDTHHMMSS)
- * @param {Date} date
- * @returns {string}
+ * Converts UTC timestamps to Europe/Vienna local time
+ * @param {Date} date - Date object (typically in UTC)
+ * @returns {string} - iCal formatted date string in Vienna timezone
  */
 function formatICalDate(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
+  // Use Intl.DateTimeFormat to convert to Europe/Vienna timezone
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Vienna',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
 
-  return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+  // Extract formatted parts
+  const parts = formatter.formatToParts(date);
+  const obj = {};
+  parts.forEach(p => obj[p.type] = p.value);
+
+  // Return iCal format: YYYYMMDDTHHMMSS
+  return `${obj.year}${obj.month}${obj.day}T${obj.hour}${obj.minute}${obj.second}`;
 }
 
 /**
