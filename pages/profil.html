@@ -1182,29 +1182,59 @@
     } from '/public/js/gravatar.js';
 
     // Extract token from URL (for direct links from emails) or session (for dashboard redirects)
-    // Both use the same token type (30 days validity)
-    const params = new URLSearchParams(window.location.search);
-    let token = params.get('token');
+    // Priority: Hash (magic links) → Query params (legacy) → Session (returning users)
+    let token = null;
+    let tokenEmail = null;
 
+    // 1. Check Hash (from /api/auth/login redirect)
+    const hash = window.location.hash.substring(1); // Remove #
+    if (hash) {
+      const hashParams = new URLSearchParams(hash);
+      const hashToken = hashParams.get('token');
+      const hashEmail = hashParams.get('email');
+
+      if (hashToken) {
+        token = hashToken;
+        tokenEmail = hashEmail;
+        console.log('[PROFILE] Using hash token from magic link');
+
+        // Save to session for future visits
+        saveSession(token, tokenEmail);
+
+        // Clear hash to remove token from URL (security + UX)
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    }
+
+    // 2. Check Query params (legacy support)
+    if (!token) {
+      const params = new URLSearchParams(window.location.search);
+      token = params.get('token');
+      if (token) {
+        console.log('[PROFILE] Using query param token (legacy)');
+      }
+    }
+
+    // 3. Check Session (returning users)
     if (!token && isSessionValid()) {
       token = getSessionToken();
+      tokenEmail = getUserEmail();
       console.log('[PROFILE] Using session token');
-    } else if (token) {
-      console.log('[PROFILE] Using URL token');
     }
 
     const content = document.getElementById('content');
 
     // State
     let userProfile = null;
-    let userEmail = null;
+    let userEmail = tokenEmail;
     let isSaving = false;
 
     // Determine active tab from URL hash (default: dashboard)
+    // Note: Hash was cleared above if it contained token, so this checks for tab names only
     let activeTab = 'dashboard';
-    const hash = window.location.hash.replace('#', '');
-    if (hash === 'profil' || hash === 'settings') {
-      activeTab = hash;
+    const currentHash = window.location.hash.replace('#', '');
+    if (currentHash === 'profil' || currentHash === 'settings') {
+      activeTab = currentHash;
     }
 
     // Active domain filters (for skills filtering)
