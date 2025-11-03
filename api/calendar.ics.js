@@ -9,12 +9,24 @@
 import { getEventsConfig } from './utils/redis.js';
 
 export default async function handler(req, res) {
-  // Only accept GET requests
-  if (req.method !== 'GET') {
+  // Log request for debugging mobile issues
+  console.log('[CALENDAR.ICS] Method:', req.method, 'User-Agent:', req.headers['user-agent']?.substring(0, 80));
+
+  // Accept GET, HEAD, and OPTIONS requests (mobile calendar apps need HEAD)
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
     return res.status(405).json({
       error: 'Method not allowed',
-      message: 'Only GET requests are accepted'
+      message: 'Only GET, HEAD, and OPTIONS requests are accepted'
     });
+  }
+
+  // Handle OPTIONS for CORS preflight (mobile browsers)
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache preflight for 24h
+    return res.status(204).end();
   }
 
   try {
@@ -27,11 +39,24 @@ export default async function handler(req, res) {
     // Generate iCal format
     const ical = generateICalFeed(events, config.defaults);
 
-    // Set headers for calendar file
+    // Set headers for calendar file (desktop + mobile compatible)
     res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
     res.setHeader('Content-Disposition', 'inline; filename=kinn-events.ics');
     res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
 
+    // Mobile-friendly headers
+    res.setHeader('Access-Control-Allow-Origin', '*'); // CORS for mobile browsers
+    res.setHeader('Accept-Ranges', 'none'); // Prevent partial content requests
+    res.setHeader('Last-Modified', new Date().toUTCString()); // Cache validation
+
+    // HEAD request: return headers only (mobile calendar apps validate feeds this way)
+    if (req.method === 'HEAD') {
+      res.setHeader('Content-Length', Buffer.byteLength(ical, 'utf8').toString());
+      console.log('[CALENDAR.ICS] HEAD request successful');
+      return res.status(200).end();
+    }
+
+    // GET request: return full iCal content
     return res.status(200).send(ical);
 
   } catch (error) {
