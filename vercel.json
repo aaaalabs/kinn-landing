@@ -43,5 +43,11 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/pages/:path*",
+      "destination": "/index.html"
+    }
   ]
 }
