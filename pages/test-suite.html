@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KINN Test Suite - Dry Run</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 2rem;
+      color: #3A3A3A;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #2C3E50;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: #6B6B6B;
+      font-size: 1rem;
+    }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .test-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .test-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+
+    .test-card h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #2C3E50;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .test-card h2::before {
+      content: '🧪';
+      font-size: 1.5rem;
+    }
+
+    .test-scenario {
+      background: #f8f9fa;
+      border-left: 4px solid #5ED9A6;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 4px;
+    }
+
+    .test-scenario h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #2C3E50;
+      margin-bottom: 0.5rem;
+    }
+
+    .test-scenario pre {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 0.75rem;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 0.75rem;
+      font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+      margin: 0.5rem 0;
+    }
+
+    .result {
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+
+    .result.success {
+      background: #E0EEE9;
+      color: #2C5F2D;
+      border-left: 4px solid #5ED9A6;
+    }
+
+    .result.error {
+      background: #FFE5E5;
+      color: #C92A2A;
+      border-left: 4px solid #E03131;
+    }
+
+    .result.warning {
+      background: #FFF4E6;
+      color: #E67700;
+      border-left: 4px solid #FFA94D;
+    }
+
+    button {
+      background: #5ED9A6;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Work Sans', sans-serif;
+    }
+
+    button:hover {
+      background: #4EC58F;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(94, 217, 166, 0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.secondary {
+      background: #E0EEE9;
+      color: #2C3E50;
+    }
+
+    button.secondary:hover {
+      background: #D0DED9;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #5ED9A6;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: #6B6B6B;
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+
+    .badge.pass { background: #E0EEE9; color: #2C5F2D; }
+    .badge.fail { background: #FFE5E5; color: #C92A2A; }
+    .badge.skip { background: #F1F3F5; color: #6B6B6B; }
+
+    .loading {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid #5ED9A6;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>KINN Test Suite</h1>
+      <p class="subtitle">Dry-Run Testing für maximale Stabilität und Edge Case Detection</p>
+    </header>
+
+    <div class="stats" id="stats">
+      <div class="stat-card">
+        <div class="stat-value" id="totalTests">0</div>
+        <div class="stat-label">Total Tests</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="passedTests">0</div>
+        <div class="stat-label">Passed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="failedTests">0</div>
+        <div class="stat-label">Failed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="edgeCases">0</div>
+        <div class="stat-label">Edge Cases</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button onclick="runAllTests()">▶ Alle Tests ausführen</button>
+      <button class="secondary" onclick="resetTests()">↻ Reset</button>
+      <button class="secondary" onclick="generateTestData()">🎲 Testdaten generieren</button>
+      <button class="secondary" onclick="exportResults()">💾 Export Results</button>
+    </div>
+
+    <div class="test-grid" id="testGrid"></div>
+  </div>
+
+  <script>
+    // Test Statistics
+    let stats = {
+      total: 0,
+      passed: 0,
+      failed: 0,
+      edgeCases: 0
+    };
+
+    // Test Suites
+    const testSuites = [
+      {
+        name: 'Email Validation',
+        icon: '📧',
+        tests: [
+          { name: 'Valid email', input: 'thomas@kinn.at', expected: true },
+          { name: 'Invalid - no @', input: 'thomaskinn.at', expected: false },
+          { name: 'Invalid - no domain', input: 'thomas@', expected: false },
+          { name: 'Invalid - spaces', input: 'thomas @kinn.at', expected: false },
+          { name: 'Edge: Unicode domain', input: 'test@münchen.de', expected: true },
+          { name: 'Edge: Plus addressing', input: 'test+kinn@gmail.com', expected: true },
+          { name: 'Edge: Very long email', input: 'a'.repeat(50) + '@' + 'b'.repeat(50) + '.com', expected: true },
+          { name: 'Edge: Dots in local', input: 'thomas.libra@kinn.at', expected: true }
+        ],
+        validator: (input) => {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return emailRegex.test(input);
+        }
+      },
+      {
+        name: 'Event Type Validation',
+        icon: '📅',
+        tests: [
+          { name: 'Valid - online', input: { type: 'online', meetingLink: 'https://meet.google.com/xyz' }, expected: true },
+          { name: 'Valid - in-person', input: { type: 'in-person', location: 'Coworking Tirol' }, expected: true },
+          { name: 'Valid - hybrid', input: { type: 'hybrid', location: 'Coworking', meetingLink: 'https://meet.google.com/xyz' }, expected: true },
+          { name: 'Invalid - online without link', input: { type: 'online' }, expected: false },
+          { name: 'Invalid - unknown type', input: { type: 'virtual' }, expected: false },
+          { name: 'Edge: hybrid without location', input: { type: 'hybrid', meetingLink: 'https://meet.google.com/xyz' }, expected: false },
+          { name: 'Edge: empty meeting link', input: { type: 'online', meetingLink: '' }, expected: false }
+        ],
+        validator: (input) => {
+          const validTypes = ['online', 'in-person', 'hybrid'];
+          if (!validTypes.includes(input.type)) return false;
+          if (input.type === 'online' && !input.meetingLink) return false;
+          if (input.type === 'hybrid' && (!input.meetingLink || !input.location)) return false;
+          if (input.meetingLink && !input.meetingLink.startsWith('http')) return false;
+          return true;
+        }
+      },
+      {
+        name: 'RSVP Logic',
+        icon: '✅',
+        tests: [
+          { name: 'Valid - yes', input: 'yes', expected: true },
+          { name: 'Valid - no', input: 'no', expected: true },
+          { name: 'Valid - maybe', input: 'maybe', expected: true },
+          { name: 'Invalid - uppercase', input: 'YES', expected: false },
+          { name: 'Invalid - German', input: 'ja', expected: false },
+          { name: 'Edge: empty string', input: '', expected: false },
+          { name: 'Edge: null', input: null, expected: false }
+        ],
+        validator: (input) => {
+          return ['yes', 'no', 'maybe'].includes(input);
+        }
+      },
+      {
+        name: 'Phone Number Format',
+        icon: '📱',
+        tests: [
+          { name: 'Valid - Austrian mobile', input: '+43 664 123 4567', expected: true },
+          { name: 'Valid - without spaces', input: '+436641234567', expected: true },
+          { name: 'Valid - German', input: '+49 151 12345678', expected: true },
+          { name: 'Invalid - missing +', input: '43 664 123 4567', expected: false },
+          { name: 'Invalid - letters', input: '+43 664 ABC 4567', expected: false },
+          { name: 'Edge: too short', input: '+43 123', expected: false },
+          { name: 'Edge: too long', input: '+43 664 123 456 789 012', expected: false }
+        ],
+        validator: (input) => {
+          const phoneRegex = /^\+\d{1,3}\s?\d{3,4}\s?\d{3,4}\s?\d{4,6}$/;
+          return phoneRegex.test(input);
+        }
+      },
+      {
+        name: 'Date/Time Validation',
+        icon: '🕐',
+        tests: [
+          { name: 'Valid - future date', input: { date: '2025-12-15', startTime: '18:00' }, expected: true },
+          { name: 'Valid - today future time', input: { date: new Date().toISOString().split('T')[0], startTime: '23:59' }, expected: true },
+          { name: 'Invalid - past date', input: { date: '2023-01-01', startTime: '18:00' }, expected: false },
+          { name: 'Invalid - wrong format', input: { date: '15.12.2025', startTime: '18:00' }, expected: false },
+          { name: 'Invalid - time format', input: { date: '2025-12-15', startTime: '6pm' }, expected: false },
+          { name: 'Edge: end before start', input: { date: '2025-12-15', startTime: '20:00', endTime: '18:00' }, expected: false }
+        ],
+        validator: (input) => {
+          const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+          const timeRegex = /^\d{2}:\d{2}$/;
+          if (!dateRegex.test(input.date)) return false;
+          if (!timeRegex.test(input.startTime)) return false;
+          const eventDate = new Date(input.date + 'T' + input.startTime);
+          if (eventDate < new Date()) return false;
+          if (input.endTime) {
+            if (!timeRegex.test(input.endTime)) return false;
+            const [startH, startM] = input.startTime.split(':').map(Number);
+            const [endH, endM] = input.endTime.split(':').map(Number);
+            if (endH < startH || (endH === startH && endM <= startM)) return false;
+          }
+          return true;
+        }
+      },
+      {
+        name: 'JWT Token Generation',
+        icon: '🔑',
+        tests: [
+          { name: 'Valid - confirmation token', input: { email: 'test@kinn.at', type: 'confirm' }, expected: true },
+          { name: 'Valid - profile token', input: { email: 'test@kinn.at', type: 'profile' }, expected: true },
+          { name: 'Invalid - missing email', input: { type: 'confirm' }, expected: false },
+          { name: 'Invalid - invalid type', input: { email: 'test@kinn.at', type: 'admin' }, expected: false },
+          { name: 'Edge: empty email', input: { email: '', type: 'confirm' }, expected: false }
+        ],
+        validator: (input) => {
+          if (!input.email || !input.type) return false;
+          if (!['confirm', 'profile'].includes(input.type)) return false;
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(input.email)) return false;
+          // Mock JWT generation - in real code would use jsonwebtoken
+          return true;
+        }
+      },
+      {
+        name: 'Profile Matching Logic',
+        icon: '🤝',
+        tests: [
+          { name: 'Valid - full profile', input: {
+            supply: { skills: ['python', 'react'], experience: 'mid', availability: 'freelancer' },
+            demand: { seeking: ['job', 'freelance'], activeSearch: 'active' }
+          }, expected: true },
+          { name: 'Valid - minimal profile', input: {
+            supply: { skills: ['python'], experience: 'junior', availability: 'student' }
+          }, expected: true },
+          { name: 'Invalid - empty skills', input: {
+            supply: { skills: [], experience: 'mid', availability: 'employed' }
+          }, expected: false },
+          { name: 'Invalid - unknown experience', input: {
+            supply: { skills: ['python'], experience: 'expert', availability: 'employed' }
+          }, expected: false },
+          { name: 'Edge: Legacy availability value', input: {
+            supply: { skills: ['python'], experience: 'mid', availability: 'fulltime' }
+          }, expected: true }
+        ],
+        validator: (input) => {
+          const validExperience = ['junior', 'mid', 'senior', 'lead'];
+          const validAvailability = ['employed', 'freelancer', 'student', 'between-jobs', 'side-projects', 'fulltime', 'freelance', 'sideproject', 'passive'];
+          const validSeeking = ['job', 'freelance', 'cofounder', 'collaboration', 'learning'];
+
+          if (!input.supply || !Array.isArray(input.supply.skills) || input.supply.skills.length === 0) return false;
+          if (!validExperience.includes(input.supply.experience)) return false;
+          if (!validAvailability.includes(input.supply.availability)) return false;
+
+          if (input.demand) {
+            if (input.demand.seeking && !input.demand.seeking.every(s => validSeeking.includes(s))) return false;
+          }
+
+          return true;
+        }
+      },
+      {
+        name: 'WhatsApp Template Generation',
+        icon: '💬',
+        tests: [
+          { name: 'Valid - 1 day template', input: { template: '1day', phone: '+43 664 123 4567', name: 'Thomas' }, expected: true },
+          { name: 'Valid - 2 hours template', input: { template: '2hours', phone: '+43 664 123 4567', name: 'Sarah' }, expected: true },
+          { name: 'Invalid - missing phone', input: { template: '1day', name: 'Thomas' }, expected: false },
+          { name: 'Invalid - invalid template', input: { template: 'custom', phone: '+43 664 123 4567', name: 'Thomas' }, expected: false },
+          { name: 'Edge: name with special chars', input: { template: '1day', phone: '+43 664 123 4567', name: 'José María' }, expected: true }
+        ],
+        validator: (input) => {
+          const validTemplates = ['1day', '2hours'];
+          if (!validTemplates.includes(input.template)) return false;
+          if (!input.phone) return false;
+          const phoneRegex = /^\+\d{1,3}\s?\d{3,4}\s?\d{3,4}\s?\d{4,6}$/;
+          if (!phoneRegex.test(input.phone)) return false;
+          return true;
+        }
+      },
+      {
+        name: 'Capacity Limits',
+        icon: '👥',
+        tests: [
+          { name: 'Valid - under capacity', input: { maxCapacity: 50, rsvps: { yes: new Array(30).fill('email@test.com') } }, expected: true },
+          { name: 'Valid - at capacity', input: { maxCapacity: 50, rsvps: { yes: new Array(50).fill('email@test.com') } }, expected: true },
+          { name: 'Invalid - over capacity', input: { maxCapacity: 50, rsvps: { yes: new Array(51).fill('email@test.com') } }, expected: false },
+          { name: 'Edge: no limit set', input: { rsvps: { yes: new Array(100).fill('email@test.com') } }, expected: true },
+          { name: 'Edge: zero capacity', input: { maxCapacity: 0, rsvps: { yes: [] } }, expected: false }
+        ],
+        validator: (input) => {
+          if (input.maxCapacity === 0) return false;
+          if (!input.maxCapacity) return true; // No limit
+          const yesCount = input.rsvps?.yes?.length || 0;
+          return yesCount <= input.maxCapacity;
+        }
+      }
+    ];
+
+    // Initialize Test Cards
+    function initializeTests() {
+      const grid = document.getElementById('testGrid');
+      grid.innerHTML = '';
+
+      testSuites.forEach((suite, suiteIndex) => {
+        const card = document.createElement('div');
+        card.className = 'test-card';
+        card.id = `suite-${suiteIndex}`;
+
+        let testsHTML = suite.tests.map((test, testIndex) => `
+          <div class="test-scenario" id="test-${suiteIndex}-${testIndex}">
+            <h3>${test.name}</h3>
+            <pre>Input: ${JSON.stringify(test.input, null, 2)}</pre>
+            <div class="result hidden" id="result-${suiteIndex}-${testIndex}"></div>
+          </div>
+        `).join('');
+
+        card.innerHTML = `
+          <h2>${suite.icon} ${suite.name}</h2>
+          ${testsHTML}
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    // Run All Tests
+    async function runAllTests() {
+      resetStats();
+
+      for (let suiteIndex = 0; suiteIndex < testSuites.length; suiteIndex++) {
+        const suite = testSuites[suiteIndex];
+
+        for (let testIndex = 0; testIndex < suite.tests.length; testIndex++) {
+          await runTest(suiteIndex, testIndex);
+          await sleep(50); // Visual delay
+        }
+      }
+
+      updateStats();
+    }
+
+    // Run Single Test
+    async function runTest(suiteIndex, testIndex) {
+      const suite = testSuites[suiteIndex];
+      const test = suite.tests[testIndex];
+      const resultEl = document.getElementById(`result-${suiteIndex}-${testIndex}`);
+
+      resultEl.classList.remove('hidden');
+      resultEl.className = 'result';
+      resultEl.innerHTML = '<span class="loading"></span> Running...';
+
+      await sleep(100);
+
+      try {
+        const actual = suite.validator(test.input);
+        const passed = actual === test.expected;
+
+        stats.total++;
+        if (passed) {
+          stats.passed++;
+          resultEl.className = 'result success';
+          resultEl.innerHTML = `<span class="badge pass">PASS</span> Expected: ${test.expected}, Got: ${actual}`;
+        } else {
+          stats.failed++;
+          resultEl.className = 'result error';
+          resultEl.innerHTML = `<span class="badge fail">FAIL</span> Expected: ${test.expected}, Got: ${actual}`;
+        }
+
+        if (test.name.startsWith('Edge:')) {
+          stats.edgeCases++;
+        }
+      } catch (error) {
+        stats.failed++;
+        resultEl.className = 'result error';
+        resultEl.innerHTML = `<span class="badge fail">ERROR</span> ${error.message}`;
+      }
+
+      updateStats();
+    }
+
+    // Reset Tests
+    function resetTests() {
+      resetStats();
+      initializeTests();
+    }
+
+    // Reset Statistics
+    function resetStats() {
+      stats = { total: 0, passed: 0, failed: 0, edgeCases: 0 };
+      updateStats();
+    }
+
+    // Update Statistics Display
+    function updateStats() {
+      document.getElementById('totalTests').textContent = stats.total;
+      document.getElementById('passedTests').textContent = stats.passed;
+      document.getElementById('failedTests').textContent = stats.failed;
+      document.getElementById('edgeCases').textContent = stats.edgeCases;
+    }
+
+    // Generate Test Data
+    function generateTestData() {
+      const testData = {
+        users: [
+          { email: 'thomas@kinn.at', name: 'Thomas', phone: '+43 664 123 4567' },
+          { email: 'sarah@example.com', name: 'Sarah', phone: '+43 660 987 6543' },
+          { email: 'max@test.de', name: 'Max', phone: '+49 151 12345678' }
+        ],
+        events: [
+          {
+            id: 'kinn-12',
+            type: 'hybrid',
+            title: 'KINN Treff #12',
+            location: 'Coworking Tirol',
+            meetingLink: 'https://meet.google.com/xyz-abc-def',
+            date: '2025-12-15',
+            startTime: '18:00',
+            endTime: '20:00',
+            maxCapacity: 50,
+            rsvps: { yes: [], no: [], maybe: [] }
+          },
+          {
+            id: 'kinn-13',
+            type: 'online',
+            title: 'KINN Online Meetup',
+            meetingLink: 'https://meet.google.com/abc-def-xyz',
+            date: '2025-12-20',
+            startTime: '19:00',
+            endTime: '21:00'
+          }
+        ]
+      };
+
+      console.log('Generated Test Data:', testData);
+      alert('Testdaten wurden in der Console generiert (F12)');
+    }
+
+    // Export Results
+    function exportResults() {
+      const results = {
+        timestamp: new Date().toISOString(),
+        stats: stats,
+        suites: testSuites.map((suite, suiteIndex) => ({
+          name: suite.name,
+          tests: suite.tests.map((test, testIndex) => {
+            const resultEl = document.getElementById(`result-${suiteIndex}-${testIndex}`);
+            return {
+              name: test.name,
+              input: test.input,
+              expected: test.expected,
+              result: resultEl ? resultEl.textContent : 'Not run'
+            };
+          })
+        }))
+      };
+
+      const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kinn-test-results-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Utility: Sleep
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      initializeTests();
+    });
+  </script>
+</body>
+</html>
