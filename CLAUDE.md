@@ -22,13 +22,59 @@ KINN (KI Treff Innsbruck) landing page for event subscriptions with iCal feed in
 - User profile management with preferences (Supply/Demand matching)
 - No OAuth - simple token-based auth
 
+---
+
+## 📚 Quick Reference Documentation
+
+All documentation has been organized into `/docs` for better structure. Here are the most important guides:
+
+### 🎯 Planning & Strategy
+- **Main Implementation Plan:** [`docs/planning/PLAN.md`](docs/planning/PLAN.md)
+- **Platform Potentials & Roadmap:** [`docs/planning/POTENZIALE.md`](docs/planning/POTENZIALE.md)
+- **KInnside Features (Future):** [`docs/planning/KInnside.md`](docs/planning/KInnside.md)
+- **Redis Architecture Plan:** [`docs/planning/redis_plan.md`](docs/planning/redis_plan.md)
+
+### 🎨 Marketing & Brand Identity
+- **Complete Marketing Strategy:** [`docs/marketing/MARKETING.md`](docs/marketing/MARKETING.md)
+- **Brand Styleguide (Visual Identity):** [`docs/marketing/KINN_BRAND_STYLEGUIDE.md`](docs/marketing/KINN_BRAND_STYLEGUIDE.md)
+- **Visual Generation Prompts:** [`docs/marketing/KINN-Visual-Generation-Prompts.md`](docs/marketing/KINN-Visual-Generation-Prompts.md)
+- **Marketing Concept (German):** [`docs/marketing/KINN-Marketing-Konzept.md`](docs/marketing/KINN-Marketing-Konzept.md)
+- **Event Locations:** [`docs/marketing/LOCATIONS.md`](docs/marketing/LOCATIONS.md)
+
+### 🔧 Technical Implementation Guides
+- **Calendar Integration Research:** [`docs/technical/CALENDAR-INTEGRATION.md`](docs/technical/CALENDAR-INTEGRATION.md)
+- **Google Calendar Flow:** [`docs/technical/GOOGLE-CALENDAR-FLOW.md`](docs/technical/GOOGLE-CALENDAR-FLOW.md)
+- **iCal Setup Guide:** [`docs/technical/ICAL_SETUP.md`](docs/technical/ICAL_SETUP.md)
+- **Event Creation Workflow:** [`docs/technical/EVENT_CREATION.md`](docs/technical/EVENT_CREATION.md)
+- **Email Warmup Guide:** [`docs/technical/EMAIL_WARMUP_GUIDE.md`](docs/technical/EMAIL_WARMUP_GUIDE.md)
+- **Resend API Checklist:** [`docs/technical/RESEND_API_CHECKLIST.md`](docs/technical/RESEND_API_CHECKLIST.md)
+- **Inbound Email Setup:** [`docs/technical/INBOUND_SETUP.md`](docs/technical/INBOUND_SETUP.md)
+
+### 🛠️ Code Restructuring (Active Project)
+- **Executive Summary:** [`docs/restructuring/RESTRUCTURING-SUMMARY.md`](docs/restructuring/RESTRUCTURING-SUMMARY.md) ⭐
+- **Detailed Implementation Plan:** [`docs/restructuring/RESTRUCTURING-PLAN.md`](docs/restructuring/RESTRUCTURING-PLAN.md)
+- **Comprehensive Risk Analysis:** [`docs/restructuring/RESTRUCTURING-RISK-ANALYSIS.md`](docs/restructuring/RESTRUCTURING-RISK-ANALYSIS.md)
+
+### 📊 Reports & Security
+- **DMARC Report (Nov 2025):** [`docs/reports/DMARC-REPORT-2025-11-02.md`](docs/reports/DMARC-REPORT-2025-11-02.md)
+- **Security Review:** [`docs/reports/SECURITY_REVIEW.md`](docs/reports/SECURITY_REVIEW.md)
+
+### 🎨 Design Assets
+- **Font Comparison Tool:** [`design/fonts/font-comparison.html`](design/fonts/font-comparison.html)
+- **Font Option Previews:** [`design/fonts/`](design/fonts/)
+
+### 📦 Archive
+- **Legacy Files:** [`docs/archive/`](docs/archive/)
+
+---
+
 ## Brand Guidelines
 
 **IMPORTANT:** All UI components must follow the KINN Brand Styleguide.
 
 ### Design & Visual Identity
 
-See: **`KINN_BRAND_STYLEGUIDE.md`** for comprehensive design system:
+See: **[`docs/marketing/KINN_BRAND_STYLEGUIDE.md`](docs/marketing/KINN_BRAND_STYLEGUIDE.md)** for comprehensive design system:
 
 **Core Identity:**
 - No emojis policy (timeless, professional)
@@ -56,7 +102,7 @@ See: **`KINN_BRAND_STYLEGUIDE.md`** for comprehensive design system:
 
 ### Marketing & Messaging
 
-See: **`MARKETING.md`** for complete marketing strategy:
+See: **[`docs/marketing/MARKETING.md`](docs/marketing/MARKETING.md)** for complete marketing strategy:
 
 **Brand Voice:**
 - Community naming: KINN'der, KINN'sider, KINN Core
@@ -88,7 +134,7 @@ See: **`MARKETING.md`** for complete marketing strategy:
 
 ### Platform Potentials & Roadmap
 
-See: **`POTENZIALE.md`** for comprehensive feature opportunities:
+See: **[`docs/planning/POTENZIALE.md`](docs/planning/POTENZIALE.md)** for comprehensive feature opportunities:
 
 **Vision:** KINN as Operating System für Tirols AI Community
 
