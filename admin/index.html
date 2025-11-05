@@ -538,9 +538,34 @@
       <div id="subscribers-tab" class="tab-content">
         <h2 style="font-weight: 400; margin-bottom: 2rem;">Teilnehmer Liste</h2>
 
-        <!-- Invite Section -->
+        <!-- Google Calendar Integration -->
         <div class="card" style="border-left: 4px solid #5ED9A6; margin-bottom: 2rem;">
-          <h3 style="font-weight: 500; margin-bottom: 0.5rem;">📨 User einladen</h3>
+          <h3 style="font-weight: 500; margin-bottom: 0.5rem;">📅 Google Calendar Invites (Empfohlen)</h3>
+          <p style="color: #666; margin-bottom: 1rem; font-size: 0.95rem;">
+            Professionelle Event-Einladungen mit echtem Google Calendar RSVP-Tracking.
+          </p>
+
+          <div style="background: #f9f9f9; padding: 1.25rem; border-radius: 8px; margin-bottom: 1rem;">
+            <p style="font-size: 0.875rem; color: #333; margin-bottom: 0.75rem; font-weight: 500;">Workflow:</p>
+            <ol style="font-size: 0.875rem; color: #666; line-height: 1.8; padding-left: 1.25rem; margin: 0;">
+              <li>Klick auf "Copy All Subscribers"</li>
+              <li>Öffne <a href="https://calendar.google.com" target="_blank" style="color: #5ED9A6; text-decoration: underline;">Google Calendar</a></li>
+              <li>Create Event → Add Google Meet (automatisch)</li>
+              <li>Paste Emails ins "Add guests" Feld</li>
+              <li>Send Invites → Done! 🎉</li>
+            </ol>
+          </div>
+
+          <button class="btn" onclick="copyAllSubscribersForGoogleCalendar()" style="margin-bottom: 0.75rem;">
+            📋 Copy All Subscribers for Google Calendar
+          </button>
+
+          <div id="googleCalendarCopyResult" style="margin-top: 0.75rem;"></div>
+        </div>
+
+        <!-- Invite Section -->
+        <div class="card" style="border-left: 4px solid #999; margin-bottom: 2rem;">
+          <h3 style="font-weight: 500; margin-bottom: 0.5rem;">📨 Manuell User einladen</h3>
           <p style="color: #666; margin-bottom: 1.5rem; font-size: 0.95rem;">
             Lade jemanden ein, den du bei einem Event getroffen hast.
           </p>
@@ -1022,6 +1047,60 @@
       } catch (error) {
         console.error('Failed to load subscribers:', error);
         container.innerHTML = `<div class="message error">Fehler beim Laden: ${error.message}</div>`;
+      }
+    }
+
+    // Copy All Subscribers for Google Calendar
+    async function copyAllSubscribersForGoogleCalendar() {
+      const resultDiv = document.getElementById('googleCalendarCopyResult');
+
+      try {
+        resultDiv.innerHTML = '<div style="color: #666; font-size: 0.875rem;">⏳ Lade Subscriber...</div>';
+
+        // Fetch subscribers in text format (comma-separated)
+        const response = await fetch('/api/admin/subscribers?format=text', {
+          headers: {
+            'Authorization': `Bearer ${adminPassword}`
+          }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to fetch subscribers');
+        }
+
+        const subscribersText = await response.text();
+        const emailCount = subscribersText.split(', ').filter(e => e.trim()).length;
+
+        // Copy to clipboard
+        await navigator.clipboard.writeText(subscribersText);
+
+        // Show success message with instructions
+        resultDiv.innerHTML = `
+          <div style="background: #E0EEE9; color: #2C5F2D; padding: 1rem; border-radius: 8px; font-size: 0.875rem; border-left: 4px solid #5ED9A6;">
+            <p style="margin: 0 0 0.75rem 0; font-weight: 600;">✅ ${emailCount} Emails kopiert!</p>
+            <p style="margin: 0; line-height: 1.6;">
+              <strong>Nächster Schritt:</strong><br>
+              1. Öffne <a href="https://calendar.google.com" target="_blank" style="color: #2C5F2D; text-decoration: underline; font-weight: 600;">Google Calendar</a><br>
+              2. Create Event → Add guests → Paste (Cmd/Ctrl+V)<br>
+              3. Add Google Meet → Send invites<br>
+              4. Google versendet automatisch Calendar Invites mit RSVP-Tracking!
+            </p>
+          </div>
+        `;
+
+        // Auto-hide success message after 15 seconds
+        setTimeout(() => {
+          resultDiv.innerHTML = '';
+        }, 15000);
+
+      } catch (error) {
+        console.error('[COPY-SUBSCRIBERS] Error:', error);
+        resultDiv.innerHTML = `
+          <div style="background: #ffebee; color: #c62828; padding: 1rem; border-radius: 8px; font-size: 0.875rem; border-left: 4px solid #e03131;">
+            ❌ Fehler: ${error.message}
+          </div>
+        `;
       }
     }
 

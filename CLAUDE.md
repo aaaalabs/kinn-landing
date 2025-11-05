@@ -17,6 +17,7 @@ KINN (KI Treff Innsbruck) landing page for event subscriptions with iCal feed in
 - iCal feed generation for calendar apps
 - **Event Types: Präsenz, Online (Google Meet), Hybrid** ✅ NEW
 - **RSVP-System mit Ja/Nein/Vielleicht** ✅ NEW (Backend ready)
+- **Google Calendar Integration (Smart Hybrid)** ✅ NEW - Copy-paste workflow for native Calendar Invites
 - **WhatsApp-Template Generator** ✅ NEW
 - Admin dashboard for event management
 - User profile management with preferences (Supply/Demand matching)
@@ -42,8 +43,9 @@ All documentation has been organized into `/docs` for better structure. Here are
 - **Event Locations:** [`docs/marketing/LOCATIONS.md`](docs/marketing/LOCATIONS.md)
 
 ### 🔧 Technical Implementation Guides
+- **Google Calendar Workflow (Smart Hybrid):** [`docs/technical/GOOGLE_CALENDAR_WORKFLOW.md`](docs/technical/GOOGLE_CALENDAR_WORKFLOW.md) ⭐ NEW
 - **Calendar Integration Research:** [`docs/technical/CALENDAR-INTEGRATION.md`](docs/technical/CALENDAR-INTEGRATION.md)
-- **Google Calendar Flow:** [`docs/technical/GOOGLE-CALENDAR-FLOW.md`](docs/technical/GOOGLE-CALENDAR-FLOW.md)
+- **Google Calendar Flow (API):** [`docs/technical/GOOGLE-CALENDAR-FLOW.md`](docs/technical/GOOGLE-CALENDAR-FLOW.md)
 - **iCal Setup Guide:** [`docs/technical/ICAL_SETUP.md`](docs/technical/ICAL_SETUP.md)
 - **Event Creation Workflow:** [`docs/technical/EVENT_CREATION.md`](docs/technical/EVENT_CREATION.md)
 - **Email Warmup Guide:** [`docs/technical/EMAIL_WARMUP_GUIDE.md`](docs/technical/EMAIL_WARMUP_GUIDE.md)
@@ -357,8 +359,8 @@ Following Jony Ive's philosophy:
 3. (Event-Erstellung aktuell nur via Admin-Seite)
 4. Events werden in Redis gespeichert
 
-**Option B: Admin-Seite** (`/pages/admin.html` - Password-based)
-1. Gehe zu `/pages/admin`
+**Option B: Admin-Seite** (`/admin/index.html` - Password-based)
+1. Gehe zu `/admin`
 2. Admin API Key eingeben (ADMIN_PASSWORD)
 3. Event-Form ausfüllen:
    - **Event Type**: Präsenz / Online / Hybrid
@@ -383,28 +385,46 @@ Following Jony Ive's philosophy:
 5. Success-Page: "Danke für deine Zusage! 29 Personen haben zugesagt"
 6. Optional: Phone-Nummer für WhatsApp-Reminder eingeben
 
-### Admin: Google Calendar Invites versenden
+### Admin: Google Calendar Invites versenden ✅ IMPLEMENTED
 
-**Workflow (Smart Hybrid - No API):**
-1. Dashboard → Event → "Teilnehmer" Tab
-2. RSVP-Statistik anzeigen:
-   ```
-   ✅ Ja: 29 (78%)
-   ❌ Nein: 3
-   ❓ Vielleicht: 8
-   ⚪ Keine Antwort: 45
-   ```
-3. Copy-Buttons:
-   - **"Copy All Emails (85)"** → Alle Subscriber
-   - **"Copy Yes Only (29)"** → Nur Zusagen
-   - **"Copy Yes + Maybe (37)"** → Zusagen + Vielleicht
-4. **Paste in Google Calendar:**
-   - Öffne Google Calendar
+**Workflow (Smart Hybrid - No API, 2 Minuten):**
+
+1. **Copy Subscribers**
+   - `/admin` → Teilnehmer Tab
+   - Klick auf "📋 Copy All Subscribers for Google Calendar"
+   - Alle Emails werden als komma-separierte Liste kopiert
+
+2. **Google Calendar öffnen**
+   - Gehe zu [calendar.google.com](https://calendar.google.com)
    - Create Event
-   - Add Guests → Paste Emails
-   - Add Google Meet Link (automatisch)
-   - Send Invites
-5. **Done!** → Alle bekommen Calendar Invite mit Meet-Link
+
+3. **Event Details ausfüllen**
+   - Title: "KINN Treff #12 - AI & Innovation"
+   - Date & Time: z.B. Do 15.12.2025, 18:00-20:00
+   - Location: "Coworking Tirol, Innsbruck"
+
+4. **Add Guests**
+   - Klick auf "Add guests"
+   - Paste Emails (Cmd/Ctrl+V)
+
+5. **Add Google Meet**
+   - Klick auf "Add Google Meet video conferencing"
+   - Meeting Link wird automatisch generiert
+
+6. **Send Invites**
+   - Klick auf "Send" → Done! 🎉
+   - Google verschickt automatisch Calendar Invites
+   - Native RSVP-Tracking (Yes/No/Maybe)
+   - Automatische Reminders (24h, 1h)
+
+**Vorteile:**
+- ✅ Professionelle Calendar Invites (nicht Custom HTML)
+- ✅ Höhere Verbindlichkeit (native RSVP)
+- ✅ Zero API-Setup (keine OAuth, keine Service Accounts)
+- ✅ Google übernimmt Reminders, Updates, Cancellations
+- ✅ Sync mit allen Calendar Apps (Apple, Outlook, etc.)
+
+**Details:** [`docs/technical/GOOGLE_CALENDAR_WORKFLOW.md`](docs/technical/GOOGLE_CALENDAR_WORKFLOW.md)
 
 ### Admin: WhatsApp-Reminder versenden
 
