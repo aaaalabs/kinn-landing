@@ -129,27 +129,6 @@
       line-height: 1.5;
     }
 
-    /* Location search notice - only shown when no event confirmed */
-    .location-notice {
-      font-family: 'Work Sans', sans-serif;
-      font-size: 0.875rem;
-      font-weight: 400;
-      color: #6b7280;
-      margin: 0 auto 3rem;
-      padding: 1rem 1.5rem;
-      background: rgba(94, 217, 166, 0.05);
-      border-left: 3px solid #5ED9A6;
-      border-radius: 0.5rem;
-      text-align: left;
-      line-height: 1.6;
-      max-width: 560px;
-      display: none; /* Hidden by default, shown via JavaScript if no events */
-    }
-
-    .location-notice strong {
-      color: #5ED9A6;
-      font-weight: 600;
-    }
 
     /* V1: BOLD MINT BUTTON - Major change */
     .cta-button {
@@ -642,12 +621,6 @@
     <h1>KI Treff Innsbruck</h1>
     <p class="subtitle">Wöchentlich in Innsbruck & Online</p>
 
-    <!-- Location notice - only shown when no events confirmed -->
-    <div class="location-notice" id="locationNotice">
-      <strong>Location gesucht:</strong> Wir planen einen Stammtisch jeden <strong>Donnerstag von 8-9 Uhr</strong> in Innsbruck.
-      Trag dich ein und erhalte Updates, sobald eine passende Location gefunden wurde.
-    </div>
-
     <button class="cta-button" onclick="openModal()">
       Eintragen <kbd class="shortcut-key">I</kbd>
     </button>
@@ -919,36 +892,6 @@
       }
     })
 
-    // Check for confirmed events and show location notice if none exist
-    async function checkEventsAndShowNotice() {
-      try {
-        const response = await fetch('/api/events')
-
-        if (!response.ok) {
-          // If API fails, show notice (fail-safe)
-          document.getElementById('locationNotice').style.display = 'block'
-          return
-        }
-
-        const data = await response.json()
-        const events = data.data?.events || []
-
-        // Show notice only if no upcoming events exist
-        if (events.length === 0) {
-          document.getElementById('locationNotice').style.display = 'block'
-          console.log('[FRONTEND] No upcoming events, showing location notice')
-        } else {
-          console.log('[FRONTEND] Found', events.length, 'upcoming events')
-        }
-      } catch (error) {
-        console.log('[FRONTEND] Could not load events, showing location notice:', error)
-        // If fetch fails, show notice (fail-safe)
-        document.getElementById('locationNotice').style.display = 'block'
-      }
-    }
-
-    // Run on page load
-    document.addEventListener('DOMContentLoaded', checkEventsAndShowNotice)
   </script>
 
   <!-- PWA Service Worker Registration -->
