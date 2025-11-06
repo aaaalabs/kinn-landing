@@ -2448,13 +2448,26 @@
 
         container.innerHTML = `
           <ul class="event-list">
-            ${upcomingEvents.map(event => `
-              <li class="event-item">
-                <div class="event-title">${event.title || 'KINN KI Treff'}</div>
-                <div class="event-date">${formatEventDate(event.date, event.startTime)}</div>
-                ${event.status === 'tentative' ? '<div class="event-tentative-notice">⚠️ Details stehen noch nicht fest</div>' : ''}
-              </li>
-            `).join('')}
+            ${upcomingEvents.map(event => {
+              // Format location based on event type
+              let locationInfo = '';
+              if (event.type === 'online') {
+                locationInfo = '🌐 Online';
+              } else if (event.type === 'in-person') {
+                locationInfo = `📍 ${event.location || 'Innsbruck'}`;
+              } else if (event.type === 'hybrid') {
+                locationInfo = `📍 ${event.location || 'Innsbruck'} + Online`;
+              }
+
+              return `
+                <li class="event-item">
+                  <div class="event-title">${event.title || 'KINN KI Treff'}</div>
+                  <div class="event-date">${formatEventDate(event.date, event.startTime)}</div>
+                  ${locationInfo ? `<div class="event-location" style="font-size: 0.875rem; color: #6B6B6B; margin-top: 0.25rem;">${locationInfo}</div>` : ''}
+                  ${event.status === 'tentative' ? '<div class="event-tentative-notice">⚠️ Details stehen noch nicht fest</div>' : ''}
+                </li>
+              `;
+            }).join('')}
           </ul>
         `;
 
