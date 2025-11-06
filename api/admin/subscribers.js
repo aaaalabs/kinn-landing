@@ -1,4 +1,4 @@
-import { getAllSubscribers, getSubscriberCount, getSubscribersByRSVP, getEventRSVPs } from '../utils/redis.js';
+import { getAllSubscribers, getAllSubscribersWithTimestamps, getSubscriberCount, getSubscribersByRSVP, getEventRSVPs } from '../utils/redis.js';
 import { enforceRateLimit } from '../utils/rate-limiter.js';
 import crypto from 'crypto';
 
@@ -131,33 +131,38 @@ export default async function handler(req, res) {
     }
 
     // Get subscribers based on filter
-    let subscribers;
+    let subscribersData;
     let rsvpStats = null;
 
     if (filter === 'all') {
-      subscribers = await getAllSubscribers();
+      // Get subscribers with timestamps (sorted newest first)
+      subscribersData = await getAllSubscribersWithTimestamps();
     } else {
-      subscribers = await getSubscribersByRSVP(event, filter);
+      // Get filtered subscribers by RSVP (returns array of emails)
+      const emails = await getSubscribersByRSVP(event, filter);
+      // Convert to objects with null timestamps (we don't fetch timestamps for RSVP filters for performance)
+      subscribersData = emails.map(email => ({ email, subscribedAt: null }));
       // Also get RSVP stats for context
       rsvpStats = await getEventRSVPs(event);
     }
 
-    const count = subscribers.length;
+    const count = subscribersData.length;
 
     console.log('[ADMIN] Subscribers fetched:', count, 'filter:', filter);
 
     // Return in requested format
     if (format === 'text') {
-      // Plain text format for copy-paste
+      // Plain text format for copy-paste (only emails, comma-separated)
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      return res.status(200).send(subscribers.sort().join(', '));
+      const emails = subscribersData.map(s => s.email).sort();
+      return res.status(200).send(emails.join(', '));
     }
 
-    // Default JSON format
+    // Default JSON format (with timestamps)
     return res.status(200).json({
       success: true,
       data: {
-        subscribers: subscribers.sort(), // Sort alphabetically
+        subscribers: subscribersData, // Array of {email, subscribedAt} objects
         count,
         filter,
         eventId: event || null,

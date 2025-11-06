@@ -63,6 +63,50 @@ export async function getAllSubscribers() {
 }
 
 /**
+ * Gets all confirmed subscribers with subscription timestamps
+ * @returns {Promise<Array<{email: string, subscribedAt: string}>>} Array of subscriber objects with timestamps
+ */
+export async function getAllSubscribersWithTimestamps() {
+  try {
+    const emails = await redis.smembers(SUBSCRIBERS_KEY);
+    if (!emails || emails.length === 0) {
+      return [];
+    }
+
+    // Fetch preferences for all subscribers in parallel
+    const subscribersWithTimestamps = await Promise.all(
+      emails.map(async (email) => {
+        try {
+          const preferences = await getUserPreferences(email);
+          return {
+            email,
+            subscribedAt: preferences?.subscribedAt || null
+          };
+        } catch (error) {
+          console.error(`[REDIS] Failed to get preferences for ${email}:`, error.message);
+          return {
+            email,
+            subscribedAt: null
+          };
+        }
+      })
+    );
+
+    // Sort by subscribedAt (newest first), put null timestamps at the end
+    subscribersWithTimestamps.sort((a, b) => {
+      if (!a.subscribedAt) return 1;
+      if (!b.subscribedAt) return -1;
+      return new Date(b.subscribedAt) - new Date(a.subscribedAt);
+    });
+
+    return subscribersWithTimestamps;
+  } catch (error) {
+    console.error('[REDIS] Failed to get subscribers with timestamps:', error.message);
+    throw new Error(`Database error: ${error.message}`);
+  }
+}
+
+/**
  * Gets total subscriber count
  * @returns {Promise<number>} Number of confirmed subscribers
  */
