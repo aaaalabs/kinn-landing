@@ -1054,6 +1054,24 @@
       border-left: 4px solid #5ED9A6;
     }
 
+    /* Jony Ive Mobile: Edge-to-edge Events für max content space */
+    @media (max-width: 768px) {
+      .event-list {
+        margin: 0 -1.5rem; /* Pull out of .card padding */
+      }
+
+      .event-item {
+        border-radius: 0; /* Edge-to-edge, kein border-radius */
+        margin-bottom: 0;
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+        padding: 1rem 1.5rem; /* Restored horizontal padding */
+      }
+
+      .event-item:last-child {
+        border-bottom: none;
+      }
+    }
+
     .event-title {
       font-weight: 600;
       color: #2C3E50;
