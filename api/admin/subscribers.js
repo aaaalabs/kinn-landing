@@ -1,4 +1,4 @@
-import { getAllSubscribers, getAllSubscribersWithTimestamps, getSubscriberCount, getSubscribersByRSVP, getEventRSVPs } from '../utils/redis.js';
+import { getAllSubscribers, getAllSubscribersWithTimestamps, getAllSubscribersWithNotificationPreferences, getSubscriberCount, getSubscribersByRSVP, getEventRSVPs } from '../utils/redis.js';
 import { enforceRateLimit } from '../utils/rate-limiter.js';
 import crypto from 'crypto';
 
@@ -9,6 +9,7 @@ import crypto from 'crypto';
  *   Query params:
  *   - filter: 'all' | 'yes' | 'no' | 'maybe' | 'yes_maybe' | 'none' (default: 'all')
  *   - event: Event ID (required if filter != 'all')
+ *   - notifications: 'all' | 'enabled' | 'disabled' (default: 'all')
  *   - format: 'json' | 'text' (default: 'json')
  *
  * Authentication: Bearer token via ADMIN_PASSWORD env var
@@ -111,7 +112,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { filter = 'all', event, format = 'json' } = req.query;
+    const { filter = 'all', event, notifications = 'all', format = 'json' } = req.query;
 
     // Validate filter
     const validFilters = ['all', 'yes', 'no', 'maybe', 'yes_maybe', 'none'];
@@ -119,6 +120,15 @@ export default async function handler(req, res) {
       return res.status(400).json({
         error: 'Invalid filter',
         message: `Filter must be one of: ${validFilters.join(', ')}`
+      });
+    }
+
+    // Validate notifications filter
+    const validNotifications = ['all', 'enabled', 'disabled'];
+    if (!validNotifications.includes(notifications)) {
+      return res.status(400).json({
+        error: 'Invalid notifications filter',
+        message: `Notifications must be one of: ${validNotifications.join(', ')}`
       });
     }
 
@@ -133,6 +143,7 @@ export default async function handler(req, res) {
     // Get subscribers based on filter
     let subscribersData;
     let rsvpStats = null;
+    let notificationsStats = null;
 
     if (filter === 'all') {
       // Get subscribers with timestamps (sorted newest first)
@@ -146,9 +157,41 @@ export default async function handler(req, res) {
       rsvpStats = await getEventRSVPs(event);
     }
 
+    // Apply notifications filter if requested
+    if (notifications !== 'all') {
+      // Fetch notification preferences for all subscribers
+      const allWithPreferences = await getAllSubscribersWithNotificationPreferences();
+      const preferencesMap = new Map(allWithPreferences.map(s => [s.email, s.notificationsEnabled]));
+
+      // Filter based on notifications preference
+      const beforeCount = subscribersData.length;
+      subscribersData = subscribersData.filter(subscriber => {
+        const notificationsEnabled = preferencesMap.get(subscriber.email) ?? true; // Default: enabled
+        return notifications === 'enabled' ? notificationsEnabled : !notificationsEnabled;
+      });
+
+      // Calculate stats
+      const enabledCount = allWithPreferences.filter(s => s.notificationsEnabled).length;
+      const disabledCount = allWithPreferences.length - enabledCount;
+      notificationsStats = {
+        total: allWithPreferences.length,
+        enabled: enabledCount,
+        disabled: disabledCount,
+        filtered: subscribersData.length,
+        skipped: beforeCount - subscribersData.length
+      };
+
+      console.log('[ADMIN] Notifications filter applied:', {
+        filter: notifications,
+        before: beforeCount,
+        after: subscribersData.length,
+        skipped: beforeCount - subscribersData.length
+      });
+    }
+
     const count = subscribersData.length;
 
-    console.log('[ADMIN] Subscribers fetched:', count, 'filter:', filter);
+    console.log('[ADMIN] Subscribers fetched:', count, 'filter:', filter, 'notifications:', notifications);
 
     // Return in requested format
     if (format === 'text') {
@@ -166,7 +209,8 @@ export default async function handler(req, res) {
         count,
         filter,
         eventId: event || null,
-        rsvpStats
+        rsvpStats,
+        notificationsStats
       }
     });
 

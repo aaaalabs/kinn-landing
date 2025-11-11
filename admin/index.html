@@ -568,7 +568,7 @@
           <div style="background: #f9f9f9; padding: 1.25rem; border-radius: 8px; margin-bottom: 1rem;">
             <p style="font-size: 0.875rem; color: #333; margin-bottom: 0.75rem; font-weight: 500;">Workflow:</p>
             <ol style="font-size: 0.875rem; color: #666; line-height: 1.8; padding-left: 1.25rem; margin: 0;">
-              <li>Klick auf "Copy All Subscribers"</li>
+              <li>Klick auf "Copy Subscribers (Notifications Enabled)"</li>
               <li>Öffne <a href="https://calendar.google.com" target="_blank" style="color: #5ED9A6; text-decoration: underline;">Google Calendar</a></li>
               <li>Create Event → Add Google Meet (automatisch)</li>
               <li>Paste Emails ins "Add guests" Feld</li>
@@ -576,11 +576,19 @@
             </ol>
           </div>
 
-          <button class="btn" onclick="copyAllSubscribersForGoogleCalendar()" style="margin-bottom: 0.75rem;">
-            📋 Copy All Subscribers for Google Calendar
+          <button class="btn" onclick="copySubscribersWithNotificationsEnabled()" style="margin-bottom: 0.75rem;">
+            📋 Copy Subscribers (Notifications Enabled)
           </button>
 
           <div id="googleCalendarCopyResult" style="margin-top: 0.75rem;"></div>
+
+          <!-- Notifications Disabled Warning -->
+          <div id="notificationsDisabledWarning" style="margin-top: 1rem; display: none;">
+            <div style="background: #fff3cd; color: #856404; padding: 1rem; border-radius: 8px; font-size: 0.875rem; border-left: 4px solid #ffc107;">
+              <p style="margin: 0 0 0.5rem 0; font-weight: 600;">⚠️ <span id="disabledCount">0</span> User haben Benachrichtigungen deaktiviert:</p>
+              <div id="disabledUsersList" style="max-height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; line-height: 1.6; color: #6c5d3f;"></div>
+            </div>
+          </div>
         </div>
 
         <!-- Invite Section -->
@@ -1107,15 +1115,19 @@
       }
     }
 
-    // Copy All Subscribers for Google Calendar
-    async function copyAllSubscribersForGoogleCalendar() {
+    // Copy Subscribers with Notifications Enabled for Google Calendar
+    async function copySubscribersWithNotificationsEnabled() {
       const resultDiv = document.getElementById('googleCalendarCopyResult');
+      const warningDiv = document.getElementById('notificationsDisabledWarning');
+      const disabledCountSpan = document.getElementById('disabledCount');
+      const disabledUsersListDiv = document.getElementById('disabledUsersList');
 
       try {
         resultDiv.innerHTML = '<div style="color: #666; font-size: 0.875rem;">⏳ Lade Subscriber...</div>';
+        warningDiv.style.display = 'none';
 
-        // Fetch subscribers in text format (comma-separated)
-        const response = await fetch('/api/admin/subscribers?format=text', {
+        // Fetch subscribers with notifications enabled (text format for copy)
+        const response = await fetch('/api/admin/subscribers?format=text&notifications=enabled', {
           headers: {
             'Authorization': `Bearer ${adminPassword}`
           }
@@ -1132,10 +1144,26 @@
         // Copy to clipboard
         await navigator.clipboard.writeText(subscribersText);
 
+        // Fetch stats about disabled users (JSON format)
+        const statsResponse = await fetch('/api/admin/subscribers?notifications=disabled&format=json', {
+          headers: {
+            'Authorization': `Bearer ${adminPassword}`
+          }
+        });
+
+        let disabledCount = 0;
+        let disabledEmails = [];
+
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          disabledCount = statsData.data.count;
+          disabledEmails = statsData.data.subscribers.map(s => s.email);
+        }
+
         // Show success message with instructions
         resultDiv.innerHTML = `
           <div style="background: #E0EEE9; color: #2C5F2D; padding: 1rem; border-radius: 8px; font-size: 0.875rem; border-left: 4px solid #5ED9A6;">
-            <p style="margin: 0 0 0.75rem 0; font-weight: 600;">✅ ${emailCount} Emails kopiert!</p>
+            <p style="margin: 0 0 0.75rem 0; font-weight: 600;">✅ ${emailCount} Emails kopiert (Notifications Enabled)!</p>
             <p style="margin: 0; line-height: 1.6;">
               <strong>Nächster Schritt:</strong><br>
               1. Öffne <a href="https://calendar.google.com" target="_blank" style="color: #2C5F2D; text-decoration: underline; font-weight: 600;">Google Calendar</a><br>
@@ -1145,6 +1173,15 @@
             </p>
           </div>
         `;
+
+        // Show warning if users have notifications disabled
+        if (disabledCount > 0) {
+          disabledCountSpan.textContent = disabledCount;
+          disabledUsersListDiv.innerHTML = disabledEmails.map(email =>
+            `<div>• ${email}</div>`
+          ).join('');
+          warningDiv.style.display = 'block';
+        }
 
         // Auto-hide success message after 15 seconds
         setTimeout(() => {

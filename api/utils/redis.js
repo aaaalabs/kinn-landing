@@ -107,6 +107,52 @@ export async function getAllSubscribersWithTimestamps() {
 }
 
 /**
+ * Gets all confirmed subscribers with notification preferences
+ * @returns {Promise<Array<{email: string, notificationsEnabled: boolean, subscribedAt: string}>>} Array of subscriber objects
+ */
+export async function getAllSubscribersWithNotificationPreferences() {
+  try {
+    const emails = await redis.smembers(SUBSCRIBERS_KEY);
+    if (!emails || emails.length === 0) {
+      return [];
+    }
+
+    // Fetch preferences for all subscribers in parallel
+    const subscribersWithPreferences = await Promise.all(
+      emails.map(async (email) => {
+        try {
+          const preferences = await getUserPreferences(email);
+          return {
+            email,
+            notificationsEnabled: preferences?.notifications?.enabled ?? true, // Default: enabled
+            subscribedAt: preferences?.subscribedAt || null
+          };
+        } catch (error) {
+          console.error(`[REDIS] Failed to get preferences for ${email}:`, error.message);
+          return {
+            email,
+            notificationsEnabled: true, // Default on error
+            subscribedAt: null
+          };
+        }
+      })
+    );
+
+    // Sort by subscribedAt (newest first), put null timestamps at the end
+    subscribersWithPreferences.sort((a, b) => {
+      if (!a.subscribedAt) return 1;
+      if (!b.subscribedAt) return -1;
+      return new Date(b.subscribedAt) - new Date(a.subscribedAt);
+    });
+
+    return subscribersWithPreferences;
+  } catch (error) {
+    console.error('[REDIS] Failed to get subscribers with notification preferences:', error.message);
+    throw new Error(`Database error: ${error.message}`);
+  }
+}
+
+/**
  * Gets total subscriber count
  * @returns {Promise<number>} Number of confirmed subscribers
  */
