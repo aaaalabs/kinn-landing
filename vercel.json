@@ -16,6 +16,13 @@
   "env": {
     "NODE_ENV": "production"
   },
+  "redirects": [
+    {
+      "source": "/profil",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
