@@ -1204,42 +1204,109 @@
     // Priority: Hash (magic links) → Query params (legacy) → Session (returning users)
     let token = null;
     let tokenEmail = null;
+    let tokenSource = null; // Track where token came from for debugging
 
     // 1. Check Hash (from /api/auth/login redirect)
-    const hash = window.location.hash.substring(1); // Remove #
-    if (hash) {
-      const hashParams = new URLSearchParams(hash);
-      const hashToken = hashParams.get('token');
-      const hashEmail = hashParams.get('email');
+    try {
+      const hash = window.location.hash.substring(1); // Remove #
+      console.log('[PROFILE DEBUG] Raw hash:', hash ? `"${hash}"` : '(empty)');
 
-      if (hashToken) {
-        token = hashToken;
-        tokenEmail = hashEmail;
-        console.log('[PROFILE] Using hash token from magic link');
+      if (hash) {
+        const hashParams = new URLSearchParams(hash);
+        const hashToken = hashParams.get('token');
+        const hashEmail = hashParams.get('email');
 
-        // Save to session for future visits
-        saveSession(token, tokenEmail);
+        console.log('[PROFILE DEBUG] Parsed from hash:', {
+          hasToken: !!hashToken,
+          tokenLength: hashToken?.length,
+          hasEmail: !!hashEmail,
+          email: hashEmail
+        });
 
-        // Clear hash to remove token from URL (security + UX)
-        window.history.replaceState(null, '', window.location.pathname);
+        if (hashToken) {
+          token = hashToken;
+          tokenEmail = hashEmail;
+          tokenSource = 'hash (magic link)';
+          console.log('[PROFILE] ✓ Using hash token from magic link');
+
+          // Save to BOTH localStorage AND sessionStorage for redundancy
+          const sessionSaved = saveSession(token, tokenEmail);
+
+          // Additional backup: sessionStorage (survives page reloads but not browser close)
+          try {
+            sessionStorage.setItem('kinn_backup_token', token);
+            sessionStorage.setItem('kinn_backup_email', tokenEmail || '');
+            console.log('[PROFILE] ✓ Backup session saved to sessionStorage');
+          } catch (err) {
+            console.warn('[PROFILE] Failed to save backup session:', err);
+          }
+
+          if (!sessionSaved) {
+            console.error('[PROFILE] ⚠️ Failed to save session to localStorage!');
+            // Continue anyway - we have the token for this page load
+          }
+
+          // Clear hash to remove token from URL (security + UX)
+          // Wait a tick to ensure session is persisted
+          setTimeout(() => {
+            window.history.replaceState(null, '', window.location.pathname);
+            console.log('[PROFILE] Hash cleared from URL');
+          }, 100);
+        }
       }
+    } catch (error) {
+      console.error('[PROFILE] Error parsing hash:', error);
     }
 
     // 2. Check Query params (legacy support)
     if (!token) {
-      const params = new URLSearchParams(window.location.search);
-      token = params.get('token');
-      if (token) {
-        console.log('[PROFILE] Using query param token (legacy)');
+      try {
+        const params = new URLSearchParams(window.location.search);
+        token = params.get('token');
+        tokenEmail = params.get('email');
+        if (token) {
+          tokenSource = 'query params (legacy)';
+          console.log('[PROFILE] ✓ Using query param token (legacy)');
+          saveSession(token, tokenEmail);
+        }
+      } catch (error) {
+        console.error('[PROFILE] Error parsing query params:', error);
       }
     }
 
-    // 3. Check Session (returning users)
+    // 3. Check Session (returning users - localStorage)
     if (!token && isSessionValid()) {
       token = getSessionToken();
       tokenEmail = getUserEmail();
-      console.log('[PROFILE] Using session token');
+      tokenSource = 'localStorage session';
+      console.log('[PROFILE] ✓ Using localStorage session token');
     }
+
+    // 4. FALLBACK: Check sessionStorage backup (if localStorage failed)
+    if (!token) {
+      try {
+        const backupToken = sessionStorage.getItem('kinn_backup_token');
+        const backupEmail = sessionStorage.getItem('kinn_backup_email');
+
+        if (backupToken) {
+          token = backupToken;
+          tokenEmail = backupEmail;
+          tokenSource = 'sessionStorage backup';
+          console.log('[PROFILE] ✓ Using sessionStorage backup token');
+
+          // Try to restore to localStorage
+          saveSession(token, tokenEmail);
+        }
+      } catch (error) {
+        console.error('[PROFILE] Error checking sessionStorage backup:', error);
+      }
+    }
+
+    console.log('[PROFILE] Final token status:', {
+      hasToken: !!token,
+      source: tokenSource,
+      email: tokenEmail
+    });
 
     const content = document.getElementById('content');
 
@@ -1369,7 +1436,17 @@
     // Initialize
     (async function init() {
       if (!token) {
-        showError('Nicht eingeloggt', 'Bitte melde dich über die Startseite an oder verwende den Link aus deiner Email.');
+        console.error('[PROFILE] No token found after all fallback attempts!');
+        console.error('[PROFILE] Token source:', tokenSource);
+        console.error('[PROFILE] Hash on page load:', window.location.hash);
+        console.error('[PROFILE] localStorage available:', typeof localStorage !== 'undefined');
+        console.error('[PROFILE] sessionStorage available:', typeof sessionStorage !== 'undefined');
+
+        showError(
+          'Nicht eingeloggt',
+          'Der Login-Link konnte nicht verarbeitet werden. Das kann verschiedene Gründe haben (Browser-Einstellungen, Cookies blockiert, etc.).',
+          true // Show SOS contact info
+        );
         return;
       }
 
@@ -2422,7 +2499,7 @@
       }, 3000);
     }
 
-    function showError(title, message) {
+    function showError(title, message, showSOS = false) {
       content.innerHTML = `
         <div class="status-indicator" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
           <svg viewBox="0 0 24 24">
@@ -2434,6 +2511,37 @@
 
         <h1>${title}</h1>
         <p class="subtitle">${message}</p>
+
+        ${showSOS ? `
+          <div style="background: rgba(94, 217, 166, 0.1); border: 2px solid #5ED9A6; border-radius: 12px; padding: 1.5rem; margin: 2rem 0; text-align: left;">
+            <h3 style="color: #2C3E50; margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600;">
+              🆘 Brauchst du Hilfe?
+            </h3>
+            <p style="color: #6B6B6B; margin-bottom: 1rem; line-height: 1.6;">
+              Falls du ausgesperrt bist oder der Magic Link nicht funktioniert, kontaktiere uns direkt:
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <a href="mailto:thomas@kinn.at?subject=Magic%20Link%20funktioniert%20nicht&body=Hallo%2C%0A%0AMein%20Magic%20Link%20funktioniert%20nicht.%20Meine%20Email%3A%20"
+                 style="display: inline-flex; align-items: center; gap: 0.5rem; color: #2C3E50; text-decoration: none; padding: 0.75rem 1rem; background: white; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); transition: all 0.2s; font-weight: 500;"
+                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                <span style="font-size: 1.2rem;">📧</span>
+                <span>Email: thomas@kinn.at</span>
+              </a>
+              <a href="https://wa.me/436601238172?text=Hallo%2C%20mein%20KINN%20Magic%20Link%20funktioniert%20nicht."
+                 style="display: inline-flex; align-items: center; gap: 0.5rem; color: #2C3E50; text-decoration: none; padding: 0.75rem 1rem; background: white; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); transition: all 0.2s; font-weight: 500;"
+                 target="_blank"
+                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                <span style="font-size: 1.2rem;">💬</span>
+                <span>WhatsApp: 0660 123 8172</span>
+              </a>
+            </div>
+            <p style="color: #6B6B6B; margin-top: 1rem; font-size: 0.9rem; line-height: 1.5;">
+              <strong>Tipp:</strong> Öffne den Browser Developer Console (F12) und schicke uns einen Screenshot der Log-Meldungen - das hilft uns beim Debuggen!
+            </p>
+          </div>
+        ` : ''}
 
         <a href="/" class="cta-button">
           Zur Startseite

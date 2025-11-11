@@ -96,6 +96,28 @@ export default async function handler(req, res) {
           <div class="container">
             <h1>⚠️ Ungültiger Login-Link</h1>
             <p>Der Login-Link ist ungültig oder unvollständig. Bitte verwende den Link aus deiner Email.</p>
+
+            <div style="background: rgba(94, 217, 166, 0.1); border: 2px solid #5ED9A6; border-radius: 12px; padding: 1.5rem; margin: 2rem 0; text-align: left;">
+              <h3 style="color: #2C3E50; margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600;">
+                🆘 Kein Link erhalten?
+              </h3>
+              <p style="color: #6B6B6B; margin-bottom: 1rem; font-size: 0.95rem; line-height: 1.6;">
+                Falls du keine Email bekommen hast oder der Link immer noch nicht funktioniert:
+              </p>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <a href="mailto:thomas@kinn.at?subject=Kein%20Login-Link%20erhalten&body=Hallo%2C%0A%0AIch%20habe%20keinen%20Login-Link%20erhalten.%20Meine%20Email%3A%20"
+                   style="display: inline-flex; align-items: center; gap: 0.5rem; color: #2C3E50; text-decoration: none; padding: 0.75rem 1rem; background: white; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); font-weight: 500;">
+                  <span>📧</span>
+                  <span>thomas@kinn.at</span>
+                </a>
+                <a href="https://wa.me/436601238172?text=Hallo%2C%20ich%20habe%20keinen%20KINN%20Login-Link%20erhalten."
+                   style="display: inline-flex; align-items: center; gap: 0.5rem; color: #2C3E50; text-decoration: none; padding: 0.75rem 1rem; background: white; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); font-weight: 500;">
+                  <span>💬</span>
+                  <span>0660 123 8172</span>
+                </a>
+              </div>
+            </div>
+
             <a href="/">Zur Startseite</a>
           </div>
         </body>
@@ -174,6 +196,28 @@ export default async function handler(req, res) {
             <h1>⏰ Login-Link abgelaufen</h1>
             <p>Dieser Login-Link ist abgelaufen oder wurde bereits verwendet. Links sind 30 Tage gültig.</p>
             <p>Gib deine Email-Adresse erneut ein, um einen neuen Login-Link zu erhalten.</p>
+
+            <div style="background: rgba(94, 217, 166, 0.1); border: 2px solid #5ED9A6; border-radius: 12px; padding: 1.5rem; margin: 2rem 0; text-align: left;">
+              <h3 style="color: #2C3E50; margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600;">
+                🆘 Link funktioniert immer noch nicht?
+              </h3>
+              <p style="color: #6B6B6B; margin-bottom: 1rem; font-size: 0.95rem; line-height: 1.6;">
+                Kontaktiere uns direkt:
+              </p>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <a href="mailto:thomas@kinn.at?subject=Login-Link%20abgelaufen&body=Hallo%2C%0A%0AMein%20Login-Link%20ist%20abgelaufen.%20Meine%20Email%3A%20"
+                   style="display: inline-flex; align-items: center; gap: 0.5rem; color: #2C3E50; text-decoration: none; padding: 0.75rem 1rem; background: white; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); font-weight: 500;">
+                  <span>📧</span>
+                  <span>thomas@kinn.at</span>
+                </a>
+                <a href="https://wa.me/436601238172?text=Hallo%2C%20mein%20KINN%20Login-Link%20ist%20abgelaufen."
+                   style="display: inline-flex; align-items: center; gap: 0.5rem; color: #2C3E50; text-decoration: none; padding: 0.75rem 1rem; background: white; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); font-weight: 500;">
+                  <span>💬</span>
+                  <span>0660 123 8172</span>
+                </a>
+              </div>
+            </div>
+
             <a href="/">Neuen Link anfordern</a>
           </div>
         </body>
@@ -248,6 +292,28 @@ export default async function handler(req, res) {
         <div class="container">
           <h1>❌ Ein Fehler ist aufgetreten</h1>
           <p>Beim Verarbeiten deines Login-Links ist ein Fehler aufgetreten. Bitte versuche es erneut.</p>
+
+          <div style="background: rgba(94, 217, 166, 0.1); border: 2px solid #5ED9A6; border-radius: 12px; padding: 1.5rem; margin: 2rem 0; text-align: left;">
+            <h3 style="color: #2C3E50; margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600;">
+              🆘 Brauchst du Hilfe?
+            </h3>
+            <p style="color: #6B6B6B; margin-bottom: 1rem; font-size: 0.95rem; line-height: 1.6;">
+              Dieser Fehler sollte nicht passieren. Kontaktiere uns bitte:
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <a href="mailto:thomas@kinn.at?subject=Login-Fehler&body=Hallo%2C%0A%0ABei%20meinem%20Login%20ist%20ein%20Fehler%20aufgetreten.%20Meine%20Email%3A%20"
+                 style="display: inline-flex; align-items: center; gap: 0.5rem; color: #2C3E50; text-decoration: none; padding: 0.75rem 1rem; background: white; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); font-weight: 500;">
+                <span>📧</span>
+                <span>thomas@kinn.at</span>
+              </a>
+              <a href="https://wa.me/436601238172?text=Hallo%2C%20bei%20meinem%20KINN%20Login%20ist%20ein%20Fehler%20aufgetreten."
+                 style="display: inline-flex; align-items: center; gap: 0.5rem; color: #2C3E50; text-decoration: none; padding: 0.75rem 1rem; background: white; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); font-weight: 500;">
+                <span>💬</span>
+                <span>0660 123 8172</span>
+              </a>
+            </div>
+          </div>
+
           <a href="/">Zur Startseite</a>
         </div>
       </body>
