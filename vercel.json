@@ -23,6 +23,12 @@
       "permanent": false
     }
   ],
+  "rewrites": [
+    {
+      "source": "/pages/:path*",
+      "destination": "/pages/:path*"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
