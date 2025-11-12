@@ -7,18 +7,21 @@
     "dev": "vercel dev",
     "build": "echo 'No build needed - static HTML'",
     "deploy": "vercel --prod",
+    "email:dev": "email dev --dir emails --port 3001",
+    "email:export": "email export --dir emails --outDir .emails-export",
     "screenshots": "node scripts/generate-screenshots.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@react-email/components": "^0.0.25",
+    "@react-email/components": "^1.0.0",
     "@react-email/render": "^1.4.0",
     "@upstash/redis": "^1.35.6",
     "@vercel/analytics": "^1.5.0",
     "groq-sdk": "^0.7.0",
     "jsonwebtoken": "^9.0.2",
+    "react-email": "^5.0.1",
     "resend": "6.4.0-canary.0"
   },
   "devDependencies": {
