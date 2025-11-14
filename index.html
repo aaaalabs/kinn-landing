@@ -421,6 +421,31 @@
       text-decoration: underline;
     }
 
+    /* Discord Community Link */
+    .community-link {
+      font-family: 'Work Sans', sans-serif;
+      display: block;
+      margin-top: 2rem;
+      font-size: 0.8rem;
+      color: #6B6B6B;
+      font-weight: 400;
+      line-height: 1.5;
+      transition: color 0.2s ease;
+    }
+
+    .community-link a {
+      color: #6B6B6B;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: all 0.2s ease;
+      padding-bottom: 2px;
+    }
+
+    .community-link a:hover {
+      color: #5ED9A6;
+      border-bottom: 1px solid #5ED9A6;
+    }
+
     @media (max-width: 1024px) {
       body {
         padding: 3rem 2rem;
@@ -503,6 +528,11 @@
       .partner-logo {
         height: 24px;
         max-width: 100px;
+      }
+
+      .community-link {
+        font-size: 0.75rem;
+        margin-top: 1.5rem;
       }
 
       .footer {
@@ -704,6 +734,10 @@
       Scho dabei? Kein Problem – einfach nochmal eintragen
     </p>
 
+    <div class="community-link">
+      Oder direkt in unsere <a href="https://discord.gg/NrtSzRkZ" target="_blank" rel="noopener noreferrer">Discord Community</a>
+    </div>
+
     <!-- Partner Logos -->
     <div class="partners-section">
       <div class="partners-label">Unterstützt von</div>
@@ -726,7 +760,7 @@
     <p class="footer">
       KINN – Wo Tiroler KI Profil bekommt
       <span class="footer-links">
-        <a href="/pages/privacy.html">Datenschutz</a> · <a href="/pages/agb.html">AGB</a>
+        <a href="/pages/privacy.html">Datenschutz</a> · <a href="/pages/agb.html">AGB</a> · <a href="https://discord.gg/NrtSzRkZ" target="_blank" rel="noopener noreferrer">Discord</a>
       </span>
     </p>
   </div>
