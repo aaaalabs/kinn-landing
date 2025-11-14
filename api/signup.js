@@ -53,9 +53,15 @@ function generateOptInEmail(confirmUrl) {
           Damit stellen wir sicher, dass nur du Zugriff auf deine Anmeldung hast und niemand unbefugt deine E-Mail-Adresse verwendet.
         </p>
 
-        <p style="font-size: 14px; line-height: 1.6; color: #666; margin-bottom: 32px;">
+        <p style="font-size: 14px; line-height: 1.6; color: #666; margin-bottom: 16px;">
           Dieser Bestätigungslink ist 48 Stunden gültig.
         </p>
+
+        <div style="margin: 24px 0; padding: 16px; background: rgba(94, 217, 166, 0.08); border-left: 3px solid #5ED9A6; border-radius: 4px;">
+          <p style="font-size: 14px; line-height: 1.6; color: #333; margin: 0;">
+            <strong>Nach der Anmeldung:</strong> Du erhältst Zugang zum Dashboard mit Event-Infos und unserer Discord Community für direkten Austausch mit AI Devs aus Tirol.
+          </p>
+        </div>
 
         <p style="font-size: 16px; line-height: 1.6; margin-top: 32px;">
           <strong>Viele Grüße,</strong><br>
@@ -102,6 +108,8 @@ Warum dieser Schritt?
 Damit stellen wir sicher, dass nur du Zugriff auf deine Anmeldung hast und niemand unbefugt deine E-Mail-Adresse verwendet.
 
 Dieser Bestätigungslink ist 48 Stunden gültig.
+
+Nach der Anmeldung: Du erhältst Zugang zum Dashboard mit Event-Infos und unserer Discord Community für direkten Austausch mit AI Devs aus Tirol.
 
 Viele Grüße,
 Thomas
@@ -151,9 +159,15 @@ function generateMagicLinkEmail(loginUrl) {
           </tr>
         </table>
 
-        <p style="font-size: 14px; line-height: 1.6; color: #666; margin-bottom: 32px;">
+        <p style="font-size: 14px; line-height: 1.6; color: #666; margin-bottom: 16px;">
           Dieser Link ist 24 Stunden gültig.
         </p>
+
+        <div style="margin: 24px 0; padding: 16px; background: rgba(94, 217, 166, 0.08); border-left: 3px solid #5ED9A6; border-radius: 4px;">
+          <p style="font-size: 14px; line-height: 1.6; color: #333; margin: 0;">
+            <strong>Tipp:</strong> Im Dashboard findest du auch den Link zu unserer Discord Community zum direkten Austausch mit anderen KINN Mitgliedern.
+          </p>
+        </div>
 
         <p style="font-size: 16px; line-height: 1.6; margin-top: 32px;">
           <strong>Viele Grüße,</strong><br>
@@ -194,6 +208,8 @@ du bist bereits bei KINN angemeldet! Hier ist dein Login-Link:
 ${loginUrl}
 
 Dieser Link ist 24 Stunden gültig.
+
+Tipp: Im Dashboard findest du auch den Link zu unserer Discord Community zum direkten Austausch mit anderen KINN Mitgliedern.
 
 Viele Grüße,
 Thomas
