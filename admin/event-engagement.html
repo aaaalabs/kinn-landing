@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KINN Admin - Event Engagement Tracking</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+  <!-- Typography: Work Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Work Sans', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(180deg, #ffffff 0%, #fafcfb 100%);
+      color: #3A3A3A;
+      padding: 20px;
+      line-height: 1.618;
+      min-height: 100vh;
+    }
+
+    /* Subtle neural network background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(94,217,166,0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(94,217,166,0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 2rem;
+    }
+
+    .back-link {
+      display: inline-block;
+      color: #5ED9A6;
+      text-decoration: none;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      transition: color 0.2s ease;
+    }
+
+    .back-link:hover {
+      color: #4EC995;
+      text-decoration: underline;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .event-meta {
+      font-size: 0.95rem;
+      color: #6B6B6B;
+      font-weight: 500;
+    }
+
+    /* Stats Box */
+    .stats-box {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .stats-box h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .stat-item {
+      font-size: 0.9rem;
+      color: #6B6B6B;
+    }
+
+    .stat-item strong {
+      color: #3A3A3A;
+      font-weight: 600;
+    }
+
+    /* Controls */
+    .controls {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .controls-row:last-child {
+      margin-bottom: 0;
+    }
+
+    input[type="text"], select {
+      padding: 10px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    input[type="text"]:focus, select:focus {
+      outline: none;
+      border-color: #5ED9A6;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 24px;
+      background: #5ED9A6;
+      color: #000;
+      text-decoration: none;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: #4EC995;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(94, 217, 166, 0.3);
+    }
+
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #3A3A3A;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    /* Participant Cards */
+    .participants {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .participant-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: box-shadow 0.2s ease;
+    }
+
+    .participant-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    .participant-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .participant-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #3A3A3A;
+    }
+
+    .participant-email {
+      font-size: 0.85rem;
+      color: #6B6B6B;
+      margin-top: 0.25rem;
+    }
+
+    .participant-rate {
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    .rate-high {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .rate-medium {
+      background: #fff8e1;
+      color: #f57c00;
+    }
+
+    .rate-low {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .rate-new {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    /* Checkboxes */
+    .checkboxes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      accent-color: #5ED9A6;
+    }
+
+    .checkbox-group label {
+      font-size: 0.9rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* History */
+    .participant-history {
+      font-size: 0.85rem;
+      color: #6B6B6B;
+      margin-bottom: 0.5rem;
+    }
+
+    .participant-source {
+      font-size: 0.85rem;
+      color: #999;
+      font-style: italic;
+    }
+
+    /* Warning */
+    .warning {
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #856404;
+      font-weight: 500;
+    }
+
+    .warning.danger {
+      background: #ffebee;
+      border-color: #c62828;
+      color: #c62828;
+    }
+
+    /* Loading & Empty States */
+    .loading, .empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #6B6B6B;
+    }
+
+    .error {
+      background: #ffebee;
+      color: #c62828;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 640px) {
+      body {
+        padding: 10px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .controls-row {
+        flex-direction: column;
+      }
+
+      input[type="text"], select {
+        min-width: 100%;
+      }
+
+      .checkboxes {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .checkbox-group {
+        font-size: 0.85rem;
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        width: 44px; /* Touch-friendly */
+        height: 44px;
+      }
+    }
+
+    /* Notification Toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #2e7d32;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <a href="/admin/index.html" class="back-link">← Zurück zu Events</a>
+      <h1 id="event-title">Loading...</h1>
+      <div class="event-meta" id="event-meta">Loading event data...</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-box" id="stats-box" style="display: none;">
+      <h2>Quick Stats</h2>
+      <div class="stats-grid" id="stats-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="controls-row">
+        <input type="text" id="search" placeholder="Suche nach Name oder Email...">
+        <select id="filter">
+          <option value="all">Alle</option>
+          <option value="new">✨ Neue User (nie eingeladen)</option>
+          <option value="high-rate">✅ Hohe Show-Up Rate (>70%)</option>
+          <option value="low-rate">⚠️ Niedrige Rate (<30%)</option>
+          <option value="invited">📧 Persönlich eingeladen</option>
+          <option value="confirmed">✓ DM-Zusagen</option>
+        </select>
+        <select id="sort">
+          <option value="rate-desc">Show-Up Rate (hoch → niedrig)</option>
+          <option value="rate-asc">Show-Up Rate (niedrig → hoch)</option>
+          <option value="name-asc">Name (A → Z)</option>
+        </select>
+      </div>
+      <div class="controls-row">
+        <button class="btn" onclick="saveAll()">💾 Save All</button>
+        <button class="btn-secondary btn" onclick="markAllAttended()">✓ Mark All Confirmed as Attended</button>
+      </div>
+    </div>
+
+    <!-- Error Display -->
+    <div id="error" class="error" style="display: none;"></div>
+
+    <!-- Participants List -->
+    <div id="loading" class="loading">Loading participants...</div>
+    <div id="empty" class="empty" style="display: none;">Keine Teilnehmer gefunden.</div>
+    <div id="participants" class="participants" style="display: none;">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // Get eventId from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get('eventId');
+    const adminPassword = sessionStorage.getItem('adminPassword');
+
+    if (!eventId) {
+      document.getElementById('loading').innerHTML = 'Error: Missing eventId parameter';
+      throw new Error('Missing eventId');
+    }
+
+    if (!adminPassword) {
+      window.location.href = '/admin/index.html';
+      throw new Error('Not authenticated');
+    }
+
+    let engagementData = null;
+    let filteredParticipants = [];
+
+    // Fetch engagement data
+    async function loadEngagementData() {
+      try {
+        const response = await fetch(`/api/admin/event-engagement?eventId=${eventId}`, {
+          headers: {
+            'Authorization': `Bearer ${adminPassword}`
+          }
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to load engagement data');
+        }
+
+        const result = await response.json();
+        engagementData = result.data;
+
+        renderHeader();
+        renderStats();
+        renderParticipants();
+
+        document.getElementById('loading').style.display = 'none';
+      } catch (error) {
+        console.error('Error loading engagement data:', error);
+        document.getElementById('error').textContent = `Error: ${error.message}`;
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('loading').style.display = 'none';
+      }
+    }
+
+    // Render header
+    function renderHeader() {
+      const { event } = engagementData;
+      document.getElementById('event-title').textContent = event.title;
+      document.getElementById('event-meta').textContent =
+        `Status: ${event.status === 'upcoming' ? 'Geplant' : 'Vergangen'} | ${formatDate(event.date)} | ${event.type}`;
+    }
+
+    // Render stats
+    function renderStats() {
+      const { stats } = engagementData;
+      const statsHtml = `
+        <div class="stat-item">• <strong>${stats.totalSubscribers}</strong> Total Subscribers</div>
+        <div class="stat-item">• <strong>${stats.personallyInvited}</strong> Persönlich eingeladen (${Math.round(stats.personallyInvited / stats.totalSubscribers * 100)}%)</div>
+        <div class="stat-item">• <strong>${stats.confirmedDM}</strong> DM-Zusagen (${stats.personallyInvited > 0 ? Math.round(stats.confirmedDM / stats.personallyInvited * 100) : 0}% von eingeladenen)</div>
+        <div class="stat-item">• <strong>${stats.attended}</strong> Gekommen ${engagementData.event.status === 'upcoming' ? '(Event noch nicht vorbei)' : `(${Math.round(stats.attended / stats.totalSubscribers * 100)}%)`}</div>
+      `;
+      document.getElementById('stats-grid').innerHTML = statsHtml;
+      document.getElementById('stats-box').style.display = 'block';
+    }
+
+    // Render participants
+    function renderParticipants() {
+      filteredParticipants = [...engagementData.participants];
+
+      // Apply search filter
+      const search = document.getElementById('search').value.toLowerCase();
+      if (search) {
+        filteredParticipants = filteredParticipants.filter(p =>
+          p.name.toLowerCase().includes(search) || p.email.toLowerCase().includes(search)
+        );
+      }
+
+      // Apply category filter
+      const filter = document.getElementById('filter').value;
+      if (filter !== 'all') {
+        filteredParticipants = filteredParticipants.filter(p => {
+          switch (filter) {
+            case 'new':
+              return p.showUpStats.invited === 0;
+            case 'high-rate':
+              return p.showUpRate > 0.7;
+            case 'low-rate':
+              return p.showUpStats.invited > 0 && p.showUpRate < 0.3;
+            case 'invited':
+              return p.thisEvent.personallyInvited;
+            case 'confirmed':
+              return p.thisEvent.confirmedDM;
+            default:
+              return true;
+          }
+        });
+      }
+
+      // Apply sort
+      const sort = document.getElementById('sort').value;
+      filteredParticipants.sort((a, b) => {
+        switch (sort) {
+          case 'rate-desc':
+            return b.showUpRate - a.showUpRate;
+          case 'rate-asc':
+            return a.showUpRate - b.showUpRate;
+          case 'name-asc':
+            return a.name.localeCompare(b.name);
+          default:
+            return 0;
+        }
+      });
+
+      // Render cards
+      if (filteredParticipants.length === 0) {
+        document.getElementById('participants').style.display = 'none';
+        document.getElementById('empty').style.display = 'block';
+        return;
+      }
+
+      const html = filteredParticipants.map(p => `
+        <div class="participant-card" data-email="${p.email}">
+          <div class="participant-header">
+            <div>
+              <div class="participant-name">${p.name}</div>
+              <div class="participant-email">${p.email}</div>
+            </div>
+            <div class="participant-rate ${getRateClass(p.showUpRate, p.showUpStats.invited)}">
+              ${getRateLabel(p.showUpRate, p.showUpStats.invited)}
+            </div>
+          </div>
+
+          <div class="checkboxes">
+            <div class="checkbox-group">
+              <input type="checkbox" id="invited-${p.email}"
+                ${p.thisEvent.personallyInvited ? 'checked' : ''}>
+              <label for="invited-${p.email}">📧 DM Sent</label>
+            </div>
+            <div class="checkbox-group">
+              <input type="checkbox" id="confirmed-${p.email}"
+                ${p.thisEvent.confirmedDM ? 'checked' : ''}>
+              <label for="confirmed-${p.email}">✓ Zusage</label>
+            </div>
+            <div class="checkbox-group">
+              <input type="checkbox" id="attended-${p.email}"
+                ${p.thisEvent.attended ? 'checked' : ''}>
+              <label for="attended-${p.email}">✓ Kam</label>
+            </div>
+          </div>
+
+          ${p.history.length > 0 ? `
+            <div class="participant-history">
+              History: ${p.history.map(h => h.attended ? `✓ ${h.eventTitle}` : `✗ ${h.eventTitle}`).join(', ')}
+            </div>
+          ` : ''}
+
+          ${p.thisEvent.source !== 'none' ? `
+            <div class="participant-source">
+              Source: ${p.thisEvent.source === 'newsletter' ? 'Newsletter RSVP' : p.thisEvent.source === 'manual' ? 'Manual DM' : 'Walk-in'}
+            </div>
+          ` : ''}
+
+          ${p.warning ? `
+            <div class="warning ${p.warning.level === 'danger' ? 'danger' : ''}">
+              ${p.warning.text}
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+
+      document.getElementById('participants').innerHTML = html;
+      document.getElementById('participants').style.display = 'flex';
+      document.getElementById('empty').style.display = 'none';
+    }
+
+    // Helper: Get rate class
+    function getRateClass(rate, invited) {
+      if (invited === 0) return 'rate-new';
+      if (rate > 0.7) return 'rate-high';
+      if (rate < 0.3) return 'rate-low';
+      return 'rate-medium';
+    }
+
+    // Helper: Get rate label
+    function getRateLabel(rate, invited) {
+      if (invited === 0) return '✨ NEW';
+      return `${Math.round(rate * 100)}% (${invited > 0 ? invited + ' events' : ''})`;
+    }
+
+    // Helper: Format date
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    // Save all changes
+    async function saveAll() {
+      try {
+        const updates = filteredParticipants.map(p => ({
+          email: p.email,
+          personallyInvited: document.getElementById(`invited-${p.email}`).checked,
+          confirmedDM: document.getElementById(`confirmed-${p.email}`).checked,
+          attended: document.getElementById(`attended-${p.email}`).checked
+        }));
+
+        const response = await fetch(`/api/admin/event-engagement?eventId=${eventId}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${adminPassword}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ updates })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to save changes');
+        }
+
+        showToast('✓ Changes saved successfully!');
+
+        // Reload data
+        await loadEngagementData();
+      } catch (error) {
+        console.error('Error saving changes:', error);
+        showToast(`Error: ${error.message}`, true);
+      }
+    }
+
+    // Mark all confirmed as attended
+    function markAllAttended() {
+      filteredParticipants.forEach(p => {
+        if (p.thisEvent.confirmedDM) {
+          const checkbox = document.getElementById(`attended-${p.email}`);
+          if (checkbox) checkbox.checked = true;
+        }
+      });
+      showToast('✓ All confirmed users marked as attended');
+    }
+
+    // Show toast notification
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.background = isError ? '#c62828' : '#2e7d32';
+      toast.classList.add('show');
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Event listeners
+    document.getElementById('search').addEventListener('input', renderParticipants);
+    document.getElementById('filter').addEventListener('change', renderParticipants);
+    document.getElementById('sort').addEventListener('change', renderParticipants);
+
+    // Init
+    loadEngagementData();
+  </script>
+</body>
+</html>

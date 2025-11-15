@@ -615,3 +615,364 @@ export async function getSubscribersByRSVP(eventId, filter = 'all') {
     throw new Error(`Database error: ${error.message}`);
   }
 }
+
+// ===== Event Engagement Tracking =====
+
+/**
+ * Computes engagement statistics for a user across all events
+ * @param {string} email - User email address
+ * @returns {Promise<Object>} Engagement stats { totalEventsInvited, totalConfirmed, totalAttended, showUpRate, history }
+ */
+export async function computeUserEngagementStats(email) {
+  try {
+    const normalizedEmail = email.toLowerCase();
+    const config = await getEventsConfig();
+
+    let totalEventsInvited = 0;
+    let totalConfirmed = 0;
+    let totalAttended = 0;
+    let lastAttended = null;
+    let streak = 0;
+    const history = {};
+
+    // Sort events by date (oldest first for streak calculation)
+    const sortedEvents = [...config.events].sort((a, b) =>
+      new Date(a.date) - new Date(b.date)
+    );
+
+    let currentStreak = 0;
+
+    for (const event of sortedEvents) {
+      const engagement = event.engagement || {
+        personallyInvited: [],
+        confirmedDM: [],
+        attended: [],
+        newsletterRSVP: { yes: [], maybe: [], no: [] }
+      };
+
+      const invited = engagement.personallyInvited?.includes(normalizedEmail) || false;
+      const confirmed = engagement.confirmedDM?.includes(normalizedEmail) || false;
+      const attended = engagement.attended?.includes(normalizedEmail) || false;
+
+      // Determine source
+      let source = 'none';
+      if (attended && !confirmed && !invited) {
+        source = 'walk-in';
+      } else if (engagement.newsletterRSVP?.yes?.includes(normalizedEmail) ||
+                 engagement.newsletterRSVP?.maybe?.includes(normalizedEmail)) {
+        source = 'newsletter';
+      } else if (invited) {
+        source = 'personal';
+      }
+
+      // Record history
+      history[event.id] = {
+        eventId: event.id,
+        eventTitle: event.title,
+        eventDate: event.date,
+        invited,
+        confirmedDM: confirmed,
+        attended,
+        source
+      };
+
+      // Update totals
+      if (invited) totalEventsInvited++;
+      if (confirmed) totalConfirmed++;
+      if (attended) {
+        totalAttended++;
+        lastAttended = event.date;
+        currentStreak++;
+      } else {
+        // Streak broken if invited/confirmed but didn't attend
+        if (invited || confirmed) {
+          currentStreak = 0;
+        }
+      }
+    }
+
+    // Streak is the current running count
+    streak = currentStreak;
+
+    // Calculate show-up rate
+    const showUpRate = totalEventsInvited > 0
+      ? totalAttended / totalEventsInvited
+      : 0;
+
+    return {
+      totalEventsInvited,
+      totalConfirmed,
+      totalAttended,
+      showUpRate: Math.round(showUpRate * 100) / 100, // Round to 2 decimals
+      lastAttended,
+      streak,
+      history
+    };
+  } catch (error) {
+    console.error('[REDIS] Failed to compute user engagement stats:', error.message);
+    throw new Error(`Database error: ${error.message}`);
+  }
+}
+
+/**
+ * Updates engagement data for a specific event (bulk update)
+ * @param {string} eventId - Event ID
+ * @param {Array<Object>} updates - Array of { email, personallyInvited, confirmedDM, attended }
+ * @returns {Promise<Object>} Updated event object
+ */
+export async function updateEventEngagement(eventId, updates) {
+  try {
+    const config = await getEventsConfig();
+
+    // Find the event
+    const eventIndex = config.events.findIndex(e => e.id === eventId);
+    if (eventIndex === -1) {
+      throw new Error('Event not found');
+    }
+
+    const event = config.events[eventIndex];
+
+    // Initialize engagement if not exists
+    if (!event.engagement) {
+      event.engagement = {
+        personallyInvited: [],
+        confirmedDM: [],
+        attended: [],
+        newsletterRSVP: { yes: [], maybe: [], no: [] }
+      };
+    }
+
+    // Apply updates
+    for (const update of updates) {
+      const normalizedEmail = update.email.toLowerCase();
+
+      // Update personallyInvited
+      if (update.personallyInvited === true) {
+        if (!event.engagement.personallyInvited.includes(normalizedEmail)) {
+          event.engagement.personallyInvited.push(normalizedEmail);
+        }
+      } else if (update.personallyInvited === false) {
+        event.engagement.personallyInvited = event.engagement.personallyInvited.filter(
+          e => e !== normalizedEmail
+        );
+      }
+
+      // Update confirmedDM
+      if (update.confirmedDM === true) {
+        if (!event.engagement.confirmedDM.includes(normalizedEmail)) {
+          event.engagement.confirmedDM.push(normalizedEmail);
+        }
+      } else if (update.confirmedDM === false) {
+        event.engagement.confirmedDM = event.engagement.confirmedDM.filter(
+          e => e !== normalizedEmail
+        );
+      }
+
+      // Update attended
+      if (update.attended === true) {
+        if (!event.engagement.attended.includes(normalizedEmail)) {
+          event.engagement.attended.push(normalizedEmail);
+        }
+      } else if (update.attended === false) {
+        event.engagement.attended = event.engagement.attended.filter(
+          e => e !== normalizedEmail
+        );
+      }
+    }
+
+    // Update event in config
+    config.events[eventIndex] = event;
+
+    // Save to Redis
+    await updateEventsConfig(config);
+
+    // Recompute stats for all affected users
+    const affectedEmails = new Set(updates.map(u => u.email.toLowerCase()));
+    for (const email of affectedEmails) {
+      await updateUserEngagementInProfile(email);
+    }
+
+    console.log('[REDIS] Event engagement updated:', eventId, updates.length, 'users');
+    return event;
+  } catch (error) {
+    console.error('[REDIS] Failed to update event engagement:', error.message);
+    throw new Error(`Database error: ${error.message}`);
+  }
+}
+
+/**
+ * Updates engagement stats in user profile after event engagement changes
+ * @param {string} email - User email address
+ * @returns {Promise<void>}
+ */
+export async function updateUserEngagementInProfile(email) {
+  try {
+    const normalizedEmail = email.toLowerCase();
+    const key = `profile:${normalizedEmail}`;
+
+    // Compute fresh stats
+    const stats = await computeUserEngagementStats(normalizedEmail);
+
+    // Get existing profile or create new
+    const existing = await redis.get(key) || {
+      email: normalizedEmail,
+      createdAt: new Date().toISOString()
+    };
+
+    // Update engagement section
+    const updated = {
+      ...existing,
+      email: normalizedEmail,
+      updatedAt: new Date().toISOString(),
+      engagement: {
+        stats: {
+          totalEventsInvited: stats.totalEventsInvited,
+          totalConfirmed: stats.totalConfirmed,
+          totalAttended: stats.totalAttended,
+          showUpRate: stats.showUpRate,
+          lastAttended: stats.lastAttended,
+          streak: stats.streak
+        },
+        history: stats.history
+      }
+    };
+
+    // Save to Redis
+    await redis.set(key, updated);
+
+    console.log('[REDIS] User engagement updated in profile:', normalizedEmail);
+  } catch (error) {
+    console.error('[REDIS] Failed to update user engagement in profile:', error.message);
+    // Don't throw - this is a background update
+  }
+}
+
+/**
+ * Gets engagement data for a specific event with all subscribers
+ * @param {string} eventId - Event ID
+ * @returns {Promise<Object>} Event engagement data with participant stats
+ */
+export async function getEventEngagement(eventId) {
+  try {
+    const config = await getEventsConfig();
+    const allSubscribers = await getAllSubscribers();
+
+    // Find the event
+    const event = config.events.find(e => e.id === eventId);
+    if (!event) {
+      throw new Error('Event not found');
+    }
+
+    // Get engagement data
+    const engagement = event.engagement || {
+      personallyInvited: [],
+      confirmedDM: [],
+      attended: [],
+      newsletterRSVP: { yes: [], maybe: [], no: [] }
+    };
+
+    // Build participant list with stats
+    const participants = [];
+
+    for (const email of allSubscribers) {
+      const normalizedEmail = email.toLowerCase();
+
+      // Get user's profile stats
+      const profile = await getProfile(normalizedEmail);
+      const preferences = await getUserPreferences(normalizedEmail);
+      const userStats = profile?.engagement?.stats || {
+        totalEventsInvited: 0,
+        totalConfirmed: 0,
+        totalAttended: 0,
+        showUpRate: 0
+      };
+
+      // Get user's event history
+      const history = profile?.engagement?.history || {};
+      const eventHistory = Object.values(history).map(h => ({
+        eventId: h.eventId,
+        eventTitle: h.eventTitle,
+        attended: h.attended
+      }));
+
+      // Determine this event's engagement
+      const personallyInvited = engagement.personallyInvited?.includes(normalizedEmail) || false;
+      const confirmedDM = engagement.confirmedDM?.includes(normalizedEmail) || false;
+      const attended = engagement.attended?.includes(normalizedEmail) || false;
+
+      // Determine source
+      let source = 'none';
+      if (engagement.newsletterRSVP?.yes?.includes(normalizedEmail)) {
+        source = 'newsletter';
+      } else if (engagement.newsletterRSVP?.maybe?.includes(normalizedEmail)) {
+        source = 'newsletter';
+      } else if (personallyInvited) {
+        source = 'manual';
+      } else if (attended && !personallyInvited && !confirmedDM) {
+        source = 'walk-in';
+      }
+
+      // Generate warning if chronic no-show
+      let warning = null;
+      if (userStats.totalEventsInvited >= 2 && userStats.showUpRate === 0) {
+        warning = {
+          level: 'danger',
+          text: `⚠️ ${userStats.totalAttended} shows in ${userStats.totalEventsInvited} invites - Skip personal invite!`
+        };
+      } else if (userStats.totalEventsInvited >= 3 && userStats.showUpRate < 0.3) {
+        warning = {
+          level: 'warning',
+          text: `⚠️ Low show-up rate (${Math.round(userStats.showUpRate * 100)}%)`
+        };
+      }
+
+      participants.push({
+        email: normalizedEmail,
+        name: profile?.identity?.name || normalizedEmail.split('@')[0],
+        showUpRate: userStats.showUpRate,
+        showUpStats: {
+          invited: userStats.totalEventsInvited,
+          confirmed: userStats.totalConfirmed,
+          attended: userStats.totalAttended
+        },
+        thisEvent: {
+          personallyInvited,
+          confirmedDM,
+          attended,
+          source
+        },
+        history: eventHistory,
+        warning,
+        notificationsEnabled: preferences?.notifications?.enabled !== false
+      });
+    }
+
+    // Compute stats
+    const stats = {
+      totalSubscribers: allSubscribers.length,
+      personallyInvited: engagement.personallyInvited?.length || 0,
+      confirmedDM: engagement.confirmedDM?.length || 0,
+      attended: engagement.attended?.length || 0,
+      newsletterRSVPs: {
+        yes: engagement.newsletterRSVP?.yes?.length || 0,
+        maybe: engagement.newsletterRSVP?.maybe?.length || 0,
+        no: engagement.newsletterRSVP?.no?.length || 0
+      }
+    };
+
+    return {
+      event: {
+        id: event.id,
+        title: event.title,
+        date: event.date,
+        status: new Date(event.date) > new Date() ? 'upcoming' : 'past',
+        type: event.type
+      },
+      stats,
+      participants
+    };
+  } catch (error) {
+    console.error('[REDIS] Failed to get event engagement:', error.message);
+    throw new Error(`Database error: ${error.message}`);
+  }
+}

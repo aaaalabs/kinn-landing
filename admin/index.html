@@ -806,6 +806,9 @@
             <button class="btn btn-small" style="background: #5ED9A6; color: #000;" onclick="sendEventInvites('${event.id}', '${event.title}')">
               📧 Send Invites
             </button>
+            <button class="btn btn-small" style="background: #3B82F6; color: white;" onclick="openEngagement('${event.id}')">
+              📊 Engagement
+            </button>
             <button class="btn btn-small btn-secondary" onclick="editEvent(${index})">Bearbeiten</button>
             <button class="btn btn-small btn-danger" onclick="deleteEvent(${index})">Löschen</button>
           </div>
@@ -1247,6 +1250,11 @@
         console.error('[INVITE] Error:', error);
         resultDiv.innerHTML = `<div class="message error">❌ Fehler: ${error.message}</div>`;
       }
+    }
+
+    // Open Engagement Tracking Page
+    function openEngagement(eventId) {
+      window.location.href = `/admin/event-engagement.html?eventId=${eventId}`;
     }
 
     // Send Event Invites to all subscribers

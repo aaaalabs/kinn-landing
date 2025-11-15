@@ -1,4 +1,14 @@
-import { getAllSubscribers, getAllSubscribersWithTimestamps, getAllSubscribersWithNotificationPreferences, getSubscriberCount, getSubscribersByRSVP, getEventRSVPs } from '../utils/redis.js';
+import {
+  getAllSubscribers,
+  getAllSubscribersWithTimestamps,
+  getAllSubscribersWithNotificationPreferences,
+  getSubscriberCount,
+  getSubscribersByRSVP,
+  getEventRSVPs,
+  getProfile,
+  getUserPreferences,
+  getEventsConfig
+} from '../utils/redis.js';
 import { enforceRateLimit } from '../utils/rate-limiter.js';
 import crypto from 'crypto';
 
@@ -8,9 +18,14 @@ import crypto from 'crypto';
  * GET /api/admin/subscribers - Get all subscribers
  *   Query params:
  *   - filter: 'all' | 'yes' | 'no' | 'maybe' | 'yes_maybe' | 'none' (default: 'all')
- *   - event: Event ID (required if filter != 'all')
+ *   - event: Event ID (required if filter != 'all' or channel = 'google-calendar')
  *   - notifications: 'all' | 'enabled' | 'disabled' (default: 'all')
+ *   - channel: 'newsletter' | 'google-calendar' (default: 'newsletter')
  *   - format: 'json' | 'text' (default: 'json')
+ *
+ * Channel Filtering:
+ *   - newsletter: All subscribers with notifications enabled
+ *   - google-calendar: Engaged users only (past attendees, wanted to come, or new since last event)
  *
  * Authentication: Bearer token via ADMIN_PASSWORD env var
  */
@@ -112,7 +127,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { filter = 'all', event, notifications = 'all', format = 'json' } = req.query;
+    const { filter = 'all', event, notifications = 'all', channel = 'newsletter', format = 'json' } = req.query;
 
     // Validate filter
     const validFilters = ['all', 'yes', 'no', 'maybe', 'yes_maybe', 'none'];
@@ -132,11 +147,20 @@ export default async function handler(req, res) {
       });
     }
 
-    // Require event ID if filter is not 'all'
-    if (filter !== 'all' && !event) {
+    // Validate channel filter
+    const validChannels = ['newsletter', 'google-calendar'];
+    if (!validChannels.includes(channel)) {
+      return res.status(400).json({
+        error: 'Invalid channel filter',
+        message: `Channel must be one of: ${validChannels.join(', ')}`
+      });
+    }
+
+    // Require event ID if filter is not 'all' or channel is 'google-calendar'
+    if ((filter !== 'all' || channel === 'google-calendar') && !event) {
       return res.status(400).json({
         error: 'Missing event ID',
-        message: 'Event ID is required when using RSVP filters'
+        message: 'Event ID is required when using RSVP filters or google-calendar channel'
       });
     }
 
@@ -189,9 +213,73 @@ export default async function handler(req, res) {
       });
     }
 
+    // Apply Google Calendar channel filter if requested
+    let channelStats = null;
+    if (channel === 'google-calendar') {
+      const eventsConfig = await getEventsConfig();
+
+      // Get last event date (for new subscriber detection)
+      const pastEvents = eventsConfig.events
+        .filter(e => new Date(e.date) < new Date())
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+      const lastEventDate = pastEvents.length > 0 ? new Date(pastEvents[0].date) : null;
+
+      const eligible = [];
+      const breakdown = {
+        pastAttendees: 0,
+        wantedToCome: 0,
+        newSubscribers: 0
+      };
+
+      for (const subscriber of subscribersData) {
+        const email = subscriber.email;
+        const profile = await getProfile(email);
+        const preferences = await getUserPreferences(email);
+
+        // Skip if notifications disabled
+        if (preferences?.notifications?.enabled === false) continue;
+
+        const stats = profile?.engagement?.stats || {};
+        const subscribedAt = preferences?.subscribedAt ? new Date(preferences.subscribedAt) : null;
+
+        const hasAttended = stats.totalAttended > 0;
+        const wantedToCome = stats.totalConfirmed > stats.totalAttended;
+        const registeredAfterLastEvent = lastEventDate && subscribedAt && subscribedAt > lastEventDate;
+
+        if (hasAttended) {
+          eligible.push(subscriber);
+          breakdown.pastAttendees++;
+        } else if (wantedToCome) {
+          eligible.push(subscriber);
+          breakdown.wantedToCome++;
+        } else if (registeredAfterLastEvent) {
+          eligible.push(subscriber);
+          breakdown.newSubscribers++;
+        }
+      }
+
+      const excluded = subscribersData.length - eligible.length;
+
+      channelStats = {
+        channel: 'google-calendar',
+        total: subscribersData.length,
+        eligible: eligible.length,
+        excluded,
+        breakdown
+      };
+
+      subscribersData = eligible;
+
+      console.log('[ADMIN] Google Calendar filter applied:', {
+        before: subscribersData.length + excluded,
+        after: eligible.length,
+        breakdown
+      });
+    }
+
     const count = subscribersData.length;
 
-    console.log('[ADMIN] Subscribers fetched:', count, 'filter:', filter, 'notifications:', notifications);
+    console.log('[ADMIN] Subscribers fetched:', count, 'filter:', filter, 'notifications:', notifications, 'channel:', channel);
 
     // Return in requested format
     if (format === 'text') {
@@ -208,9 +296,11 @@ export default async function handler(req, res) {
         subscribers: subscribersData, // Array of {email, subscribedAt} objects
         count,
         filter,
+        channel,
         eventId: event || null,
         rsvpStats,
-        notificationsStats
+        notificationsStats,
+        channelStats
       }
     });
 
