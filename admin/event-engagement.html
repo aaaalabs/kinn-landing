@@ -569,20 +569,26 @@
 
           <div class="checkboxes">
             <div class="checkbox-group">
-              <input type="checkbox" id="invited-${p.email}"
-                ${p.thisEvent.personallyInvited ? 'checked' : ''}>
+              <input type="checkbox" id="invited-${p.email}" data-email="${p.email}" data-field="invited"
+                ${p.thisEvent.personallyInvited ? 'checked' : ''}
+                onchange="autoSaveCheckbox('${p.email}')">
               <label for="invited-${p.email}">📧 DM Sent</label>
             </div>
             <div class="checkbox-group">
-              <input type="checkbox" id="confirmed-${p.email}"
-                ${p.thisEvent.confirmedDM ? 'checked' : ''}>
+              <input type="checkbox" id="confirmed-${p.email}" data-email="${p.email}" data-field="confirmed"
+                ${p.thisEvent.confirmedDM ? 'checked' : ''}
+                onchange="autoSaveCheckbox('${p.email}')">
               <label for="confirmed-${p.email}">✓ Zusage</label>
             </div>
             <div class="checkbox-group">
-              <input type="checkbox" id="attended-${p.email}"
-                ${p.thisEvent.attended ? 'checked' : ''}>
+              <input type="checkbox" id="attended-${p.email}" data-email="${p.email}" data-field="attended"
+                ${p.thisEvent.attended ? 'checked' : ''}
+                onchange="autoSaveCheckbox('${p.email}')">
               <label for="attended-${p.email}">✓ Kam</label>
             </div>
+          </div>
+          <div class="save-indicator" id="save-indicator-${p.email}" style="display: none; font-size: 0.8rem; color: #5ED9A6; margin-top: 0.5rem;">
+            💾 Saving...
           </div>
 
           ${p.history.length > 0 ? `
@@ -630,7 +636,76 @@
       return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
 
-    // Save all changes
+    // Auto-save when checkbox changes
+    let saveTimeout = null;
+    async function autoSaveCheckbox(email) {
+      // Show saving indicator
+      const indicator = document.getElementById(`save-indicator-${email}`);
+      if (indicator) {
+        indicator.style.display = 'block';
+      }
+
+      // Debounce: wait 500ms before saving
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(async () => {
+        try {
+          const update = {
+            email: email,
+            personallyInvited: document.getElementById(`invited-${email}`).checked,
+            confirmedDM: document.getElementById(`confirmed-${email}`).checked,
+            attended: document.getElementById(`attended-${email}`).checked
+          };
+
+          const response = await fetch(`/api/admin/event-engagement?eventId=${eventId}`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${adminPassword}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ updates: [update] })
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to save changes');
+          }
+
+          // Show success briefly
+          if (indicator) {
+            indicator.textContent = '✓ Saved';
+            indicator.style.color = '#2e7d32';
+            setTimeout(() => {
+              indicator.style.display = 'none';
+              indicator.textContent = '💾 Saving...';
+              indicator.style.color = '#5ED9A6';
+            }, 1500);
+          }
+
+          // Update local data (stats will be recomputed on next load)
+          const participant = engagementData.participants.find(p => p.email === email);
+          if (participant) {
+            participant.thisEvent.personallyInvited = update.personallyInvited;
+            participant.thisEvent.confirmedDM = update.confirmedDM;
+            participant.thisEvent.attended = update.attended;
+          }
+
+        } catch (error) {
+          console.error('Error auto-saving checkbox:', error);
+          if (indicator) {
+            indicator.textContent = '✗ Error';
+            indicator.style.color = '#c62828';
+            setTimeout(() => {
+              indicator.style.display = 'none';
+              indicator.textContent = '💾 Saving...';
+              indicator.style.color = '#5ED9A6';
+            }, 2000);
+          }
+          showToast(`Error: ${error.message}`, true);
+        }
+      }, 500);
+    }
+
+    // Save all changes (manual trigger)
     async function saveAll() {
       try {
         const updates = filteredParticipants.map(p => ({
