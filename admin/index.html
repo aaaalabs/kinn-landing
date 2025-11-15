@@ -1378,9 +1378,14 @@
               </select>
             </div>
 
-            <button class="btn" onclick="sendNewsletterForNextEvent('${nextEvent.id}', '${nextEvent.title}')" style="font-size: 1rem;">
-              📰 Send Newsletter
-            </button>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+              <button class="btn btn-secondary" onclick="previewNewsletter('${nextEvent.id}')" style="font-size: 1rem;">
+                👁️ Preview
+              </button>
+              <button class="btn" onclick="sendNewsletterForNextEvent('${nextEvent.id}', '${nextEvent.title}')" style="font-size: 1rem;">
+                📰 Send Newsletter
+              </button>
+            </div>
           </div>
         `;
 
@@ -1417,6 +1422,10 @@
         console.error('[GET-SUBSCRIBER-COUNT] Error:', error);
         return 0;
       }
+    }
+
+    function previewNewsletter(eventId) {
+      window.open(`/api/admin/preview-newsletter?eventId=${eventId}`, '_blank');
     }
 
     async function sendNewsletterForNextEvent(eventId, eventTitle) {
