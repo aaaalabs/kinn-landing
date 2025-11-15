@@ -443,6 +443,7 @@
         <button class="tab" onclick="switchTab('dashboard')">Dashboard</button>
         <button class="tab active" onclick="switchTab('events')">Events</button>
         <button class="tab" onclick="switchTab('subscribers')">Teilnehmer</button>
+        <button class="tab" onclick="switchTab('newsletter')">Newsletter</button>
         <button class="tab" onclick="logout()" style="margin-left: auto;">Logout</button>
       </div>
 
@@ -624,6 +625,13 @@
 
         <div id="subscribers-list" class="loading">Lade Teilnehmer...</div>
       </div>
+
+      <!-- Newsletter Tab -->
+      <div id="newsletter-tab" class="tab-content">
+        <h2 style="font-weight: 400; margin-bottom: 2rem;">📰 Newsletter</h2>
+
+        <div id="newsletter-content" class="loading">Lade Newsletter...</div>
+      </div>
     </div>
   </div>
 
@@ -734,6 +742,8 @@
         loadSubscribers();
       } else if (tabName === 'dashboard') {
         loadDashboard();
+      } else if (tabName === 'newsletter') {
+        loadNewsletterTab();
       }
     }
 
@@ -805,9 +815,6 @@
           <div class="event-actions">
             <button class="btn btn-small" style="background: #5ED9A6; color: #000;" onclick="sendEventInvites('${event.id}', '${event.title}')">
               📧 Send Invites
-            </button>
-            <button class="btn btn-small" style="background: #5ED9A6; color: #000;" onclick="sendNewsletter('${event.id}', '${event.title}')">
-              📰 Send Newsletter
             </button>
             <button class="btn btn-small" style="background: #3B82F6; color: white;" onclick="openEngagement('${event.id}')">
               📊 Engagement
@@ -1311,32 +1318,111 @@
       }
     }
 
-    // Send Newsletter
-    async function sendNewsletter(eventId, eventTitle) {
-      // Simple prompt for recipient selection
-      const recipientOptions = `Wähle Empfänger für Newsletter:\n\n1 = Alle Subscriber\n2 = Nur Notifications-Enabled\n3 = Nur Engaged Users (VIPs)`;
-      const choice = prompt(recipientOptions, '1');
+    // === Newsletter Tab ===
 
-      if (!choice) return; // Cancelled
+    async function loadNewsletterTab() {
+      const container = document.getElementById('newsletter-content');
+      container.innerHTML = '<div class="loading">Lade Newsletter...</div>';
 
-      const recipientMap = {
-        '1': 'all',
-        '2': 'notifications',
-        '3': 'engaged'
-      };
+      try {
+        // Get events
+        const response = await apiCall('/events');
+        const events = response.events || [];
 
-      const recipients = recipientMap[choice];
+        // Find next upcoming event
+        const now = new Date();
+        const upcomingEvents = events
+          .filter(e => new Date(e.start) > now)
+          .sort((a, b) => new Date(a.start) - new Date(b.start));
 
-      if (!recipients) {
-        alert('Ungültige Auswahl. Bitte 1, 2 oder 3 eingeben.');
-        return;
+        if (upcomingEvents.length === 0) {
+          container.innerHTML = `
+            <div class="card">
+              <p style="color: #999; text-align: center;">Kein Event geplant</p>
+            </div>
+          `;
+          return;
+        }
+
+        const nextEvent = upcomingEvents[0];
+
+        // Get subscriber counts
+        const allCount = await getSubscriberCount('all');
+        const notificationsCount = await getSubscriberCount('notifications');
+        const engagedCount = await getSubscriberCount('engaged', nextEvent.id);
+
+        // Render newsletter UI
+        container.innerHTML = `
+          <div class="card">
+            <h3 style="font-weight: 500; margin-bottom: 1rem;">Next Event:</h3>
+
+            <div style="background: rgba(94, 217, 166, 0.08); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border-left: 4px solid #5ED9A6;">
+              <h2 style="margin: 0 0 0.75rem 0; font-size: 1.25rem; font-weight: 600; color: #2C3E50;">${nextEvent.title}</h2>
+              <p style="margin: 0.5rem 0; font-size: 0.95rem; color: #666;">
+                📅 ${formatDate(nextEvent.date)}<br>
+                🕐 ${nextEvent.startTime} - ${nextEvent.endTime} Uhr<br>
+                ${nextEvent.type === 'online' || nextEvent.type === 'hybrid'
+                  ? `💻 Online${nextEvent.meetingLink ? ` (<a href="${nextEvent.meetingLink}" target="_blank" style="color: #5ED9A6;">Meeting Link</a>)` : ''}`
+                  : `📍 ${nextEvent.location}`
+                }
+              </p>
+              ${nextEvent.description ? `<p style="margin: 1rem 0 0 0; font-size: 0.9rem; color: #666;">${nextEvent.description}</p>` : ''}
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+              <label for="newsletter-recipients" style="display: block; font-weight: 500; margin-bottom: 0.5rem;">Recipients:</label>
+              <select id="newsletter-recipients" style="width: 100%; max-width: 400px; padding: 12px; font-size: 1rem; border: 2px solid #e0e0e0; border-radius: 8px; font-family: inherit;">
+                <option value="all">All Subscribers (${allCount})</option>
+                <option value="notifications">Notifications Enabled (${notificationsCount})</option>
+                <option value="engaged">Engaged Users - VIPs (${engagedCount})</option>
+              </select>
+            </div>
+
+            <button class="btn" onclick="sendNewsletterForNextEvent('${nextEvent.id}', '${nextEvent.title}')" style="font-size: 1rem;">
+              📰 Send Newsletter
+            </button>
+          </div>
+        `;
+
+      } catch (error) {
+        console.error('[NEWSLETTER-TAB] Error:', error);
+        container.innerHTML = `
+          <div class="card">
+            <p style="color: #c62828;">❌ Fehler beim Laden: ${error.message}</p>
+          </div>
+        `;
       }
+    }
 
-      const recipientLabel = {
-        'all': 'alle Subscriber',
-        'notifications': 'Notifications-Enabled',
-        'engaged': 'Engaged Users (VIPs)'
-      }[recipients];
+    async function getSubscriberCount(filter, eventId) {
+      try {
+        const params = new URLSearchParams({ filter: 'all', format: 'json' });
+
+        if (filter === 'notifications') {
+          params.set('notifications', 'enabled');
+        } else if (filter === 'engaged') {
+          params.set('channel', 'google-calendar');
+          params.set('event', eventId);
+        }
+
+        const response = await fetch(`/api/admin/subscribers?${params}`, {
+          headers: {
+            'Authorization': `Bearer ${adminPassword}`
+          }
+        });
+
+        const data = await response.json();
+        return data.success ? data.data.count : 0;
+      } catch (error) {
+        console.error('[GET-SUBSCRIBER-COUNT] Error:', error);
+        return 0;
+      }
+    }
+
+    async function sendNewsletterForNextEvent(eventId, eventTitle) {
+      const recipientsSelect = document.getElementById('newsletter-recipients');
+      const recipients = recipientsSelect.value;
+      const recipientLabel = recipientsSelect.options[recipientsSelect.selectedIndex].text;
 
       if (!confirm(`Newsletter versenden?\n\n"${eventTitle}"\nAn: ${recipientLabel}\n\nDies kann einige Sekunden dauern.`)) {
         return;
