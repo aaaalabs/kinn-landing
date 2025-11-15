@@ -10,7 +10,7 @@ import {
   getEventsConfig
 } from '../utils/redis.js';
 import { enforceRateLimit } from '../utils/rate-limiter.js';
-import crypto from 'crypto';
+import { isAuthenticated } from '../utils/auth.js';
 
 /**
  * Admin API for Subscriber Management
@@ -50,39 +50,6 @@ function getCorsHeaders(origin) {
     };
   }
   return {};
-}
-
-/**
- * Verify admin password using timing-safe comparison
- */
-function isAuthenticated(req) {
-  const authHeader = req.headers.authorization;
-  const adminPassword = process.env.ADMIN_PASSWORD;
-
-  if (!adminPassword) {
-    console.error('[ADMIN] ADMIN_PASSWORD not set in environment variables');
-    return false;
-  }
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return false;
-  }
-
-  const token = authHeader.substring(7);
-
-  try {
-    const tokenBuffer = Buffer.from(token);
-    const passwordBuffer = Buffer.from(adminPassword);
-
-    if (tokenBuffer.length !== passwordBuffer.length) {
-      return false;
-    }
-
-    return crypto.timingSafeEqual(tokenBuffer, passwordBuffer);
-  } catch (error) {
-    console.error('[ADMIN] Authentication error:', error.message);
-    return false;
-  }
 }
 
 export default async function handler(req, res) {

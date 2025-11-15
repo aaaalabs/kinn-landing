@@ -63,10 +63,14 @@ export async function getAllSubscribers() {
 }
 
 /**
- * Gets all confirmed subscribers with subscription timestamps
- * @returns {Promise<Array<{email: string, subscribedAt: string}>>} Array of subscriber objects with timestamps
+ * Gets all confirmed subscribers with specified metadata
+ * @param {Object} options - Options for metadata to include
+ * @param {boolean} options.includeNotifications - Whether to include notification preferences
+ * @returns {Promise<Array<{email: string, subscribedAt: string, notificationsEnabled?: boolean}>>} Array of subscriber objects
  */
-export async function getAllSubscribersWithTimestamps() {
+export async function getAllSubscribersWithMetadata(options = {}) {
+  const { includeNotifications = false } = options;
+
   try {
     const emails = await redis.smembers(SUBSCRIBERS_KEY);
     if (!emails || emails.length === 0) {
@@ -74,82 +78,64 @@ export async function getAllSubscribersWithTimestamps() {
     }
 
     // Fetch preferences for all subscribers in parallel
-    const subscribersWithTimestamps = await Promise.all(
+    const subscribers = await Promise.all(
       emails.map(async (email) => {
         try {
           const preferences = await getUserPreferences(email);
-          return {
+          const subscriber = {
             email,
             subscribedAt: preferences?.subscribedAt || null
           };
+
+          if (includeNotifications) {
+            subscriber.notificationsEnabled = preferences?.notifications?.enabled ?? true;
+          }
+
+          return subscriber;
         } catch (error) {
           console.error(`[REDIS] Failed to get preferences for ${email}:`, error.message);
-          return {
+          const subscriber = {
             email,
             subscribedAt: null
           };
+
+          if (includeNotifications) {
+            subscriber.notificationsEnabled = true; // Default on error
+          }
+
+          return subscriber;
         }
       })
     );
 
     // Sort by subscribedAt (newest first), put null timestamps at the end
-    subscribersWithTimestamps.sort((a, b) => {
+    subscribers.sort((a, b) => {
       if (!a.subscribedAt) return 1;
       if (!b.subscribedAt) return -1;
       return new Date(b.subscribedAt) - new Date(a.subscribedAt);
     });
 
-    return subscribersWithTimestamps;
+    return subscribers;
   } catch (error) {
-    console.error('[REDIS] Failed to get subscribers with timestamps:', error.message);
+    console.error('[REDIS] Failed to get subscribers with metadata:', error.message);
     throw new Error(`Database error: ${error.message}`);
   }
 }
 
 /**
- * Gets all confirmed subscribers with notification preferences
+ * Gets all confirmed subscribers with timestamps (legacy wrapper)
+ * @returns {Promise<Array<{email: string, subscribedAt: string}>>} Array of subscriber objects
+ */
+export async function getAllSubscribersWithTimestamps() {
+  return getAllSubscribersWithMetadata({ includeNotifications: false });
+}
+
+/**
+ * Gets all confirmed subscribers with notification preferences (legacy wrapper)
  * @returns {Promise<Array<{email: string, notificationsEnabled: boolean, subscribedAt: string}>>} Array of subscriber objects
  */
 export async function getAllSubscribersWithNotificationPreferences() {
-  try {
-    const emails = await redis.smembers(SUBSCRIBERS_KEY);
-    if (!emails || emails.length === 0) {
-      return [];
-    }
-
-    // Fetch preferences for all subscribers in parallel
-    const subscribersWithPreferences = await Promise.all(
-      emails.map(async (email) => {
-        try {
-          const preferences = await getUserPreferences(email);
-          return {
-            email,
-            notificationsEnabled: preferences?.notifications?.enabled ?? true, // Default: enabled
-            subscribedAt: preferences?.subscribedAt || null
-          };
-        } catch (error) {
-          console.error(`[REDIS] Failed to get preferences for ${email}:`, error.message);
-          return {
-            email,
-            notificationsEnabled: true, // Default on error
-            subscribedAt: null
-          };
-        }
-      })
-    );
-
-    // Sort by subscribedAt (newest first), put null timestamps at the end
-    subscribersWithPreferences.sort((a, b) => {
-      if (!a.subscribedAt) return 1;
-      if (!b.subscribedAt) return -1;
-      return new Date(b.subscribedAt) - new Date(a.subscribedAt);
-    });
-
-    return subscribersWithPreferences;
-  } catch (error) {
-    console.error('[REDIS] Failed to get subscribers with notification preferences:', error.message);
-    throw new Error(`Database error: ${error.message}`);
-  }
+  return getAllSubscribersWithMetadata({ includeNotifications: true });
 }
 
 /**
@@ -872,14 +858,37 @@ export async function getEventEngagement(eventId) {
     };
 
     // Build participant list with stats
-    const participants = [];
+    // FIX: Batch fetch all profiles and preferences in parallel to avoid N+1 queries
+    const BATCH_SIZE = 10;
+    const batches = [];
+    for (let i = 0; i < allSubscribers.length; i += BATCH_SIZE) {
+      batches.push(allSubscribers.slice(i, i + BATCH_SIZE));
+    }
 
-    for (const email of allSubscribers) {
+    // Fetch all data in batches
+    const profilesMap = new Map();
+    const preferencesMap = new Map();
+
+    for (const batch of batches) {
+      const [profiles, preferences] = await Promise.all([
+        Promise.all(batch.map(email => getProfile(email.toLowerCase()).catch(() => null))),
+        Promise.all(batch.map(email => getUserPreferences(email.toLowerCase()).catch(() => null)))
+      ]);
+
+      batch.forEach((email, idx) => {
+        const normalizedEmail = email.toLowerCase();
+        profilesMap.set(normalizedEmail, profiles[idx]);
+        preferencesMap.set(normalizedEmail, preferences[idx]);
+      });
+    }
+
+    // Process participants using cached data
+    const participants = allSubscribers.map(email => {
       const normalizedEmail = email.toLowerCase();
 
-      // Get user's profile stats
-      const profile = await getProfile(normalizedEmail);
-      const preferences = await getUserPreferences(normalizedEmail);
+      // Get user's profile stats from cache
+      const profile = profilesMap.get(normalizedEmail);
+      const preferences = preferencesMap.get(normalizedEmail);
       const userStats = profile?.engagement?.stats || {
         totalEventsInvited: 0,
         totalConfirmed: 0,
@@ -926,7 +935,7 @@ export async function getEventEngagement(eventId) {
         };
       }
 
-      participants.push({
+      return {
         email: normalizedEmail,
         name: profile?.identity?.name || normalizedEmail.split('@')[0],
         adminDisplayName: preferences?.adminDisplayName || null,
@@ -945,8 +954,8 @@ export async function getEventEngagement(eventId) {
         history: eventHistory,
         warning,
         notificationsEnabled: preferences?.notifications?.enabled !== false
-      });
-    }
+      };
+    });
 
     // Compute stats
     const stats = {

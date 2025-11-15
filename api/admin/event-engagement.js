@@ -1,8 +1,8 @@
-import crypto from 'crypto';
 import {
   getEventEngagement,
   updateEventEngagement
 } from '../utils/redis.js';
+import { isAuthenticated } from '../utils/auth.js';
 
 /**
  * Admin API: Event Engagement Tracking
@@ -12,39 +12,6 @@ import {
  *
  * Authentication: Bearer token via ADMIN_PASSWORD env var
  */
-
-/**
- * Verify admin password using timing-safe comparison
- */
-function isAuthenticated(req) {
-  const authHeader = req.headers.authorization;
-  const adminPassword = process.env.ADMIN_PASSWORD;
-
-  if (!adminPassword) {
-    console.error('[EVENT-ENGAGEMENT] ADMIN_PASSWORD not set');
-    return false;
-  }
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return false;
-  }
-
-  const token = authHeader.substring(7);
-
-  try {
-    const tokenBuffer = Buffer.from(token);
-    const passwordBuffer = Buffer.from(adminPassword);
-
-    if (tokenBuffer.length !== passwordBuffer.length) {
-      return false;
-    }
-
-    return crypto.timingSafeEqual(tokenBuffer, passwordBuffer);
-  } catch (error) {
-    console.error('[EVENT-ENGAGEMENT] Auth error:', error.message);
-    return false;
-  }
-}
 
 export default async function handler(req, res) {
   // CORS headers
@@ -107,6 +74,17 @@ export default async function handler(req, res) {
             error: 'Bad Request',
             message: 'Each update must include "email" field'
           });
+        }
+
+        // Validate boolean fields
+        const booleanFields = ['personallyInvited', 'confirmedDM', 'attended'];
+        for (const field of booleanFields) {
+          if (field in update && typeof update[field] !== 'boolean') {
+            return res.status(400).json({
+              error: 'Bad Request',
+              message: `Field "${field}" must be a boolean value (true/false), got: ${typeof update[field]}`
+            });
+          }
         }
       }
 

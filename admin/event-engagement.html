@@ -701,7 +701,7 @@
         indicator.style.display = 'block';
       }
 
-      // Debounce: wait 500ms before saving
+      // Debounce: wait 300ms before saving (optimized for better UX)
       clearTimeout(saveTimeout);
       saveTimeout = setTimeout(async () => {
         try {
@@ -758,7 +758,7 @@
           }
           showToast(`Error: ${error.message}`, true);
         }
-      }, 500);
+      }, 300);
     }
 
     // Save all changes (manual trigger)
