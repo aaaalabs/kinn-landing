@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
-import EventAnnouncement from '../../emails/event-announcement';
+import EventAnnouncement from '../../emails/event-announcement.js';
 import { generateAuthToken } from '../utils/tokens.js';
 import { getAllSubscribers, getEventsConfig, getProfile, updateEventsConfig } from '../utils/redis.js';
 

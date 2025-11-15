@@ -1,5 +1,5 @@
 import { render } from '@react-email/render';
-import EventAnnouncement from '../../emails/event-announcement';
+import EventAnnouncement from '../../emails/event-announcement.js';
 import { getEventsConfig } from '../utils/redis.js';
 
 /**
