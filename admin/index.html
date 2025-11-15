@@ -1327,7 +1327,7 @@
       try {
         // Get events
         const response = await apiCall('/events');
-        const events = response.events || [];
+        const events = response.data?.events || [];
 
         // Find next upcoming event
         const now = new Date();
