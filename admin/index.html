@@ -806,6 +806,9 @@
             <button class="btn btn-small" style="background: #5ED9A6; color: #000;" onclick="sendEventInvites('${event.id}', '${event.title}')">
               📧 Send Invites
             </button>
+            <button class="btn btn-small" style="background: #5ED9A6; color: #000;" onclick="sendNewsletter('${event.id}', '${event.title}')">
+              📰 Send Newsletter
+            </button>
             <button class="btn btn-small" style="background: #3B82F6; color: white;" onclick="openEngagement('${event.id}')">
               📊 Engagement
             </button>
@@ -1304,6 +1307,76 @@
         }
       } catch (error) {
         console.error('[SEND-EVENT-INVITES] Error:', error);
+        showMessage(`❌ Fehler beim Versenden: ${error.message}`, 'error');
+      }
+    }
+
+    // Send Newsletter
+    async function sendNewsletter(eventId, eventTitle) {
+      // Simple prompt for recipient selection
+      const recipientOptions = `Wähle Empfänger für Newsletter:\n\n1 = Alle Subscriber\n2 = Nur Notifications-Enabled\n3 = Nur Engaged Users (VIPs)`;
+      const choice = prompt(recipientOptions, '1');
+
+      if (!choice) return; // Cancelled
+
+      const recipientMap = {
+        '1': 'all',
+        '2': 'notifications',
+        '3': 'engaged'
+      };
+
+      const recipients = recipientMap[choice];
+
+      if (!recipients) {
+        alert('Ungültige Auswahl. Bitte 1, 2 oder 3 eingeben.');
+        return;
+      }
+
+      const recipientLabel = {
+        'all': 'alle Subscriber',
+        'notifications': 'Notifications-Enabled',
+        'engaged': 'Engaged Users (VIPs)'
+      }[recipients];
+
+      if (!confirm(`Newsletter versenden?\n\n"${eventTitle}"\nAn: ${recipientLabel}\n\nDies kann einige Sekunden dauern.`)) {
+        return;
+      }
+
+      try {
+        showMessage('📰 Versende Newsletter...', 'info');
+
+        const response = await fetch('/api/admin/send-newsletter', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${adminPassword}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ eventId, recipients })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          const { stats } = data;
+
+          let message = `✅ Newsletter versendet!\n\n`;
+          message += `📊 Von ${stats.total} Subscribern:\n`;
+          message += `✓ ${stats.sent} versendet\n`;
+
+          if (stats.skipped > 0) {
+            message += `⊘ ${stats.skipped} übersprungen (Filter)\n`;
+          }
+
+          if (stats.failed > 0) {
+            message += `✗ ${stats.failed} fehlgeschlagen`;
+          }
+
+          showMessage(message, 'success');
+        } else {
+          showMessage(`❌ Fehler: ${data.message || data.error}`, 'error');
+        }
+      } catch (error) {
+        console.error('[SEND-NEWSLETTER] Error:', error);
         showMessage(`❌ Fehler beim Versenden: ${error.message}`, 'error');
       }
     }
