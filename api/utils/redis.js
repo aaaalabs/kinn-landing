@@ -929,6 +929,7 @@ export async function getEventEngagement(eventId) {
       participants.push({
         email: normalizedEmail,
         name: profile?.identity?.name || normalizedEmail.split('@')[0],
+        adminDisplayName: preferences?.adminDisplayName || null,
         showUpRate: userStats.showUpRate,
         showUpStats: {
           invited: userStats.totalEventsInvited,
