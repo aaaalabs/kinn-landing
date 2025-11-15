@@ -30,15 +30,24 @@ export default async function handler(req, res) {
       return res.status(400).send('<h1>Missing eventId parameter</h1>');
     }
 
+    console.log('[PREVIEW-NEWSLETTER] Fetching event:', eventId);
+
     // Get event
     const eventsConfig = await getEventsConfig();
+    console.log('[PREVIEW-NEWSLETTER] Got events config:', eventsConfig?.events?.length || 0, 'events');
+
     const event = eventsConfig.events.find(e => e.id === eventId);
 
     if (!event) {
+      console.error('[PREVIEW-NEWSLETTER] Event not found:', eventId);
       return res.status(404).send('<h1>Event not found</h1>');
     }
 
+    console.log('[PREVIEW-NEWSLETTER] Found event:', event.title);
+
     const baseUrl = process.env.BASE_URL || 'https://kinn.at';
+
+    console.log('[PREVIEW-NEWSLETTER] Rendering email template...');
 
     // Render email with dummy data for preview
     const html = await render(
@@ -54,12 +63,15 @@ export default async function handler(req, res) {
       })
     );
 
+    console.log('[PREVIEW-NEWSLETTER] Email rendered successfully, length:', html.length);
+
     // Return raw HTML (browser displays directly)
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.status(200).send(html);
 
   } catch (error) {
     console.error('[PREVIEW-NEWSLETTER] Error:', error);
-    res.status(500).send(`<h1>Error generating preview</h1><pre>${error.message}</pre>`);
+    console.error('[PREVIEW-NEWSLETTER] Stack:', error.stack);
+    res.status(500).send(`<h1>Error generating preview</h1><pre>${error.message}\n\n${error.stack}</pre>`);
   }
 }
