@@ -1,4 +1,6 @@
 import { Resend } from 'resend';
+import { render } from '@react-email/render';
+import EventAnnouncement from '../../emails/event-announcement';
 import { generateAuthToken } from '../utils/tokens.js';
 import { getAllSubscribers, getEventsConfig, getProfile, updateEventsConfig } from '../utils/redis.js';
 
@@ -41,196 +43,35 @@ function matchesEventType(eventType, userLocation) {
 }
 
 /**
- * Event Invite Email Template (HTML)
- * With RSVP buttons (Yes/No/Maybe)
+ * Generate Event Invite Email using React Email template
+ * Renders both HTML and plain text versions
  */
-function generateEventInviteEmail(name, event, rsvpLinks) {
-  const { yesUrl, noUrl, maybeUrl } = rsvpLinks;
+async function renderEventInviteEmail(name, event, rsvpLinks) {
+  const baseUrl = process.env.BASE_URL || 'https://kinn.at';
+  const unsubscribeUrl = `${baseUrl}/pages/profil.html#unsubscribe`;
 
-  // Parse event date from ISO8601 timestamp
-  // Events are stored as UTC, formatted for Vienna timezone
-  const eventDate = new Date(event.start);
+  // Render HTML version
+  const html = await render(
+    EventAnnouncement({
+      name,
+      event,
+      rsvpLinks,
+      unsubscribeUrl
+    })
+  );
 
-  // Validate
-  if (!event.start || isNaN(eventDate.getTime())) {
-    console.error('[EMAIL-TEMPLATE] Invalid or missing event.start field:', event);
-    throw new Error(`Event ${event.id} has invalid start timestamp`);
-  }
+  // Render plain text version
+  const text = await render(
+    EventAnnouncement({
+      name,
+      event,
+      rsvpLinks,
+      unsubscribeUrl
+    }),
+    { plainText: true }
+  );
 
-  // Format for Austria/Vienna timezone
-  // Note: toLocaleDateString automatically converts UTC to local time
-  const dateStr = eventDate.toLocaleDateString('de-AT', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'Europe/Vienna'
-  });
-  const timeStr = eventDate.toLocaleTimeString('de-AT', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'Europe/Vienna'
-  });
-
-  return `
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #ffffff; color: #333;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 20px;">
-    <tr>
-      <td style="padding: 20px;">
-
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Hey ${name}!</p>
-
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
-          Der nächste <strong>KINN Treff</strong> steht an:
-        </p>
-
-        <div style="background: rgba(94, 217, 166, 0.08); padding: 1.5rem; border-radius: 12px; margin: 24px 0; border-left: 4px solid #5ED9A6;">
-          <h2 style="margin: 0 0 0.75rem 0; font-size: 1.25rem; font-weight: 600; color: #2C3E50;">${event.title}</h2>
-          <p style="margin: 0.5rem 0; font-size: 0.95rem; color: #666;">
-            📅 ${dateStr}<br>
-            🕐 ${timeStr} Uhr<br>
-            ${event.type === 'online' || event.type === 'hybrid'
-              ? `💻 <a href="${event.meetingLink}" style="color: #5ED9A6; text-decoration: none;">Meeting Link</a>`
-              : `📍 ${event.location}`
-            }
-          </p>
-          ${event.description ? `<p style="margin: 1rem 0 0 0; font-size: 0.9rem; color: #666;">${event.description}</p>` : ''}
-        </div>
-
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px; font-weight: 600;">
-          Kommst du?
-        </p>
-
-        <!-- RSVP Buttons -->
-        <table width="100%" cellpadding="0" cellspacing="0" style="margin: 24px 0;">
-          <tr>
-            <td style="text-align: center; padding-bottom: 12px;">
-              <a href="${yesUrl}" style="background-color: #5ED9A6; color: #000; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px; padding: 14px 32px; display: inline-block; min-width: 200px;">
-                ✅ Ja, ich komme
-              </a>
-            </td>
-          </tr>
-          <tr>
-            <td style="text-align: center; padding-bottom: 12px;">
-              <a href="${maybeUrl}" style="background-color: #FFA500; color: #000; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px; padding: 14px 32px; display: inline-block; min-width: 200px;">
-                ❓ Vielleicht
-              </a>
-            </td>
-          </tr>
-          <tr>
-            <td style="text-align: center;">
-              <a href="${noUrl}" style="background-color: #f0f0f0; color: #666; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px; padding: 14px 32px; display: inline-block; min-width: 200px;">
-                ❌ Kann nicht
-              </a>
-            </td>
-          </tr>
-        </table>
-
-        <p style="font-size: 14px; line-height: 1.6; color: #999; margin-top: 32px; text-align: center;">
-          Ein Klick genügt – kein Login nötig.
-        </p>
-
-        <p style="font-size: 16px; line-height: 1.6; margin-top: 32px;">
-          Bis bald!<br>
-          <strong>Thomas</strong>
-        </p>
-
-        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 32px 0;">
-
-        <p style="font-size: 12px; line-height: 1.5; color: #999;">
-          <strong>KINN – KI Treff Innsbruck</strong><br>
-          Thomas Seiger<br>
-          E-Mail: thomas@kinn.at<br>
-          Web: <a href="https://kinn.at" style="color: #999;">kinn.at</a>
-        </p>
-
-        <p style="font-size: 11px; line-height: 1.5; color: #999; margin-top: 16px;">
-          <a href="https://kinn.at/pages/privacy.html" style="color: #999; text-decoration: none;">Datenschutz</a> |
-          <a href="https://kinn.at/pages/agb.html" style="color: #999; text-decoration: none;">Impressum</a>
-        </p>
-
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `.trim();
-}
-
-/**
- * Event Invite Email Template (Plain Text)
- */
-function generateEventInviteEmailPlainText(name, event, rsvpLinks) {
-  const { yesUrl, noUrl, maybeUrl } = rsvpLinks;
-
-  // Parse event date from ISO8601 timestamp
-  const eventDate = new Date(event.start);
-
-  // Validate
-  if (!event.start || isNaN(eventDate.getTime())) {
-    console.error('[EMAIL-TEMPLATE-PLAIN] Invalid event.start:', event);
-    throw new Error(`Event ${event.id} has invalid start timestamp`);
-  }
-
-  const dateStr = eventDate.toLocaleDateString('de-AT', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'Europe/Vienna'
-  });
-  const timeStr = eventDate.toLocaleTimeString('de-AT', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'Europe/Vienna'
-  });
-
-  return `
-Hey ${name}!
-
-Der nächste KINN Treff steht an:
-
-${event.title}
-📅 ${dateStr}
-🕐 ${timeStr} Uhr
-${event.type === 'online' || event.type === 'hybrid'
-    ? `💻 ${event.meetingLink}`
-    : `📍 ${event.location}`
-  }
-
-${event.description || ''}
-
-Kommst du?
-
-✅ Ja, ich komme:
-${yesUrl}
-
-❓ Vielleicht:
-${maybeUrl}
-
-❌ Kann nicht:
-${noUrl}
-
-Ein Klick genügt – kein Login nötig.
-
-Bis bald!
-Thomas
-
----
-KINN – KI Treff Innsbruck
-Thomas Seiger
-E-Mail: thomas@kinn.at
-Web: kinn.at
-
-Datenschutz: https://kinn.at/pages/privacy.html
-Impressum: https://kinn.at/pages/agb.html
-  `.trim();
+  return { html, text };
 }
 
 /**
@@ -375,13 +216,16 @@ export default async function handler(req, res) {
               maybeUrl: `${baseUrl}/api/rsvp?token=${rsvpToken}&event=${eventId}&response=maybe`
             };
 
+            // Render email template
+            const { html, text } = await renderEventInviteEmail(name, event, rsvpLinks);
+
             // Send email
             await resend.emails.send({
               from: process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>',
               to: email,
               subject: `${event.title} – Bist du dabei?`,
-              html: generateEventInviteEmail(name, event, rsvpLinks),
-              text: generateEventInviteEmailPlainText(name, event, rsvpLinks),
+              html,
+              text,
               tags: [
                 { name: 'type', value: 'event-invite' },
                 { name: 'event_id', value: eventId }

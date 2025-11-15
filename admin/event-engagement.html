@@ -416,7 +416,6 @@
       </div>
       <div class="controls-row">
         <button class="btn" onclick="saveAll()">💾 Save All</button>
-        <button class="btn-secondary btn" onclick="markAllAttended()">✓ Mark All Confirmed as Attended</button>
       </div>
     </div>
 
@@ -850,18 +849,6 @@
         showToast(`Error: ${error.message}`, true);
       }
     }
-
-    // Mark all confirmed as attended
-    function markAllAttended() {
-      filteredParticipants.forEach(p => {
-        if (p.thisEvent.confirmedDM) {
-          const checkbox = document.getElementById(`attended-${p.email}`);
-          if (checkbox) checkbox.checked = true;
-        }
-      });
-      showToast('✓ All confirmed users marked as attended');
-    }
-
     // Show toast notification
     function showToast(message, isError = false) {
       const toast = document.getElementById('toast');
