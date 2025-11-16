@@ -10,31 +10,11 @@ import {
   Font
 } from '@react-email/components';
 import * as React from 'react';
-import { Header } from './components/header';
-import { EventDetailsCard } from './components/event-details-card';
-import { RSVPButtons } from './components/rsvp-buttons';
-import { MeetingLinkSection } from './components/meeting-link-section';
+import { Header } from './components/header.jsx';
+import { EventDetailsCard } from './components/event-details-card.jsx';
+import { RSVPButtons } from './components/rsvp-buttons.jsx';
+import { MeetingLinkSection } from './components/meeting-link-section.jsx';
 import { Footer } from './components/footer';
-
-interface EventAnnouncementProps {
-  name?: string;
-  intro?: string;
-  event?: {
-    id: string;
-    title: string;
-    description?: string;
-    start: string; // ISO8601 timestamp
-    type: 'online' | 'in-person' | 'hybrid';
-    location?: string;
-    meetingLink?: string;
-  };
-  rsvpLinks?: {
-    yesUrl: string;
-    maybeUrl: string;
-    noUrl: string;
-  };
-  unsubscribeUrl?: string;
-}
 
 export const EventAnnouncement = ({
   name = 'KINN\'der',
@@ -53,7 +33,7 @@ export const EventAnnouncement = ({
     noUrl: 'https://kinn.at'
   },
   unsubscribeUrl = 'https://kinn.at/pages/profil.html#unsubscribe'
-}: EventAnnouncementProps) => {
+}) => {
   // Format event date for Austria/Vienna timezone
   const eventDate = new Date(event.start);
 
@@ -167,7 +147,7 @@ const container = {
 };
 
 const badgeSection = {
-  textAlign: 'center' as const,
+  textAlign: 'center',
   marginTop: '24px',
   marginBottom: '16px'
 };
@@ -179,15 +159,15 @@ const eventTypeBadge = {
   padding: '6px 16px',
   borderRadius: '20px',
   fontSize: '13px',
-  fontWeight: '500' as const,
+  fontWeight: '500',
   margin: '0'
 };
 
 const h1 = {
   fontSize: '32px',
-  fontWeight: '700' as const,
+  fontWeight: '700',
   color: '#1A1A1A',
-  textAlign: 'center' as const,
+  textAlign: 'center',
   lineHeight: '1.2',
   margin: '24px 0',
   padding: '0'

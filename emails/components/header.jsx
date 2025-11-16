@@ -1,15 +1,10 @@
 import { Section, Img } from '@react-email/components';
 import * as React from 'react';
 
-interface HeaderProps {
-  logoUrl?: string;
-  logoWidth?: number;
-}
-
 export const Header = ({
   logoUrl = 'https://kinn.at/logo.svg',
   logoWidth = 120
-}: HeaderProps) => {
+}) => {
   return (
     <Section style={headerSection}>
       <Img
@@ -23,7 +18,7 @@ export const Header = ({
 };
 
 const headerSection = {
-  textAlign: 'center' as const,
+  textAlign: 'center',
   marginBottom: '32px',
   paddingTop: '20px'
 };

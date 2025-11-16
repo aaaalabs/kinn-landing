@@ -17,7 +17,7 @@ export const Button = ({ href, variant = 'primary', children, fullWidth = false 
     display: 'inline-block',
     fontSize: '16px',
     minWidth: fullWidth ? '200px' : 'auto',
-    textAlign: 'center' as const
+    textAlign: 'center'
   };
 
   const variantStyles = {

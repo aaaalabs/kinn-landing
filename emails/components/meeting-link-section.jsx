@@ -2,15 +2,11 @@ import { Section, Text } from '@react-email/components';
 import { Button } from './button';
 import * as React from 'react';
 
-interface MeetingLinkSectionProps {
-  meetingLink: string;
-  eventType: 'online' | 'hybrid';
-}
 
 export const MeetingLinkSection = ({
   meetingLink,
   eventType
-}: MeetingLinkSectionProps) => {
+) => {
   return (
     <Section style={meetingCard}>
       <Text style={headingStyle}>
@@ -40,13 +36,13 @@ const meetingCard = {
   backgroundColor: '#E8F4FD',
   padding: '20px',
   borderRadius: '8px',
-  textAlign: 'center' as const,
+  textAlign: 'center',
   marginBottom: '24px',
   marginTop: '24px'
 };
 
 const headingStyle = {
-  fontWeight: '600' as const,
+  fontWeight: '600',
   fontSize: '16px',
   marginBottom: '12px',
   marginTop: '0',
@@ -54,7 +50,7 @@ const headingStyle = {
 };
 
 const buttonContainer = {
-  textAlign: 'center' as const,
+  textAlign: 'center',
   marginTop: '12px',
   marginBottom: '12px'
 };

@@ -3,6 +3,9 @@
   "buildCommand": null,
   "outputDirectory": ".",
   "functions": {
+    "api/**/*.js": {
+      "includeFiles": "emails/**"
+    },
     "api/signup.js": {
       "maxDuration": 10
     },

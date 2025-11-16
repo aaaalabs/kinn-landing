@@ -1,13 +1,6 @@
 import { Section, Text } from '@react-email/components';
 import * as React from 'react';
 
-interface EventDetailsCardProps {
-  eventDate: string;
-  eventTime: string;
-  eventType: 'online' | 'in-person' | 'hybrid';
-  location?: string;
-  meetingLink?: string;
-}
 
 export const EventDetailsCard = ({
   eventDate,
@@ -15,7 +8,7 @@ export const EventDetailsCard = ({
   eventType,
   location,
   meetingLink
-}: EventDetailsCardProps) => {
+}) => {
   return (
     <Section style={cardStyle}>
       <Text style={labelStyle}>📅 Datum</Text>
@@ -55,7 +48,7 @@ const cardStyle = {
 
 const labelStyle = {
   fontSize: '13px',
-  fontWeight: '600' as const,
+  fontWeight: '600',
   color: '#6B6B6B',
   marginBottom: '4px',
   marginTop: '12px'
@@ -63,7 +56,7 @@ const labelStyle = {
 
 const valueStyle = {
   fontSize: '16px',
-  fontWeight: '500' as const,
+  fontWeight: '500',
   color: '#1A1A1A',
   marginTop: '0',
   marginBottom: '0'
@@ -72,5 +65,5 @@ const valueStyle = {
 const linkStyle = {
   color: '#5ED9A6',
   textDecoration: 'none',
-  fontWeight: '500' as const
+  fontWeight: '500'
 };

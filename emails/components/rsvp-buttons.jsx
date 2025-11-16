@@ -2,13 +2,8 @@ import { Section, Text } from '@react-email/components';
 import { Button } from './button';
 import * as React from 'react';
 
-interface RSVPButtonsProps {
-  yesUrl: string;
-  maybeUrl: string;
-  noUrl: string;
-}
 
-export const RSVPButtons = ({ yesUrl, maybeUrl, noUrl }: RSVPButtonsProps) => {
+export const RSVPButtons = ({ yesUrl, maybeUrl, noUrl ) => {
   return (
     <Section style={rsvpSection}>
       <Text style={headingStyle}>Wirst du dabei sein?</Text>
@@ -45,15 +40,15 @@ const rsvpSection = {
 
 const headingStyle = {
   fontSize: '18px',
-  fontWeight: '600' as const,
-  textAlign: 'center' as const,
+  fontWeight: '600',
+  textAlign: 'center',
   color: '#1A1A1A',
   marginBottom: '20px',
   marginTop: '0'
 };
 
 const buttonRow = {
-  textAlign: 'center' as const,
+  textAlign: 'center',
   paddingBottom: '12px'
 };
 
@@ -63,5 +58,5 @@ const metaTextStyle = {
   color: '#999',
   marginTop: '32px',
   marginBottom: '0',
-  textAlign: 'center' as const
+  textAlign: 'center'
 };
