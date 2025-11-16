@@ -1,14 +1,19 @@
 import {
   Html,
   Head,
+  Preview,
   Body,
   Container,
   Section,
   Text,
-  Link
+  Heading,
+  Font
 } from '@react-email/components';
 import * as React from 'react';
-import { Button } from './components/button';
+import { Header } from './components/header';
+import { EventDetailsCard } from './components/event-details-card';
+import { RSVPButtons } from './components/rsvp-buttons';
+import { MeetingLinkSection } from './components/meeting-link-section';
 import { Footer } from './components/footer';
 
 interface EventAnnouncementProps {
@@ -68,69 +73,80 @@ export const EventAnnouncement = ({
 
   return (
     <Html lang="de">
-      <Head />
+      <Head>
+        <Font
+          fontFamily="Work Sans"
+          fallbackFontFamily="Arial"
+          webFont={{
+            url: "https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap",
+            format: "woff2"
+          }}
+        />
+      </Head>
+      <Preview>
+        {event.title} - {dateStr} | KINN Treff Innsbruck
+      </Preview>
       <Body style={main}>
         <Container style={container}>
-          {/* Main Content */}
-          <Section style={content}>
-            <Text style={greeting}>Hey {name}!</Text>
+          {/* Header with KINN Logo */}
+          <Header />
 
-            <Text style={paragraph}>
-              {intro || `Der nächste <strong>KINN Treff</strong> steht an:`}
-            </Text>
-
-            {/* Event Details Box */}
-            <Section style={eventBox}>
-              <Text style={eventTitle}>{event.title}</Text>
-
-              <Text style={eventDetails}>
-                📅 {dateStr}<br/>
-                🕐 {timeStr} Uhr<br/>
-                {event.type === 'online' || event.type === 'hybrid' ? (
-                  <>💻 <Link href={event.meetingLink} style={meetingLink}>Meeting Link</Link></>
-                ) : (
-                  <>📍 {event.location}</>
-                )}
-              </Text>
-
-              {event.description && (
-                <Text style={eventDescription}>{event.description}</Text>
-              )}
-            </Section>
-
-            <Text style={rsvpHeading}>Kommst du?</Text>
-
-            {/* RSVP Buttons */}
-            <Section style={rsvpSection}>
-              <Section style={buttonRow}>
-                <Button href={rsvpLinks.yesUrl} variant="primary" fullWidth={true}>
-                  ✅ Ja, ich komme
-                </Button>
-              </Section>
-
-              <Section style={buttonRow}>
-                <Button href={rsvpLinks.maybeUrl} variant="warning" fullWidth={true}>
-                  ❓ Vielleicht
-                </Button>
-              </Section>
-
-              <Section style={buttonRow}>
-                <Button href={rsvpLinks.noUrl} variant="secondary" fullWidth={true}>
-                  ❌ Kann nicht
-                </Button>
-              </Section>
-            </Section>
-
-            <Text style={rsvpMeta}>
-              Ein Klick genügt – kein Login nötig.
-            </Text>
-
-            <Text style={signature}>
-              Bis bald!<br/>
-              <strong>Thomas</strong>
+          {/* Event Type Badge */}
+          <Section style={badgeSection}>
+            <Text style={eventTypeBadge}>
+              {event.type === 'online'
+                ? '🌐 Online Event'
+                : event.type === 'hybrid'
+                ? '🔀 Hybrid Event'
+                : '📍 Präsenz Event'}
             </Text>
           </Section>
 
+          {/* Main Heading */}
+          <Heading style={h1}>{event.title}</Heading>
+
+          {/* Greeting & Intro */}
+          <Text style={greeting}>Hey {name}!</Text>
+          <Text style={intro}>
+            {intro || `Der nächste <strong>KINN Treff</strong> steht an:`}
+          </Text>
+
+          {/* Event Details Card */}
+          <EventDetailsCard
+            eventDate={dateStr}
+            eventTime={`${timeStr} Uhr`}
+            eventType={event.type}
+            location={event.location}
+            meetingLink={event.meetingLink}
+          />
+
+          {/* Description */}
+          {event.description && (
+            <Text style={description}>{event.description}</Text>
+          )}
+
+          {/* Meeting Link Section (Online/Hybrid only) */}
+          {(event.type === 'online' || event.type === 'hybrid') && event.meetingLink && (
+            <MeetingLinkSection
+              meetingLink={event.meetingLink}
+              eventType={event.type}
+            />
+          )}
+
+          {/* RSVP Buttons */}
+          <RSVPButtons
+            yesUrl={rsvpLinks.yesUrl}
+            maybeUrl={rsvpLinks.maybeUrl}
+            noUrl={rsvpLinks.noUrl}
+          />
+
+          {/* Signature */}
+          <Text style={signature}>
+            Bis bald!<br />
+            <strong>Thomas</strong>
+          </Text>
+
+          {/* Footer */}
           <Footer includeUnsubscribe={true} unsubscribeUrl={unsubscribeUrl} />
         </Container>
       </Body>
@@ -138,100 +154,67 @@ export const EventAnnouncement = ({
   );
 };
 
-// Styles (inline for email client compatibility)
+// Styles (Professional Google Calendar Design)
 const main = {
-  backgroundColor: '#ffffff',
+  backgroundColor: '#FFFFFF',
   fontFamily: "'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Arial', sans-serif"
 };
 
 const container = {
   margin: '0 auto',
-  padding: '20px 0 48px',
+  padding: '40px 20px',
   maxWidth: '600px'
 };
 
-const content = {
-  padding: '20px'
+const badgeSection = {
+  textAlign: 'center' as const,
+  marginTop: '24px',
+  marginBottom: '16px'
+};
+
+const eventTypeBadge = {
+  display: 'inline-block',
+  backgroundColor: '#E0EEE9',
+  color: '#1A1A1A',
+  padding: '6px 16px',
+  borderRadius: '20px',
+  fontSize: '13px',
+  fontWeight: '500' as const,
+  margin: '0'
+};
+
+const h1 = {
+  fontSize: '32px',
+  fontWeight: '700' as const,
+  color: '#1A1A1A',
+  textAlign: 'center' as const,
+  lineHeight: '1.2',
+  margin: '24px 0',
+  padding: '0'
 };
 
 const greeting = {
   fontSize: '16px',
   lineHeight: '1.6',
   color: '#3A3A3A',
-  marginBottom: '16px',
-  marginTop: '0'
+  marginBottom: '8px',
+  marginTop: '24px'
 };
 
-const paragraph = {
+const intro = {
   fontSize: '16px',
   lineHeight: '1.6',
   color: '#3A3A3A',
-  marginBottom: '16px',
-  marginTop: '0'
-};
-
-const eventBox = {
-  backgroundColor: 'rgba(94, 217, 166, 0.08)',
-  padding: '24px',
-  borderRadius: '12px',
-  margin: '24px 0',
-  borderLeft: '4px solid #5ED9A6'
-};
-
-const eventTitle = {
-  fontSize: '20px',
-  fontWeight: '600',
-  color: '#2C3E50',
-  marginBottom: '12px',
-  marginTop: '0'
-};
-
-const eventDetails = {
-  fontSize: '15px',
-  lineHeight: '1.8',
-  color: '#666',
   marginBottom: '0',
   marginTop: '0'
 };
 
-const eventDescription = {
-  fontSize: '14px',
-  lineHeight: '1.6',
-  color: '#666',
-  marginTop: '16px',
-  marginBottom: '0'
-};
-
-const meetingLink = {
-  color: '#5ED9A6',
-  textDecoration: 'none'
-};
-
-const rsvpHeading = {
+const description = {
   fontSize: '16px',
-  lineHeight: '1.6',
-  fontWeight: '600',
+  lineHeight: '1.618',
   color: '#3A3A3A',
-  marginBottom: '16px',
-  marginTop: '0'
-};
-
-const rsvpSection = {
-  margin: '24px 0'
-};
-
-const buttonRow = {
-  textAlign: 'center' as const,
-  paddingBottom: '12px'
-};
-
-const rsvpMeta = {
-  fontSize: '14px',
-  lineHeight: '1.6',
-  color: '#999',
-  marginTop: '32px',
   marginBottom: '0',
-  textAlign: 'center' as const
+  marginTop: '0'
 };
 
 const signature = {
@@ -239,7 +222,7 @@ const signature = {
   lineHeight: '1.6',
   color: '#3A3A3A',
   marginTop: '32px',
-  marginBottom: '0'
+  marginBottom: '32px'
 };
 
 export default EventAnnouncement;
