@@ -1,6 +1,5 @@
 import { Resend } from 'resend';
-import { render } from '@react-email/render';
-import EventAnnouncement from '../../emails/event-announcement.js';
+import { renderEventEmail } from '../../emails/render-event-email.js';
 import { generateAuthToken } from '../utils/tokens.js';
 import { getAllSubscribers, getEventsConfig, getProfile, updateEventsConfig } from '../utils/redis.js';
 
@@ -40,38 +39,6 @@ function matchesEventType(eventType, userLocation) {
 
   // No match
   return false;
-}
-
-/**
- * Generate Event Invite Email using React Email template
- * Renders both HTML and plain text versions
- */
-async function renderEventInviteEmail(name, event, rsvpLinks, profileUrl, unsubscribeUrl) {
-
-  // Render HTML version
-  const html = await render(
-    EventAnnouncement({
-      name,
-      event,
-      rsvpLinks,
-      profileUrl,
-      unsubscribeUrl
-    })
-  );
-
-  // Render plain text version
-  const text = await render(
-    EventAnnouncement({
-      name,
-      event,
-      rsvpLinks,
-      profileUrl,
-      unsubscribeUrl
-    }),
-    { plainText: true }
-  );
-
-  return { html, text };
 }
 
 /**
@@ -157,7 +124,7 @@ export default async function handler(req, res) {
       // === FILTER 1: Already invited? ===
       if (event.invitesSent.includes(email)) {
         stats.skipped.alreadyInvited++;
-        console.log(`[SEND-INVITES] ⊘ Skipped ${email} - already invited`);
+        console.log(`[SEND-INVITES] Skipped ${email} - already invited`);
         continue;
       }
 
@@ -169,7 +136,7 @@ export default async function handler(req, res) {
       // Only skip if explicitly disabled
       if (profile?.preferences?.notifications?.enabled === false) {
         stats.skipped.notifications++;
-        console.log(`[SEND-INVITES] ⊘ Skipped ${email} - notifications disabled`);
+        console.log(`[SEND-INVITES] Skipped ${email} - notifications disabled`);
         continue;
       }
 
@@ -179,7 +146,7 @@ export default async function handler(req, res) {
 
       if (!matchesEventType(eventType, userLocation)) {
         stats.skipped.location++;
-        console.log(`[SEND-INVITES] ⊘ Skipped ${email} - location mismatch (event: ${eventType}, user: ${userLocation || 'all'})`);
+        console.log(`[SEND-INVITES] Skipped ${email} - location mismatch (event: ${eventType}, user: ${userLocation || 'all'})`);
         continue;
       }
 
@@ -222,14 +189,20 @@ export default async function handler(req, res) {
             // Unsubscribe URL (direct login to settings page where unsubscribe button is)
             const unsubscribeUrl = `${baseUrl}/api/auth/login?token=${encodeURIComponent(authToken)}&redirect=settings`;
 
-            // Render email template
-            const { html, text } = await renderEventInviteEmail(name, event, rsvpLinks, profileUrl, unsubscribeUrl);
+            // Render email template (pure HTML, no JSX)
+            const { html, text } = renderEventEmail({
+              name,
+              event,
+              rsvpLinks,
+              profileUrl,
+              unsubscribeUrl
+            });
 
             // Send email
             await resend.emails.send({
               from: process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>',
               to: email,
-              subject: `${event.title} – Bist du dabei?`,
+              subject: `${event.title} - Bist du dabei?`,
               html,
               text,
               tags: [
@@ -241,7 +214,7 @@ export default async function handler(req, res) {
             // Track successful send
             event.invitesSent.push(email);
             stats.sent++;
-            console.log(`[SEND-INVITES] ✓ Sent to ${email}`);
+            console.log(`[SEND-INVITES] Sent to ${email}`);
 
           } catch (error) {
             stats.failed++;
@@ -249,7 +222,7 @@ export default async function handler(req, res) {
               email,
               error: error.message
             });
-            console.error(`[SEND-INVITES] ✗ Failed for ${email}:`, error.message);
+            console.error(`[SEND-INVITES] Failed for ${email}:`, error.message);
           }
         })
       );

@@ -1,6 +1,5 @@
 import { Resend } from 'resend';
-import { render } from '@react-email/render';
-import EventAnnouncement from '../../emails/event-announcement.js';
+import { renderEventEmail } from '../../emails/render-event-email.js';
 import { isAuthenticated } from '../utils/auth.js';
 import { getAllSubscribers, getEventsConfig, getProfile, getUserPreferences } from '../utils/redis.js';
 import { generateAuthToken } from '../utils/tokens.js';
@@ -15,7 +14,8 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  *
  * Body: {
  *   eventId: string,
- *   recipients: 'all' | 'notifications' | 'engaged'
+ *   recipients: 'all' | 'notifications' | 'engaged',
+ *   testEmail?: string  // If provided, sends only to this email
  * }
  *
  * Authentication: Bearer token (ADMIN_PASSWORD)
@@ -69,11 +69,12 @@ export default async function handler(req, res) {
       });
     }
 
+    const baseUrl = process.env.BASE_URL || 'https://kinn.at';
+
     // TEST MODE: Send only to specified email
     if (testEmail) {
       console.log(`[NEWSLETTER] TEST MODE: Sending to ${testEmail}`);
 
-      const baseUrl = process.env.BASE_URL || 'https://kinn.at';
       const name = testEmail.split('@')[0];
       const authToken = generateAuthToken(testEmail);
 
@@ -86,31 +87,19 @@ export default async function handler(req, res) {
       const profileUrl = `${baseUrl}/api/auth/login?token=${encodeURIComponent(authToken)}&redirect=profil`;
       const unsubscribeUrl = `${baseUrl}/api/auth/login?token=${encodeURIComponent(authToken)}&redirect=settings`;
 
-      const html = await render(
-        EventAnnouncement({
-          name,
-          event,
-          rsvpLinks,
-          profileUrl,
-          unsubscribeUrl
-        })
-      );
-
-      const text = await render(
-        EventAnnouncement({
-          name,
-          event,
-          rsvpLinks,
-          profileUrl,
-          unsubscribeUrl
-        }),
-        { plainText: true }
-      );
+      const { html, text } = renderEventEmail({
+        name,
+        event,
+        rsvpLinks,
+        profileUrl,
+        unsubscribeUrl,
+        isTest: true
+      });
 
       await resend.emails.send({
         from: process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>',
         to: testEmail,
-        subject: `[TEST] ${event.title} – Bist du dabei?`,
+        subject: `[TEST] ${event.title} - Bist du dabei?`,
         html,
         text,
         tags: [
@@ -119,7 +108,7 @@ export default async function handler(req, res) {
         ]
       });
 
-      console.log(`[NEWSLETTER] ✓ Test email sent to ${testEmail}`);
+      console.log(`[NEWSLETTER] Test email sent to ${testEmail}`);
 
       return res.status(200).json({
         success: true,
@@ -197,8 +186,6 @@ export default async function handler(req, res) {
       });
     }
 
-    const baseUrl = process.env.BASE_URL || 'https://kinn.at';
-
     // Send in batches of 10
     for (let i = 0; i < eligibleEmails.length; i += 10) {
       const batch = eligibleEmails.slice(i, i + 10);
@@ -223,32 +210,20 @@ export default async function handler(req, res) {
 
             // Unsubscribe URL (direct login to settings page where unsubscribe button is)
             const unsubscribeUrl = `${baseUrl}/api/auth/login?token=${encodeURIComponent(authToken)}&redirect=settings`;
-            const html = await render(
-              EventAnnouncement({
-                name,
-                event,
-                rsvpLinks,
-                profileUrl,
-                unsubscribeUrl
-              })
-            );
 
-            const text = await render(
-              EventAnnouncement({
-                name,
-                event,
-                rsvpLinks,
-                profileUrl,
-                unsubscribeUrl
-              }),
-              { plainText: true }
-            );
+            const { html, text } = renderEventEmail({
+              name,
+              event,
+              rsvpLinks,
+              profileUrl,
+              unsubscribeUrl
+            });
 
             // Send
             await resend.emails.send({
               from: process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>',
               to: email,
-              subject: `${event.title} – Bist du dabei?`,
+              subject: `${event.title} - Bist du dabei?`,
               html,
               text,
               tags: [
@@ -258,11 +233,11 @@ export default async function handler(req, res) {
             });
 
             stats.sent++;
-            console.log(`[NEWSLETTER] ✓ Sent to ${email}`);
+            console.log(`[NEWSLETTER] Sent to ${email}`);
 
           } catch (error) {
             stats.failed++;
-            console.error(`[NEWSLETTER] ✗ Failed for ${email}:`, error.message);
+            console.error(`[NEWSLETTER] Failed for ${email}:`, error.message);
           }
         })
       );
