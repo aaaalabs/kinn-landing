@@ -20,8 +20,8 @@ interface ProfileWalkthroughProps {
 
 export const ProfileWalkthrough = ({
   name = 'Thomas',
-  profileUrl = 'https://kinn.at/pages/profil.html',
-  unsubscribeUrl = 'https://kinn.at/pages/profil.html#unsubscribe'
+  profileUrl = 'https://kinn.at/api/auth/login?redirect=profil',
+  unsubscribeUrl = 'https://kinn.at/api/auth/login?redirect=settings'
 }: ProfileWalkthroughProps) => {
   return (
     <Html>

@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import ProfileWalkthrough from '../../emails/profile-walkthrough';
-import { generateProfileToken } from '../utils/tokens.js';
+import { generateAuthToken } from '../utils/tokens.js';
 import { getAllSubscribers, getProfile, getUserPreferences } from '../utils/redis.js';
 import { enforceRateLimit } from '../utils/rate-limiter.js';
 import crypto from 'crypto';
@@ -179,11 +179,11 @@ export default async function handler(req, res) {
       await Promise.all(
         batch.map(async ({ email, name }) => {
           try {
-            // Generate profile URL with magic link token
-            const authToken = generateProfileToken(email);
+            // Generate URLs with magic link token
+            const authToken = generateAuthToken(email);
             const baseUrl = process.env.BASE_URL || 'https://kinn.at';
-            const profileUrl = `${baseUrl}/pages/profil.html?token=${authToken}`;
-            const unsubscribeUrl = `${baseUrl}/pages/profil.html?token=${authToken}#unsubscribe`;
+            const profileUrl = `${baseUrl}/api/auth/login?token=${encodeURIComponent(authToken)}&redirect=profil`;
+            const unsubscribeUrl = `${baseUrl}/api/auth/login?token=${encodeURIComponent(authToken)}&redirect=settings`;
 
             // Render React component to HTML (new async API in v5)
             const html = await render(

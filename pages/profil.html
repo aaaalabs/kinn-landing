@@ -1229,6 +1229,14 @@
           tokenSource = 'hash (magic link)';
           console.log('[PROFILE] ✓ Using hash token from magic link');
 
+          // Check for section parameter (e.g., section=profil to navigate to profile tab)
+          const hashSection = hashParams.get('section');
+          if (hashSection) {
+            console.log('[PROFILE] Section redirect requested:', hashSection);
+            // Store in sessionStorage to apply after profile loads
+            sessionStorage.setItem('kinn_redirect_section', hashSection);
+          }
+
           // Save to BOTH localStorage AND sessionStorage for redundancy
           const sessionSaved = saveSession(token, tokenEmail);
 
@@ -1249,8 +1257,16 @@
           // Clear hash to remove token from URL (security + UX)
           // Wait a tick to ensure session is persisted
           setTimeout(() => {
-            window.history.replaceState(null, '', window.location.pathname);
-            console.log('[PROFILE] Hash cleared from URL');
+            // If there's a section redirect, use that as the new hash
+            const redirectSection = sessionStorage.getItem('kinn_redirect_section');
+            if (redirectSection) {
+              window.history.replaceState(null, '', `${window.location.pathname}#${redirectSection}`);
+              sessionStorage.removeItem('kinn_redirect_section');
+              console.log('[PROFILE] Hash updated to section:', redirectSection);
+            } else {
+              window.history.replaceState(null, '', window.location.pathname);
+              console.log('[PROFILE] Hash cleared from URL');
+            }
           }, 100);
         }
       }
@@ -1321,6 +1337,14 @@
     const currentHash = window.location.hash.replace('#', '');
     if (currentHash === 'profil' || currentHash === 'settings') {
       activeTab = currentHash;
+    }
+
+    // Check for section redirect from magic link (stored in sessionStorage)
+    const redirectSection = sessionStorage.getItem('kinn_redirect_section');
+    if (redirectSection && (redirectSection === 'profil' || redirectSection === 'settings')) {
+      activeTab = redirectSection;
+      sessionStorage.removeItem('kinn_redirect_section');
+      console.log('[PROFILE] Activating tab from redirect:', activeTab);
     }
 
     // Active domain filters (for skills filtering)
@@ -1972,6 +1996,10 @@
                 <div class="checkbox-option">
                   <input type="checkbox" id="seek-learning" name="seeking" value="learning" ${(demand.seeking || []).includes('learning') ? 'checked' : ''}>
                   <label for="seek-learning">Learning / Mentorship</label>
+                </div>
+                <div class="checkbox-option">
+                  <input type="checkbox" id="seek-inspiration" name="seeking" value="inspiration" ${(demand.seeking || []).includes('inspiration') ? 'checked' : ''}>
+                  <label for="seek-inspiration">Inspiration / Exchange</label>
                 </div>
               </div>
             </div>

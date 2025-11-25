@@ -149,23 +149,27 @@ export default async function handler(req, res) {
           try {
             const name = profile?.identity?.name || preferences?.adminDisplayName || email.split('@')[0];
 
-            // Generate RSVP token
-            const rsvpToken = generateAuthToken(email);
+            // Generate auth token (used for both RSVP and profile)
+            const authToken = generateAuthToken(email);
 
             // RSVP URLs
             const rsvpLinks = {
-              yesUrl: `${baseUrl}/api/rsvp?token=${rsvpToken}&event=${eventId}&response=yes`,
-              maybeUrl: `${baseUrl}/api/rsvp?token=${rsvpToken}&event=${eventId}&response=maybe`,
-              noUrl: `${baseUrl}/api/rsvp?token=${rsvpToken}&event=${eventId}&response=no`
+              yesUrl: `${baseUrl}/api/rsvp?token=${authToken}&event=${eventId}&response=yes`,
+              maybeUrl: `${baseUrl}/api/rsvp?token=${authToken}&event=${eventId}&response=maybe`,
+              noUrl: `${baseUrl}/api/rsvp?token=${authToken}&event=${eventId}&response=no`
             };
 
-            // Render email
-            const unsubscribeUrl = `${baseUrl}/pages/profil.html#unsubscribe`;
+            // Profile URL (direct login to profile page)
+            const profileUrl = `${baseUrl}/api/auth/login?token=${encodeURIComponent(authToken)}&redirect=profil`;
+
+            // Unsubscribe URL (direct login to settings page where unsubscribe button is)
+            const unsubscribeUrl = `${baseUrl}/api/auth/login?token=${encodeURIComponent(authToken)}&redirect=settings`;
             const html = await render(
               EventAnnouncement({
                 name,
                 event,
                 rsvpLinks,
+                profileUrl,
                 unsubscribeUrl
               })
             );
@@ -175,6 +179,7 @@ export default async function handler(req, res) {
                 name,
                 event,
                 rsvpLinks,
+                profileUrl,
                 unsubscribeUrl
               }),
               { plainText: true }

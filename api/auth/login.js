@@ -227,9 +227,18 @@ export default async function handler(req, res) {
 
     console.log(`[LOGIN] Valid token for ${email}`);
 
+    // Check for redirect parameter (e.g., 'profil' or 'settings' to go directly to that section)
+    const { redirect } = req.query;
+
     // Redirect to user portal (profil.html) with token in URL fragment (hash)
     // This keeps the token client-side only (not sent to server)
-    const portalUrl = `/pages/profil.html#token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+    let portalUrl = `/pages/profil.html#token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+
+    // If redirect parameter is provided, append it to navigate to specific section
+    const validSections = ['profil', 'settings', 'dashboard'];
+    if (redirect && validSections.includes(redirect)) {
+      portalUrl = `/pages/profil.html#token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}&section=${redirect}`;
+    }
 
     return res.redirect(302, portalUrl);
 

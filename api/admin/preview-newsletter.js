@@ -164,6 +164,20 @@ export default async function handler(req, res) {
       </p>
     </div>
 
+    <!-- Profile CTA Section -->
+    <div style="margin: 32px 0 24px 0; padding: 24px; background-color: #F8F9FA; border-radius: 12px; border-left: 4px solid #5ED9A6;">
+      <p style="font-size: 15px; font-weight: 600; color: #1A1A1A; margin: 0 0 8px 0;">
+        Hilf uns, das Event auf dich zuzuschneiden
+      </p>
+      <p style="font-size: 14px; line-height: 1.6; color: #6B6B6B; margin: 0 0 16px 0;">
+        Mit deinem Profil wissen wir, welche Themen dich interessieren und
+        mit wem wir dich vernetzen können. So wird der Treff für alle wertvoller.
+      </p>
+      <a href="${baseUrl}/api/auth/login?redirect=profil" style="font-size: 14px; font-weight: 600; color: #5ED9A6; text-decoration: none;">
+        Profil aktualisieren →
+      </a>
+    </div>
+
     <!-- Signature -->
     <p style="font-size: 16px; line-height: 1.6; color: #3A3A3A; margin: 32px 0;">
       Bis bald!<br>
@@ -173,7 +187,8 @@ export default async function handler(req, res) {
     <!-- Footer -->
     <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid #e0e0e0;">
       <p style="font-size: 12px; line-height: 1.6; color: #999; margin: 0; text-align: center;">
-        <a href="${baseUrl}/pages/profil.html#unsubscribe" style="color: #999; text-decoration: underline;">Abmelden</a>
+        <a href="${baseUrl}/api/auth/login?redirect=settings" style="color: #999; text-decoration: underline;">Abmelden</a>
+        <span style="font-size: 10px; color: #ccc;"> (+ token in production)</span>
       </p>
     </div>
 

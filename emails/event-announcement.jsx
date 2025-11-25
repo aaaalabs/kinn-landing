@@ -7,7 +7,8 @@ import {
   Section,
   Text,
   Heading,
-  Font
+  Font,
+  Link
 } from '@react-email/components';
 import * as React from 'react';
 import { Header } from './components/header.jsx';
@@ -32,7 +33,8 @@ export const EventAnnouncement = ({
     maybeUrl: 'https://kinn.at',
     noUrl: 'https://kinn.at'
   },
-  unsubscribeUrl = 'https://kinn.at/pages/profil.html#unsubscribe'
+  profileUrl = null,
+  unsubscribeUrl = 'https://kinn.at/api/auth/login?redirect=settings'
 }) => {
   // Format event date for Austria/Vienna timezone
   const eventDate = new Date(event.start);
@@ -120,6 +122,22 @@ export const EventAnnouncement = ({
             noUrl={rsvpLinks.noUrl}
           />
 
+          {/* Profile CTA Section */}
+          {profileUrl && (
+            <Section style={profileSection}>
+              <Text style={profileHeading}>
+                Hilf uns, das Event auf dich zuzuschneiden
+              </Text>
+              <Text style={profileText}>
+                Mit deinem Profil wissen wir, welche Themen dich interessieren und
+                mit wem wir dich vernetzen können. So wird der Treff für alle wertvoller.
+              </Text>
+              <Link href={profileUrl} style={profileLink}>
+                Profil aktualisieren
+              </Link>
+            </Section>
+          )}
+
           {/* Signature */}
           <Text style={signature}>
             Bis bald!<br />
@@ -203,6 +221,36 @@ const signature = {
   color: '#3A3A3A',
   marginTop: '32px',
   marginBottom: '32px'
+};
+
+const profileSection = {
+  marginTop: '32px',
+  marginBottom: '24px',
+  padding: '24px',
+  backgroundColor: '#F8F9FA',
+  borderRadius: '12px',
+  borderLeft: '4px solid #5ED9A6'
+};
+
+const profileHeading = {
+  fontSize: '15px',
+  fontWeight: '600',
+  color: '#1A1A1A',
+  margin: '0 0 8px 0'
+};
+
+const profileText = {
+  fontSize: '14px',
+  lineHeight: '1.6',
+  color: '#6B6B6B',
+  margin: '0 0 16px 0'
+};
+
+const profileLink = {
+  fontSize: '14px',
+  fontWeight: '600',
+  color: '#5ED9A6',
+  textDecoration: 'none'
 };
 
 export default EventAnnouncement;

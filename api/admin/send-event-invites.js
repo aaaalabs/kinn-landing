@@ -46,9 +46,7 @@ function matchesEventType(eventType, userLocation) {
  * Generate Event Invite Email using React Email template
  * Renders both HTML and plain text versions
  */
-async function renderEventInviteEmail(name, event, rsvpLinks) {
-  const baseUrl = process.env.BASE_URL || 'https://kinn.at';
-  const unsubscribeUrl = `${baseUrl}/pages/profil.html#unsubscribe`;
+async function renderEventInviteEmail(name, event, rsvpLinks, profileUrl, unsubscribeUrl) {
 
   // Render HTML version
   const html = await render(
@@ -56,6 +54,7 @@ async function renderEventInviteEmail(name, event, rsvpLinks) {
       name,
       event,
       rsvpLinks,
+      profileUrl,
       unsubscribeUrl
     })
   );
@@ -66,6 +65,7 @@ async function renderEventInviteEmail(name, event, rsvpLinks) {
       name,
       event,
       rsvpLinks,
+      profileUrl,
       unsubscribeUrl
     }),
     { plainText: true }
@@ -206,18 +206,24 @@ export default async function handler(req, res) {
           try {
             const name = profile?.identity?.name || email.split('@')[0];
 
-            // Generate RSVP token (30 days validity)
-            const rsvpToken = generateAuthToken(email);
+            // Generate auth token (30 days validity) - used for RSVP and profile
+            const authToken = generateAuthToken(email);
 
             // Build RSVP URLs
             const rsvpLinks = {
-              yesUrl: `${baseUrl}/api/rsvp?token=${rsvpToken}&event=${eventId}&response=yes`,
-              noUrl: `${baseUrl}/api/rsvp?token=${rsvpToken}&event=${eventId}&response=no`,
-              maybeUrl: `${baseUrl}/api/rsvp?token=${rsvpToken}&event=${eventId}&response=maybe`
+              yesUrl: `${baseUrl}/api/rsvp?token=${authToken}&event=${eventId}&response=yes`,
+              noUrl: `${baseUrl}/api/rsvp?token=${authToken}&event=${eventId}&response=no`,
+              maybeUrl: `${baseUrl}/api/rsvp?token=${authToken}&event=${eventId}&response=maybe`
             };
 
+            // Profile URL (direct login to profile page)
+            const profileUrl = `${baseUrl}/api/auth/login?token=${encodeURIComponent(authToken)}&redirect=profil`;
+
+            // Unsubscribe URL (direct login to settings page where unsubscribe button is)
+            const unsubscribeUrl = `${baseUrl}/api/auth/login?token=${encodeURIComponent(authToken)}&redirect=settings`;
+
             // Render email template
-            const { html, text } = await renderEventInviteEmail(name, event, rsvpLinks);
+            const { html, text } = await renderEventInviteEmail(name, event, rsvpLinks, profileUrl, unsubscribeUrl);
 
             // Send email
             await resend.emails.send({
