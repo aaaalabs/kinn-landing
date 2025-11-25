@@ -208,7 +208,7 @@ function generateSuccessPage(response, rsvps, eventId) {
     <h1>Danke für deine ${responseText[response]}!</h1>
     <p class="response">Deine Antwort wurde erfolgreich gespeichert.</p>
 
-    ${response === 'yes' ? `
+    ${response === 'yes' && rsvps.counts.yes >= 10 && rsvps.counts.no < 5 ? `
     <div class="stats">
       <h3>Event-Statistik</h3>
       <div class="stats-row">
