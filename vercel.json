@@ -4,15 +4,7 @@
   "outputDirectory": ".",
   "functions": {
     "api/**/*.js": {
-      "includeFiles": "emails/**"
-    },
-    "api/signup.js": {
-      "maxDuration": 10
-    },
-    "api/inbound.js": {
-      "maxDuration": 15
-    },
-    "api/calendar.ics.js": {
+      "includeFiles": "emails/**",
       "maxDuration": 15
     }
   },
