@@ -99,7 +99,7 @@ export default async function handler(req, res) {
       const profileUrl = `${baseUrl}/api/auth/login?token=${encodeURIComponent(authToken)}&redirect=profil`;
       const unsubscribeUrl = `${baseUrl}/api/auth/login?token=${encodeURIComponent(authToken)}&redirect=settings`;
 
-      const { html, text } = renderEventEmail({
+      const { html, text, simpleHtml } = renderEventEmail({
         name,
         event,
         rsvpLinks,
@@ -122,8 +122,10 @@ export default async function handler(req, res) {
       };
 
       if (format === 'text') {
-        emailPayload.text = text;
+        // Simple HTML - looks like plain text but with basic formatting
+        emailPayload.html = simpleHtml;
       } else {
+        // Rich HTML + plain text fallback
         emailPayload.html = html;
         emailPayload.text = text;
       }
@@ -233,7 +235,7 @@ export default async function handler(req, res) {
             // Unsubscribe URL (direct login to settings page where unsubscribe button is)
             const unsubscribeUrl = `${baseUrl}/api/auth/login?token=${encodeURIComponent(authToken)}&redirect=settings`;
 
-            const { html, text } = renderEventEmail({
+            const { html, text, simpleHtml } = renderEventEmail({
               name,
               event,
               rsvpLinks,
@@ -255,8 +257,10 @@ export default async function handler(req, res) {
             };
 
             if (format === 'text') {
-              emailPayload.text = text;
+              // Simple HTML - looks like plain text but with basic formatting
+              emailPayload.html = simpleHtml;
             } else {
+              // Rich HTML + plain text fallback
               emailPayload.html = html;
               emailPayload.text = text;
             }

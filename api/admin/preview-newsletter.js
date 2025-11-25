@@ -5,7 +5,9 @@ import { renderEventEmail } from '../../emails/render-event-email.js';
  * Admin Endpoint: Preview Newsletter Email
  * GET /api/admin/preview-newsletter?eventId=X&format=both|text&baseAttendees=0
  *
- * Renders inline HTML or plain text preview
+ * Renders inline HTML preview
+ * - format=both: Rich HTML with buttons, cards, styling
+ * - format=text: Simple HTML (text-like, but with <strong>, clickable links)
  */
 export default async function handler(req, res) {
   // CORS
@@ -48,7 +50,7 @@ export default async function handler(req, res) {
     };
 
     // Generate email content using shared template
-    const { html, text } = renderEventEmail({
+    const { html, simpleHtml } = renderEventEmail({
       name: 'Thomas',  // Preview uses placeholder name
       event,
       rsvpLinks: {
@@ -62,119 +64,29 @@ export default async function handler(req, res) {
       rsvpCounts
     });
 
-    // TEXT FORMAT: Show plain text in styled container
+    // SIMPLE HTML FORMAT
     if (format === 'text') {
-      const textPreviewHtml = `
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
-  <title>Plain Text Preview - ${event.title}</title>
-  <style>
-    body {
-      font-family: 'Work Sans', sans-serif;
-      background: #1a1a1a;
-      color: #e0e0e0;
-      padding: 40px 20px;
-      margin: 0;
-    }
-    .container {
-      max-width: 700px;
-      margin: 0 auto;
-    }
-    .badge {
-      display: inline-block;
-      background: #5ED9A6;
-      color: #000;
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 20px;
-    }
-    h1 {
-      font-size: 24px;
-      font-weight: 600;
-      margin: 0 0 8px 0;
-      color: #fff;
-    }
-    .subtitle {
-      color: #888;
-      font-size: 14px;
-      margin-bottom: 24px;
-    }
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      background: #252525;
-      padding: 12px 16px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-      font-size: 13px;
-    }
-    .info-label { color: #888; }
-    .info-value { color: #5ED9A6; }
-    pre {
-      background: #0d0d0d;
-      border: 1px solid #333;
-      border-radius: 12px;
-      padding: 24px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      overflow-x: auto;
-      color: #d4d4d4;
-    }
-    .note {
-      margin-top: 24px;
-      padding: 16px;
-      background: rgba(94, 217, 166, 0.1);
-      border-left: 3px solid #5ED9A6;
-      border-radius: 4px;
-      font-size: 13px;
-      color: #888;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <span class="badge">TEXT-ONLY PREVIEW</span>
-    <h1>${event.title}</h1>
-    <p class="subtitle">So sieht die Plain-Text-Version der Email aus</p>
-
-    <div class="info-row">
-      <span class="info-label">RSVP Counts (Social Proof)</span>
-      <span class="info-value">${rsvpCounts.yes} Zusagen, ${rsvpCounts.maybe} Vielleicht</span>
-    </div>
-    <div class="info-row">
-      <span class="info-label">Social Proof angezeigt?</span>
-      <span class="info-value">${rsvpCounts.yes >= 10 ? 'Ja (10+ Zusagen)' : 'Nein (weniger als 10 Zusagen)'}</span>
-    </div>
-
-    <pre>${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
-
-    <div class="note">
-      <strong>Tipp:</strong> Plain-Text-Only Emails haben oft bessere Deliverability und landen seltener im Spam.
-      Die Social Proof Zeile ("X+ Zusagen") wird nur angezeigt, wenn mindestens 10 Personen zugesagt haben.
-    </div>
-  </div>
-</body>
-</html>`;
+      const simpleHtmlWithBadge = simpleHtml.replace(
+        '</body>',
+        `<div style="position: fixed; top: 20px; right: 20px; background: #5ED9A6; color: #000; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; font-family: -apple-system, sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+          SIMPLE HTML PREVIEW
+        </div>
+        <div style="position: fixed; bottom: 20px; left: 20px; background: #252525; color: #888; padding: 12px 16px; border-radius: 8px; font-size: 12px; font-family: -apple-system, sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+          RSVP: ${rsvpCounts.yes} Zusagen, ${rsvpCounts.maybe} Vielleicht
+          ${rsvpCounts.yes >= 10 ? ' (Social Proof aktiv)' : ''}
+        </div>
+        </body>`
+      );
 
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.status(200).send(textPreviewHtml);
+      return res.status(200).send(simpleHtmlWithBadge);
     }
 
-    // HTML FORMAT (default): Show rendered email
-    // Add preview badge
+    // RICH HTML FORMAT (default)
     const previewHtml = html.replace(
       '</body>',
       `<div style="position: fixed; top: 20px; right: 20px; background: #5ED9A6; color: #000; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; font-family: 'Work Sans', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-        HTML + TEXT PREVIEW
+        RICH HTML PREVIEW
       </div>
       <div style="position: fixed; bottom: 20px; left: 20px; background: #252525; color: #888; padding: 12px 16px; border-radius: 8px; font-size: 12px; font-family: 'Work Sans', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
         RSVP: ${rsvpCounts.yes} Zusagen, ${rsvpCounts.maybe} Vielleicht

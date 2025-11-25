@@ -232,5 +232,62 @@ Thomas
 ${unsubscribeUrl ? `Abmelden: ${unsubscribeUrl}` : ''}
 KINN - KI Treff Innsbruck | kinn.at`.trim();
 
-  return { html, text };
+  // Simple HTML version - looks like plain text but with basic formatting
+  // Better deliverability than rich HTML, but clickable links and bold text
+  const simpleHtml = `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${event.title}</title>
+</head>
+<body style="margin: 0; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #333; background-color: #fff;">
+
+<p><strong>Hey ${name}!</strong></p>
+
+<p>Der nächste KINN Treff steht an - <strong>${event.title}</strong>:</p>
+
+<p>
+<strong>WANN:</strong> ${dateStr}<br>
+<strong>UHRZEIT:</strong> ${timeStr} Uhr<br>
+${(event.type === 'in-person' || event.type === 'hybrid') && event.location ? `<strong>WO:</strong> ${event.location}<br>` : ''}
+${(event.type === 'online' || event.type === 'hybrid') && event.meetingLink ? `<strong>ONLINE:</strong> <a href="${event.meetingLink}" style="color: #5ED9A6;">${event.meetingLink}</a><br>` : ''}
+</p>
+
+${rsvpCounts.yes >= 10 ? `<p><strong style="color: #5ED9A6;">${rsvpCounts.yes}+ Zusagen${rsvpCounts.maybe > 0 ? `, ${rsvpCounts.maybe} vielleicht` : ''}.</strong> Und es werden mehr.</p>` : ''}
+
+${event.description ? `<p>${event.description.replace(/\n/g, '<br>')}</p>` : ''}
+
+<hr style="border: none; border-top: 1px solid #ddd; margin: 24px 0;">
+
+<p><strong>BIST DU DABEI?</strong></p>
+
+<p>
+<a href="${rsvpLinks.yesUrl || '#'}" style="color: #5ED9A6; font-weight: 600;">Ja, bin dabei</a><br><br>
+<a href="${rsvpLinks.maybeUrl || '#'}" style="color: #FFA500; font-weight: 600;">Vielleicht</a><br><br>
+<a href="${rsvpLinks.noUrl || '#'}" style="color: #999;">Kann leider nicht</a>
+</p>
+
+<p style="color: #666; font-size: 13px;">Ein Klick genügt - kein Login nötig.</p>
+
+${profileUrl ? `
+<hr style="border: none; border-top: 1px solid #ddd; margin: 24px 0;">
+
+<p><strong>DEIN PROFIL MACHT DEN UNTERSCHIED</strong></p>
+<p>Mit deinem Profil wissen wir, welche Themen dich interessieren und mit wem wir dich vernetzen können.</p>
+<p><a href="${profileUrl}" style="color: #5ED9A6;">Profil aktualisieren</a></p>
+` : ''}
+
+<hr style="border: none; border-top: 1px solid #ddd; margin: 24px 0;">
+
+<p>Bis bald!<br><strong>Thomas</strong></p>
+
+<p style="font-size: 12px; color: #999;">
+${unsubscribeUrl ? `<a href="${unsubscribeUrl}" style="color: #999;">Abmelden</a> · ` : ''}KINN - KI Treff Innsbruck | <a href="https://kinn.at" style="color: #999;">kinn.at</a>
+</p>
+
+</body>
+</html>`;
+
+  return { html, text, simpleHtml };
 }
