@@ -2,7 +2,7 @@ import { Section, Img } from '@react-email/components';
 import * as React from 'react';
 
 export const Header = ({
-  logoUrl = 'https://kinn.at/logo.svg',
+  logoUrl = 'https://kinn.at/kinn-logo.png',
   logoWidth = 120
 }) => {
   return (

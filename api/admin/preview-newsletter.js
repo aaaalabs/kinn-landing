@@ -73,7 +73,7 @@ export default async function handler(req, res) {
 
     <!-- Header with Logo -->
     <div style="text-align: center; margin-bottom: 32px; padding-top: 20px;">
-      <img src="https://kinn.at/logo.svg" width="120" alt="KINN Logo" style="margin: 0 auto; display: block;">
+      <img src="https://kinn.at/kinn-logo.png" width="120" alt="KINN Logo" style="margin: 0 auto; display: block;">
     </div>
 
     <!-- Event Type Badge -->
