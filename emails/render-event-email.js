@@ -5,6 +5,21 @@
  * No React/JSX required - compatible with Vercel serverless.
  */
 
+/**
+ * Convert simple Markdown to HTML
+ * Supports: **bold**, --- (horizontal rule), newlines
+ */
+function markdownToHtml(text) {
+  if (!text) return '';
+  return text
+    // Bold: **text** → <strong>text</strong>
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    // Horizontal rule: --- at start of line → <hr>
+    .replace(/^---$/gm, '<hr style="border: none; border-top: 1px solid #e0e0e0; margin: 16px 0;">')
+    // Newlines → <br>
+    .replace(/\n/g, '<br>');
+}
+
 export function renderEventEmail({
   name = null,
   event,
@@ -104,9 +119,9 @@ export function renderEventEmail({
 
     <!-- Description -->
     ${event.description ? `
-    <p style="font-size: 16px; line-height: 1.618; color: #3A3A3A; margin: 0;">
-      ${event.description.replace(/\n/g, '<br>')}
-    </p>
+    <div style="font-size: 16px; line-height: 1.618; color: #3A3A3A; margin: 0;">
+      ${markdownToHtml(event.description)}
+    </div>
     ` : ''}
 
     <!-- Meeting Link Section (Online/Hybrid) -->
@@ -259,7 +274,7 @@ ${(event.type === 'online' || event.type === 'hybrid') && event.meetingLink ? `<
 
 ${rsvpCounts.yes >= 10 ? `<p><strong style="color: #5ED9A6;">${rsvpCounts.yes}+ Zusagen${rsvpCounts.maybe > 0 ? `, ${rsvpCounts.maybe} vielleicht` : ''}.</strong> Und es werden mehr.</p>` : ''}
 
-${event.description ? `<p>${event.description.replace(/\n/g, '<br>')}</p>` : ''}
+${event.description ? `<div>${markdownToHtml(event.description)}</div>` : ''}
 
 <hr style="border: none; border-top: 1px solid #ddd; margin: 24px 0;">
 
