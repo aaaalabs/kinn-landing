@@ -1339,9 +1339,14 @@
       container.innerHTML = '<div class="loading">Lade Newsletter...</div>';
 
       try {
-        // Get events
-        const response = await apiCall('/events');
-        const events = response.data?.events || [];
+        // Get events (uses cached eventsConfig if available)
+        let events;
+        if (eventsConfig?.events) {
+          events = eventsConfig.events;
+        } else {
+          const response = await apiCall('/events');
+          events = response.data?.events || [];
+        }
 
         // Find next upcoming event
         const now = new Date();
@@ -1360,12 +1365,7 @@
 
         const nextEvent = upcomingEvents[0];
 
-        // Get subscriber counts
-        const allCount = await getSubscriberCount('all');
-        const notificationsCount = await getSubscriberCount('notifications');
-        const engagedCount = await getSubscriberCount('engaged', nextEvent.id);
-
-        // Render newsletter UI
+        // Render UI immediately with loading placeholders for counts
         container.innerHTML = `
           <div class="card">
             <h3 style="font-weight: 500; margin-bottom: 1rem;">Next Event:</h3>
@@ -1386,9 +1386,9 @@
             <div style="margin-bottom: 1.5rem;">
               <label for="newsletter-recipients" style="display: block; font-weight: 500; margin-bottom: 0.5rem;">Recipients:</label>
               <select id="newsletter-recipients" style="width: 100%; max-width: 400px; padding: 12px; font-size: 1rem; border: 2px solid #e0e0e0; border-radius: 8px; font-family: inherit;">
-                <option value="all">All Subscribers (${allCount})</option>
-                <option value="notifications">Notifications Enabled (${notificationsCount})</option>
-                <option value="engaged">Engaged Users - VIPs (${engagedCount})</option>
+                <option value="all">All Subscribers (<span id="count-all">...</span>)</option>
+                <option value="notifications">Notifications Enabled (<span id="count-notifications">...</span>)</option>
+                <option value="engaged">Engaged Users - VIPs (<span id="count-engaged">...</span>)</option>
               </select>
             </div>
 
@@ -1402,6 +1402,23 @@
             </div>
           </div>
         `;
+
+        // Lazy-load subscriber counts in parallel
+        Promise.all([
+          getSubscriberCount('all'),
+          getSubscriberCount('notifications'),
+          getSubscriberCount('engaged', nextEvent.id)
+        ]).then(([allCount, notificationsCount, engagedCount]) => {
+          // Update select options with actual counts
+          const select = document.getElementById('newsletter-recipients');
+          if (select) {
+            select.innerHTML = `
+              <option value="all">All Subscribers (${allCount})</option>
+              <option value="notifications">Notifications Enabled (${notificationsCount})</option>
+              <option value="engaged">Engaged Users - VIPs (${engagedCount})</option>
+            `;
+          }
+        });
 
       } catch (error) {
         console.error('[NEWSLETTER-TAB] Error:', error);
