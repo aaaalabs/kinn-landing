@@ -200,7 +200,7 @@ export function renderEventEmail({
 
 Hey ${name}!
 
-Der naechste KINN Treff steht an:
+Der nächste KINN Treff steht an:
 
 WANN:     ${dateStr}
 UHRZEIT:  ${timeStr} Uhr
@@ -211,22 +211,19 @@ ${event.description ? `${event.description}\n` : ''}
 
 BIST DU DABEI?
 
-Ja, bin dabei:
-${rsvpLinks.yesUrl || '#'}
+Ja, bin dabei: ${rsvpLinks.yesUrl || '#'}
 
-Vielleicht:
-${rsvpLinks.maybeUrl || '#'}
+Vielleicht: ${rsvpLinks.maybeUrl || '#'}
 
-Kann leider nicht:
-${rsvpLinks.noUrl || '#'}
+Kann leider nicht: ${rsvpLinks.noUrl || '#'}
 
-Ein Klick genuegt - kein Login noetig.
+Ein Klick genügt - kein Login nötig.
 
 ---
 ${profileUrl ? `
 DEIN PROFIL MACHT DEN UNTERSCHIED
 Mit deinem Profil wissen wir, welche Themen dich interessieren
-und mit wem wir dich vernetzen koennen.
+und mit wem wir dich vernetzen können.
 ${profileUrl}
 
 ---
