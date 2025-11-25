@@ -11,7 +11,8 @@ export function renderEventEmail({
   rsvpLinks = {},
   profileUrl,
   unsubscribeUrl,
-  isTest = false
+  isTest = false,
+  rsvpCounts = { yes: 0, maybe: 0 }  // For social proof in plain text
 }) {
   const baseUrl = process.env.BASE_URL || 'https://kinn.at';
 
@@ -87,6 +88,14 @@ export function renderEventEmail({
       <p style="font-size: 16px; font-weight: 500; color: #1A1A1A; margin: 0;">
         <a href="${event.meetingLink}" style="color: #5ED9A6; text-decoration: none; font-weight: 500;">Meeting Link</a>
       </p>
+      ` : ''}
+
+      ${rsvpCounts.yes >= 10 ? `
+      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e0e0e0;">
+        <p style="font-size: 15px; font-weight: 600; color: #5ED9A6; margin: 0;">
+          ${rsvpCounts.yes}+ Zusagen${rsvpCounts.maybe > 0 ? ` · ${rsvpCounts.maybe} vielleicht` : ''}
+        </p>
+      </div>
       ` : ''}
     </div>
 
@@ -172,38 +181,61 @@ export function renderEventEmail({
 </body>
 </html>`;
 
-  // Plain text version
-  const text = `
-KINN - ${event.title}
+  // Plain text version - optimized for deliverability
+  // Dynamic social proof (only show if 10+ confirmed)
+  const socialProof = rsvpCounts.yes >= 10
+    ? `${rsvpCounts.yes}+ Zusagen${rsvpCounts.maybe > 0 ? `, ${rsvpCounts.maybe} vielleicht` : ''}. Und es werden mehr.`
+    : '';
+
+  // Build location/online info
+  const locationInfo = [];
+  if ((event.type === 'in-person' || event.type === 'hybrid') && event.location) {
+    locationInfo.push(`WO:       ${event.location}`);
+  }
+  if ((event.type === 'online' || event.type === 'hybrid') && event.meetingLink) {
+    locationInfo.push(`ONLINE:   ${event.meetingLink}`);
+  }
+
+  const text = `${event.title}
 
 Hey ${name}!
 
-Der nächste KINN Treff steht an:
+Der naechste KINN Treff steht an:
 
-${badgeText}
-
-Datum: ${dateStr}
-Uhrzeit: ${timeStr} Uhr
-${(event.type === 'in-person' || event.type === 'hybrid') && event.location ? `Ort: ${event.location}` : ''}
-${(event.type === 'online' || event.type === 'hybrid') && event.meetingLink ? `Meeting Link: ${event.meetingLink}` : ''}
-
-${event.description || ''}
-
-Wirst du dabei sein?
-
-Ja, bin dabei: ${rsvpLinks.yesUrl || '#'}
-Vielleicht: ${rsvpLinks.maybeUrl || '#'}
-Kann leider nicht: ${rsvpLinks.noUrl || '#'}
-
-Ein Klick genügt - kein Login nötig.
-
+WANN:     ${dateStr}
+UHRZEIT:  ${timeStr} Uhr
+${locationInfo.join('\n')}
+${socialProof ? `\n${socialProof}\n` : ''}
+${event.description ? `${event.description}\n` : ''}
 ---
 
+BIST DU DABEI?
+
+Ja, bin dabei:
+${rsvpLinks.yesUrl || '#'}
+
+Vielleicht:
+${rsvpLinks.maybeUrl || '#'}
+
+Kann leider nicht:
+${rsvpLinks.noUrl || '#'}
+
+Ein Klick genuegt - kein Login noetig.
+
+---
+${profileUrl ? `
+DEIN PROFIL MACHT DEN UNTERSCHIED
+Mit deinem Profil wissen wir, welche Themen dich interessieren
+und mit wem wir dich vernetzen koennen.
+${profileUrl}
+
+---
+` : ''}
 Bis bald!
 Thomas
 
 ${unsubscribeUrl ? `Abmelden: ${unsubscribeUrl}` : ''}
-`.trim();
+KINN - KI Treff Innsbruck | kinn.at`.trim();
 
   return { html, text };
 }

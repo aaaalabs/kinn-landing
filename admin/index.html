@@ -1383,18 +1383,36 @@
               ${nextEvent.description ? `<p style="margin: 1rem 0 0 0; font-size: 0.9rem; color: #666;">${nextEvent.description}</p>` : ''}
             </div>
 
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+              <div>
+                <label for="newsletter-recipients" style="display: block; font-weight: 500; margin-bottom: 0.5rem;">Recipients:</label>
+                <select id="newsletter-recipients" style="width: 100%; padding: 12px; font-size: 1rem; border: 2px solid #e0e0e0; border-radius: 8px; font-family: inherit;">
+                  <option value="all">All Subscribers (...)</option>
+                  <option value="notifications">Notifications Enabled (...)</option>
+                  <option value="engaged">Engaged Users - VIPs (...)</option>
+                </select>
+              </div>
+              <div>
+                <label for="newsletter-format" style="display: block; font-weight: 500; margin-bottom: 0.5rem;">Format:</label>
+                <select id="newsletter-format" style="width: 100%; padding: 12px; font-size: 1rem; border: 2px solid #e0e0e0; border-radius: 8px; font-family: inherit;">
+                  <option value="both">HTML + Text (Standard)</option>
+                  <option value="text">Nur Text (beste Deliverability)</option>
+                </select>
+              </div>
+            </div>
+
             <div style="margin-bottom: 1.5rem;">
-              <label for="newsletter-recipients" style="display: block; font-weight: 500; margin-bottom: 0.5rem;">Recipients:</label>
-              <select id="newsletter-recipients" style="width: 100%; max-width: 400px; padding: 12px; font-size: 1rem; border: 2px solid #e0e0e0; border-radius: 8px; font-family: inherit;">
-                <option value="all">All Subscribers (<span id="count-all">...</span>)</option>
-                <option value="notifications">Notifications Enabled (<span id="count-notifications">...</span>)</option>
-                <option value="engaged">Engaged Users - VIPs (<span id="count-engaged">...</span>)</option>
-              </select>
+              <label for="newsletter-base-attendees" style="display: block; font-weight: 500; margin-bottom: 0.5rem;">Basis-Zusagen (extern):</label>
+              <input type="number" id="newsletter-base-attendees" min="0" value="0" placeholder="0" style="width: 150px; padding: 12px; font-size: 1rem; border: 2px solid #e0e0e0; border-radius: 8px; font-family: inherit;">
+              <span style="margin-left: 0.75rem; font-size: 0.875rem; color: #666;">Zusagen von anderen Kanälen (z.B. WhatsApp, Meetup)</span>
             </div>
 
             <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
               <button class="btn btn-secondary" onclick="previewNewsletter('${nextEvent.id}')" style="font-size: 1rem;">
-                👁️ Preview
+                👁️ Preview HTML
+              </button>
+              <button class="btn btn-secondary" onclick="previewNewsletter('${nextEvent.id}', 'text')" style="font-size: 1rem;">
+                📝 Preview Text
               </button>
               <button class="btn btn-secondary" onclick="sendTestNewsletter('${nextEvent.id}')" style="font-size: 1rem;">
                 🧪 Test Send
@@ -1458,16 +1476,21 @@
       }
     }
 
-    function previewNewsletter(eventId) {
-      window.open(`/api/admin/preview-newsletter?eventId=${eventId}`, '_blank');
+    function previewNewsletter(eventId, formatOverride = null) {
+      const format = formatOverride || document.getElementById('newsletter-format')?.value || 'both';
+      const baseAttendees = document.getElementById('newsletter-base-attendees')?.value || '0';
+      window.open(`/api/admin/preview-newsletter?eventId=${eventId}&format=${format}&baseAttendees=${baseAttendees}`, '_blank');
     }
 
     async function sendNewsletterForNextEvent(eventId, eventTitle) {
       const recipientsSelect = document.getElementById('newsletter-recipients');
       const recipients = recipientsSelect.value;
       const recipientLabel = recipientsSelect.options[recipientsSelect.selectedIndex].text;
+      const format = document.getElementById('newsletter-format')?.value || 'both';
+      const formatLabel = format === 'text' ? 'Nur Text' : 'HTML + Text';
+      const baseAttendees = parseInt(document.getElementById('newsletter-base-attendees')?.value || '0', 10);
 
-      if (!confirm(`Newsletter versenden?\n\n"${eventTitle}"\nAn: ${recipientLabel}\n\nDies kann einige Sekunden dauern.`)) {
+      if (!confirm(`Newsletter versenden?\n\n"${eventTitle}"\nAn: ${recipientLabel}\nFormat: ${formatLabel}\n${baseAttendees > 0 ? `Basis-Zusagen: +${baseAttendees}\n` : ''}\nDies kann einige Sekunden dauern.`)) {
         return;
       }
 
@@ -1480,7 +1503,7 @@
             'Authorization': `Bearer ${adminPassword}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ eventId, recipients })
+          body: JSON.stringify({ eventId, recipients, format, baseAttendees })
         });
 
         const data = await response.json();
@@ -1513,8 +1536,11 @@
     // Send test newsletter to admin@libralab.ai
     async function sendTestNewsletter(eventId) {
       const testEmail = 'admin@libralab.ai';
+      const format = document.getElementById('newsletter-format')?.value || 'both';
+      const formatLabel = format === 'text' ? 'Nur Text' : 'HTML + Text';
+      const baseAttendees = parseInt(document.getElementById('newsletter-base-attendees')?.value || '0', 10);
 
-      if (!confirm(`Test-Newsletter senden?\n\nAn: ${testEmail}\nEvent: ${eventId}`)) {
+      if (!confirm(`Test-Newsletter senden?\n\nAn: ${testEmail}\nEvent: ${eventId}\nFormat: ${formatLabel}${baseAttendees > 0 ? `\nBasis-Zusagen: +${baseAttendees}` : ''}`)) {
         return;
       }
 
@@ -1527,7 +1553,7 @@
             'Authorization': `Bearer ${adminPassword}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ eventId, testEmail })
+          body: JSON.stringify({ eventId, testEmail, format, baseAttendees })
         });
 
         const data = await response.json();

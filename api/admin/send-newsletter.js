@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import { renderEventEmail } from '../../emails/render-event-email.js';
 import { isAuthenticated } from '../utils/auth.js';
-import { getAllSubscribers, getEventsConfig, getProfile, getUserPreferences } from '../utils/redis.js';
+import { getAllSubscribers, getEventsConfig, getProfile, getUserPreferences, getEventRSVPs } from '../utils/redis.js';
 import { generateAuthToken } from '../utils/tokens.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -15,7 +15,8 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  * Body: {
  *   eventId: string,
  *   recipients: 'all' | 'notifications' | 'engaged',
- *   testEmail?: string  // If provided, sends only to this email
+ *   testEmail?: string,  // If provided, sends only to this email
+ *   format?: 'both' | 'text'  // 'both' = HTML+Text (default), 'text' = plain text only
  * }
  *
  * Authentication: Bearer token (ADMIN_PASSWORD)
@@ -40,7 +41,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { eventId, recipients = 'all', testEmail } = req.body;
+    const { eventId, recipients = 'all', testEmail, format = 'both', baseAttendees = 0 } = req.body;
 
     if (!eventId) {
       return res.status(400).json({
@@ -71,9 +72,20 @@ export default async function handler(req, res) {
 
     const baseUrl = process.env.BASE_URL || 'https://kinn.at';
 
+    // Get RSVP counts for social proof
+    const rsvps = await getEventRSVPs(eventId);
+    const eventBaseAttendees = event.baseAttendees || 0;
+    const totalBase = parseInt(baseAttendees, 10) || eventBaseAttendees;
+    const rsvpCounts = {
+      yes: (rsvps?.counts?.yes || 0) + totalBase,
+      maybe: rsvps?.counts?.maybe || 0
+    };
+
+    console.log(`[NEWSLETTER] RSVP counts: ${rsvpCounts.yes} yes (incl. ${totalBase} base), ${rsvpCounts.maybe} maybe`);
+
     // TEST MODE: Send only to specified email
     if (testEmail) {
-      console.log(`[NEWSLETTER] TEST MODE: Sending to ${testEmail}`);
+      console.log(`[NEWSLETTER] TEST MODE: Sending to ${testEmail} (format: ${format})`);
 
       const name = testEmail.split('@')[0];
       const authToken = generateAuthToken(testEmail);
@@ -93,26 +105,36 @@ export default async function handler(req, res) {
         rsvpLinks,
         profileUrl,
         unsubscribeUrl,
-        isTest: true
+        isTest: true,
+        rsvpCounts
       });
 
-      await resend.emails.send({
+      // Build email payload based on format
+      const emailPayload = {
         from: process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>',
         to: testEmail,
         subject: `[TEST] ${event.title} - Bist du dabei?`,
-        html,
-        text,
         tags: [
           { name: 'type', value: 'newsletter-test' },
-          { name: 'event_id', value: eventId }
+          { name: 'event_id', value: eventId },
+          { name: 'format', value: format }
         ]
-      });
+      };
+
+      if (format === 'text') {
+        emailPayload.text = text;
+      } else {
+        emailPayload.html = html;
+        emailPayload.text = text;
+      }
+
+      await resend.emails.send(emailPayload);
 
       console.log(`[NEWSLETTER] Test email sent to ${testEmail}`);
 
       return res.status(200).json({
         success: true,
-        message: `Test email sent to ${testEmail}`,
+        message: `Test email sent to ${testEmail} (${format === 'text' ? 'plain text only' : 'HTML + text'})`,
         stats: { total: 1, sent: 1, failed: 0, skipped: 0 }
       });
     }
@@ -216,21 +238,31 @@ export default async function handler(req, res) {
               event,
               rsvpLinks,
               profileUrl,
-              unsubscribeUrl
+              unsubscribeUrl,
+              rsvpCounts
             });
 
-            // Send
-            await resend.emails.send({
+            // Build email payload based on format
+            const emailPayload = {
               from: process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>',
               to: email,
               subject: `${event.title} - Bist du dabei?`,
-              html,
-              text,
               tags: [
                 { name: 'type', value: 'newsletter' },
-                { name: 'event_id', value: eventId }
+                { name: 'event_id', value: eventId },
+                { name: 'format', value: format }
               ]
-            });
+            };
+
+            if (format === 'text') {
+              emailPayload.text = text;
+            } else {
+              emailPayload.html = html;
+              emailPayload.text = text;
+            }
+
+            // Send
+            await resend.emails.send(emailPayload);
 
             stats.sent++;
             console.log(`[NEWSLETTER] Sent to ${email}`);

@@ -1,11 +1,11 @@
-import { getEventsConfig } from '../utils/redis.js';
+import { getEventsConfig, getEventRSVPs } from '../utils/redis.js';
+import { renderEventEmail } from '../../emails/render-event-email.js';
 
 /**
  * Admin Endpoint: Preview Newsletter Email
- * GET /api/admin/preview-newsletter?eventId=X
+ * GET /api/admin/preview-newsletter?eventId=X&format=both|text&baseAttendees=0
  *
- * Renders inline HTML preview (professional Google Calendar design)
- * Matches React Email template design
+ * Renders inline HTML or plain text preview
  */
 export default async function handler(req, res) {
   // CORS
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { eventId } = req.query;
+    const { eventId, format = 'both', baseAttendees = '0' } = req.query;
 
     if (!eventId) {
       return res.status(400).send('<h1>Missing eventId parameter</h1>');
@@ -38,167 +38,153 @@ export default async function handler(req, res) {
 
     const baseUrl = process.env.BASE_URL || 'https://kinn.at';
 
-    // Format event date
-    const eventDate = new Date(event.start);
-    const dateStr = eventDate.toLocaleDateString('de-AT', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      timeZone: 'Europe/Vienna'
-    });
-    const timeStr = eventDate.toLocaleTimeString('de-AT', {
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'Europe/Vienna'
+    // Get RSVP counts for social proof
+    const rsvps = await getEventRSVPs(eventId);
+    const eventBaseAttendees = event.baseAttendees || 0;
+    const totalBase = parseInt(baseAttendees, 10) || eventBaseAttendees;
+    const rsvpCounts = {
+      yes: (rsvps?.counts?.yes || 0) + totalBase,
+      maybe: rsvps?.counts?.maybe || 0
+    };
+
+    // Generate email content using shared template
+    const { html, text } = renderEventEmail({
+      name: 'Thomas',  // Preview uses placeholder name
+      event,
+      rsvpLinks: {
+        yesUrl: `${baseUrl}#preview-rsvp-yes`,
+        maybeUrl: `${baseUrl}#preview-rsvp-maybe`,
+        noUrl: `${baseUrl}#preview-rsvp-no`
+      },
+      profileUrl: `${baseUrl}/api/auth/login?redirect=profil`,
+      unsubscribeUrl: `${baseUrl}/api/auth/login?redirect=settings`,
+      isTest: true,
+      rsvpCounts
     });
 
-    // Event type badge text
-    const badgeText = event.type === 'online' ? '🌐 Online Event' :
-                      event.type === 'hybrid' ? '🔀 Hybrid Event' :
-                      '📍 Präsenz Event';
-
-    // Generate professional inline HTML (matches React Email design)
-    const html = `
+    // TEXT FORMAT: Show plain text in styled container
+    if (format === 'text') {
+      const textPreviewHtml = `
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <title>${event.title}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <title>Plain Text Preview - ${event.title}</title>
+  <style>
+    body {
+      font-family: 'Work Sans', sans-serif;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      padding: 40px 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .badge {
+      display: inline-block;
+      background: #5ED9A6;
+      color: #000;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+      color: #fff;
+    }
+    .subtitle {
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      background: #252525;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+    .info-label { color: #888; }
+    .info-value { color: #5ED9A6; }
+    pre {
+      background: #0d0d0d;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-x: auto;
+      color: #d4d4d4;
+    }
+    .note {
+      margin-top: 24px;
+      padding: 16px;
+      background: rgba(94, 217, 166, 0.1);
+      border-left: 3px solid #5ED9A6;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #888;
+    }
+  </style>
 </head>
-<body style="margin: 0; padding: 40px 20px; background-color: #FFFFFF; font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Arial', sans-serif;">
-  <div style="max-width: 600px; margin: 0 auto;">
+<body>
+  <div class="container">
+    <span class="badge">TEXT-ONLY PREVIEW</span>
+    <h1>${event.title}</h1>
+    <p class="subtitle">So sieht die Plain-Text-Version der Email aus</p>
 
-    <!-- Header with Logo -->
-    <div style="text-align: center; margin-bottom: 32px; padding-top: 20px;">
-      <img src="https://kinn.at/kinn-logo.png" width="120" alt="KINN Logo" style="margin: 0 auto; display: block;">
+    <div class="info-row">
+      <span class="info-label">RSVP Counts (Social Proof)</span>
+      <span class="info-value">${rsvpCounts.yes} Zusagen, ${rsvpCounts.maybe} Vielleicht</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Social Proof angezeigt?</span>
+      <span class="info-value">${rsvpCounts.yes >= 10 ? 'Ja (10+ Zusagen)' : 'Nein (weniger als 10 Zusagen)'}</span>
     </div>
 
-    <!-- Event Type Badge -->
-    <div style="text-align: center; margin-top: 24px; margin-bottom: 16px;">
-      <span style="display: inline-block; background-color: #E0EEE9; color: #1A1A1A; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-        ${badgeText}
-      </span>
+    <pre>${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+
+    <div class="note">
+      <strong>Tipp:</strong> Plain-Text-Only Emails haben oft bessere Deliverability und landen seltener im Spam.
+      Die Social Proof Zeile ("X+ Zusagen") wird nur angezeigt, wenn mindestens 10 Personen zugesagt haben.
     </div>
-
-    <!-- Main Heading -->
-    <h1 style="font-size: 32px; font-weight: 700; color: #1A1A1A; text-align: center; line-height: 1.2; margin: 24px 0; padding: 0;">
-      ${event.title}
-    </h1>
-
-    <!-- Greeting & Intro -->
-    <p style="font-size: 16px; line-height: 1.6; color: #3A3A3A; margin: 24px 0 8px 0;">Hey Thomas!</p>
-    <p style="font-size: 16px; line-height: 1.6; color: #3A3A3A; margin: 0;">
-      Der nächste <strong>KINN Treff</strong> steht an:
-    </p>
-
-    <!-- Event Details Card -->
-    <div style="background-color: #F8F8F8; padding: 24px; border-radius: 12px; margin: 24px 0;">
-      <p style="font-size: 13px; font-weight: 600; color: #6B6B6B; margin: 12px 0 4px 0;">📅 Datum</p>
-      <p style="font-size: 16px; font-weight: 500; color: #1A1A1A; margin: 0;">${dateStr}</p>
-
-      <p style="font-size: 13px; font-weight: 600; color: #6B6B6B; margin: 12px 0 4px 0;">⏰ Uhrzeit</p>
-      <p style="font-size: 16px; font-weight: 500; color: #1A1A1A; margin: 0;">${timeStr} Uhr</p>
-
-      ${(event.type === 'in-person' || event.type === 'hybrid') && event.location ? `
-      <p style="font-size: 13px; font-weight: 600; color: #6B6B6B; margin: 12px 0 4px 0;">📍 Ort</p>
-      <p style="font-size: 16px; font-weight: 500; color: #1A1A1A; margin: 0;">${event.location}</p>
-      ` : ''}
-
-      ${(event.type === 'online' || event.type === 'hybrid') && event.meetingLink ? `
-      <p style="font-size: 13px; font-weight: 600; color: #6B6B6B; margin: 12px 0 4px 0;">💻 Online-Teilnahme</p>
-      <p style="font-size: 16px; font-weight: 500; color: #1A1A1A; margin: 0;">
-        <a href="${event.meetingLink}" style="color: #5ED9A6; text-decoration: none; font-weight: 500;">Meeting Link →</a>
-      </p>
-      ` : ''}
-    </div>
-
-    <!-- Description -->
-    ${event.description ? `
-    <p style="font-size: 16px; line-height: 1.618; color: #3A3A3A; margin: 0;">
-      ${event.description.replace(/\n/g, '<br>')}
-    </p>
-    ` : ''}
-
-    <!-- Meeting Link Section (Online/Hybrid) -->
-    ${(event.type === 'online' || event.type === 'hybrid') && event.meetingLink ? `
-    <div style="background-color: #E8F4FD; padding: 20px; border-radius: 8px; text-align: center; margin: 24px 0;">
-      <p style="font-weight: 600; font-size: 16px; margin: 0 0 12px 0; color: #1A1A1A;">
-        ${event.type === 'hybrid' ? '🎥 Online-Teilnahme auch möglich' : '🎥 Online-Meeting'}
-      </p>
-      <a href="${event.meetingLink}" style="display: inline-block; background-color: #5ED9A6; color: #000; font-weight: 600; border-radius: 8px; padding: 14px 32px; text-decoration: none; font-size: 16px; margin: 12px 0;">
-        Meeting beitreten →
-      </a>
-      <p style="font-size: 13px; color: #6B6B6B; margin: 12px 0 0 0;">Link wird 15 Minuten vor Beginn aktiviert</p>
-    </div>
-    ` : ''}
-
-    <!-- RSVP Section -->
-    <div style="margin: 32px 0;">
-      <p style="font-size: 18px; font-weight: 600; text-align: center; color: #1A1A1A; margin: 0 0 20px 0;">
-        Wirst du dabei sein?
-      </p>
-
-      <div style="text-align: center; padding-bottom: 12px;">
-        <a href="${baseUrl}#preview-rsvp-yes" style="display: inline-block; background-color: #5ED9A6; color: #000; font-weight: 600; border-radius: 8px; padding: 14px 32px; text-decoration: none; font-size: 16px; min-width: 200px; text-align: center;">
-          ✓ Zusagen
-        </a>
-      </div>
-
-      <div style="text-align: center; padding-bottom: 12px;">
-        <a href="${baseUrl}#preview-rsvp-maybe" style="display: inline-block; background-color: #FFA500; color: #000; font-weight: 600; border-radius: 8px; padding: 14px 32px; text-decoration: none; font-size: 16px; min-width: 200px; text-align: center;">
-          ? Vielleicht
-        </a>
-      </div>
-
-      <div style="text-align: center; padding-bottom: 12px;">
-        <a href="${baseUrl}#preview-rsvp-no" style="display: inline-block; background-color: #f0f0f0; color: #666; font-weight: 600; border-radius: 8px; padding: 14px 32px; text-decoration: none; font-size: 16px; min-width: 200px; text-align: center;">
-          ✗ Absagen
-        </a>
-      </div>
-
-      <p style="font-size: 14px; line-height: 1.6; color: #999; margin: 32px 0 0 0; text-align: center;">
-        Ein Klick genügt – kein Login nötig.
-      </p>
-    </div>
-
-    <!-- Profile CTA Section -->
-    <div style="margin: 32px 0 24px 0; padding: 24px; background-color: #F8F9FA; border-radius: 12px; border-left: 4px solid #5ED9A6;">
-      <p style="font-size: 15px; font-weight: 600; color: #1A1A1A; margin: 0 0 8px 0;">
-        Hilf uns, das Event auf dich zuzuschneiden
-      </p>
-      <p style="font-size: 14px; line-height: 1.6; color: #6B6B6B; margin: 0 0 16px 0;">
-        Mit deinem Profil wissen wir, welche Themen dich interessieren und
-        mit wem wir dich vernetzen können. So wird der Treff für alle wertvoller.
-      </p>
-      <a href="${baseUrl}/api/auth/login?redirect=profil" style="font-size: 14px; font-weight: 600; color: #5ED9A6; text-decoration: none;">
-        Profil aktualisieren →
-      </a>
-    </div>
-
-    <!-- Signature -->
-    <p style="font-size: 16px; line-height: 1.6; color: #3A3A3A; margin: 32px 0;">
-      Bis bald!<br>
-      <strong>Thomas</strong>
-    </p>
-
-    <!-- Footer -->
-    <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid #e0e0e0;">
-      <p style="font-size: 12px; line-height: 1.6; color: #999; margin: 0; text-align: center;">
-        <a href="${baseUrl}/api/auth/login?redirect=settings" style="color: #999; text-decoration: underline;">Abmelden</a>
-        <span style="font-size: 10px; color: #ccc;"> (+ token in production)</span>
-      </p>
-    </div>
-
   </div>
 </body>
 </html>`;
 
-    // Return raw HTML (browser displays directly)
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(200).send(textPreviewHtml);
+    }
+
+    // HTML FORMAT (default): Show rendered email
+    // Add preview badge
+    const previewHtml = html.replace(
+      '</body>',
+      `<div style="position: fixed; top: 20px; right: 20px; background: #5ED9A6; color: #000; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; font-family: 'Work Sans', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+        HTML + TEXT PREVIEW
+      </div>
+      <div style="position: fixed; bottom: 20px; left: 20px; background: #252525; color: #888; padding: 12px 16px; border-radius: 8px; font-size: 12px; font-family: 'Work Sans', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+        RSVP: ${rsvpCounts.yes} Zusagen, ${rsvpCounts.maybe} Vielleicht
+        ${rsvpCounts.yes >= 10 ? ' (Social Proof aktiv)' : ''}
+      </div>
+      </body>`
+    );
+
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.status(200).send(html);
+    res.status(200).send(previewHtml);
 
   } catch (error) {
     console.error('[PREVIEW-NEWSLETTER] Error:', error);
