@@ -217,7 +217,7 @@ export default async function handler(req, res) {
       await Promise.all(
         batch.map(async ({ email, profile, preferences }) => {
           try {
-            const name = profile?.identity?.name || preferences?.adminDisplayName || email.split('@')[0];
+            const name = profile?.identity?.name || preferences?.adminDisplayName || null;
 
             // Generate auth token (used for both RSVP and profile)
             const authToken = generateAuthToken(email);

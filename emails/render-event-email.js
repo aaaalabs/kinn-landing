@@ -6,7 +6,7 @@
  */
 
 export function renderEventEmail({
-  name = 'KINN\'der',
+  name = null,
   event,
   rsvpLinks = {},
   profileUrl,
@@ -15,6 +15,9 @@ export function renderEventEmail({
   rsvpCounts = { yes: 0, maybe: 0 }  // For social proof in plain text
 }) {
   const baseUrl = process.env.BASE_URL || 'https://kinn.at';
+
+  // Greeting: Use name if available, otherwise generic greeting
+  const greeting = name ? `Grüß dich ${name},` : 'Grüß dich,';
 
   // Format event date
   const eventDate = new Date(event.start);
@@ -65,7 +68,7 @@ export function renderEventEmail({
     </h1>
 
     <!-- Greeting & Intro -->
-    <p style="font-size: 16px; line-height: 1.6; color: #3A3A3A; margin: 24px 0 8px 0;">Hey ${name}!</p>
+    <p style="font-size: 16px; line-height: 1.6; color: #3A3A3A; margin: 24px 0 8px 0;">${greeting}</p>
     <p style="font-size: 16px; line-height: 1.6; color: #3A3A3A; margin: 0;">
       Der nächste <strong>KINN Treff</strong> steht an:
     </p>
@@ -196,7 +199,7 @@ export function renderEventEmail({
     locationInfo.push(`ONLINE:   ${event.meetingLink}`);
   }
 
-  const text = `Hey ${name}!
+  const text = `${greeting}
 
 Der nächste KINN Treff steht an - ${event.title}:
 
@@ -243,7 +246,7 @@ KINN - KI Treff Innsbruck | kinn.at`.trim();
 </head>
 <body style="margin: 0; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #333; background-color: #fff;">
 
-<p><strong>Hey ${name}!</strong></p>
+<p><strong>${greeting}</strong></p>
 
 <p>Der nächste KINN Treff steht an - <strong>${event.title}</strong>:</p>
 
