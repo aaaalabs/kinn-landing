@@ -40,7 +40,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { eventId, recipients = 'all' } = req.body;
+    const { eventId, recipients = 'all', testEmail } = req.body;
 
     if (!eventId) {
       return res.status(400).json({
@@ -49,9 +49,9 @@ export default async function handler(req, res) {
       });
     }
 
-    // Validate recipients filter
+    // Validate recipients filter (only if not test mode)
     const validFilters = ['all', 'notifications', 'engaged'];
-    if (!validFilters.includes(recipients)) {
+    if (!testEmail && !validFilters.includes(recipients)) {
       return res.status(400).json({
         error: 'Invalid recipients filter',
         message: `recipients must be one of: ${validFilters.join(', ')}`
@@ -66,6 +66,65 @@ export default async function handler(req, res) {
       return res.status(404).json({
         error: 'Event not found',
         message: `Event ${eventId} does not exist`
+      });
+    }
+
+    // TEST MODE: Send only to specified email
+    if (testEmail) {
+      console.log(`[NEWSLETTER] TEST MODE: Sending to ${testEmail}`);
+
+      const baseUrl = process.env.BASE_URL || 'https://kinn.at';
+      const name = testEmail.split('@')[0];
+      const authToken = generateAuthToken(testEmail);
+
+      const rsvpLinks = {
+        yesUrl: `${baseUrl}/api/rsvp?token=${authToken}&event=${eventId}&response=yes`,
+        maybeUrl: `${baseUrl}/api/rsvp?token=${authToken}&event=${eventId}&response=maybe`,
+        noUrl: `${baseUrl}/api/rsvp?token=${authToken}&event=${eventId}&response=no`
+      };
+
+      const profileUrl = `${baseUrl}/api/auth/login?token=${encodeURIComponent(authToken)}&redirect=profil`;
+      const unsubscribeUrl = `${baseUrl}/api/auth/login?token=${encodeURIComponent(authToken)}&redirect=settings`;
+
+      const html = await render(
+        EventAnnouncement({
+          name,
+          event,
+          rsvpLinks,
+          profileUrl,
+          unsubscribeUrl
+        })
+      );
+
+      const text = await render(
+        EventAnnouncement({
+          name,
+          event,
+          rsvpLinks,
+          profileUrl,
+          unsubscribeUrl
+        }),
+        { plainText: true }
+      );
+
+      await resend.emails.send({
+        from: process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>',
+        to: testEmail,
+        subject: `[TEST] ${event.title} – Bist du dabei?`,
+        html,
+        text,
+        tags: [
+          { name: 'type', value: 'newsletter-test' },
+          { name: 'event_id', value: eventId }
+        ]
+      });
+
+      console.log(`[NEWSLETTER] ✓ Test email sent to ${testEmail}`);
+
+      return res.status(200).json({
+        success: true,
+        message: `Test email sent to ${testEmail}`,
+        stats: { total: 1, sent: 1, failed: 0, skipped: 0 }
       });
     }
 

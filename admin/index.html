@@ -1396,6 +1396,9 @@
               <button class="btn btn-secondary" onclick="previewNewsletter('${nextEvent.id}')" style="font-size: 1rem;">
                 👁️ Preview
               </button>
+              <button class="btn btn-secondary" onclick="sendTestNewsletter('${nextEvent.id}')" style="font-size: 1rem;">
+                🧪 Test Send
+              </button>
               <button class="btn" onclick="sendNewsletterForNextEvent('${nextEvent.id}', '${nextEvent.title}')" style="font-size: 1rem;">
                 📰 Send Newsletter
               </button>
@@ -1503,6 +1506,39 @@
         }
       } catch (error) {
         console.error('[SEND-NEWSLETTER] Error:', error);
+        showMessage(`❌ Fehler beim Versenden: ${error.message}`, 'error');
+      }
+    }
+
+    // Send test newsletter to admin@libralab.ai
+    async function sendTestNewsletter(eventId) {
+      const testEmail = 'admin@libralab.ai';
+
+      if (!confirm(`Test-Newsletter senden?\n\nAn: ${testEmail}\nEvent: ${eventId}`)) {
+        return;
+      }
+
+      try {
+        showMessage('🧪 Sende Test-Newsletter...', 'info');
+
+        const response = await fetch('/api/admin/send-newsletter', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${adminPassword}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ eventId, testEmail })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showMessage(`✅ Test-Newsletter an ${testEmail} gesendet!`, 'success');
+        } else {
+          showMessage(`❌ Fehler: ${data.message || data.error}`, 'error');
+        }
+      } catch (error) {
+        console.error('[SEND-TEST-NEWSLETTER] Error:', error);
         showMessage(`❌ Fehler beim Versenden: ${error.message}`, 'error');
       }
     }
