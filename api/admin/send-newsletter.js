@@ -87,7 +87,11 @@ export default async function handler(req, res) {
     if (testEmail) {
       console.log(`[NEWSLETTER] TEST MODE: Sending to ${testEmail} (format: ${format})`);
 
-      const name = testEmail.split('@')[0];
+      // Load profile to get real name
+      const profile = await getProfile(testEmail);
+      const preferences = await getUserPreferences(testEmail);
+      const name = profile?.identity?.name || preferences?.adminDisplayName || null;
+
       const authToken = generateAuthToken(testEmail);
 
       const rsvpLinks = {
