@@ -11,10 +11,10 @@ import {
   Link
 } from '@react-email/components';
 import * as React from 'react';
-import { Header } from './components/header.jsx';
-import { EventDetailsCard } from './components/event-details-card.jsx';
-import { RSVPButtons } from './components/rsvp-buttons.jsx';
-import { MeetingLinkSection } from './components/meeting-link-section.jsx';
+import { Header } from './components/header.js';
+import { EventDetailsCard } from './components/event-details-card.js';
+import { RSVPButtons } from './components/rsvp-buttons.js';
+import { MeetingLinkSection } from './components/meeting-link-section.js';
 import { Footer } from './components/footer';
 
 export const EventAnnouncement = ({
