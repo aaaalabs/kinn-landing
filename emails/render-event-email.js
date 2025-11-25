@@ -196,11 +196,9 @@ export function renderEventEmail({
     locationInfo.push(`ONLINE:   ${event.meetingLink}`);
   }
 
-  const text = `${event.title}
+  const text = `Hey ${name}!
 
-Hey ${name}!
-
-Der nächste KINN Treff steht an:
+Der nächste KINN Treff steht an - ${event.title}:
 
 WANN:     ${dateStr}
 UHRZEIT:  ${timeStr} Uhr
