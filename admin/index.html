@@ -651,6 +651,7 @@
     // State
     let adminPassword = null;
     let eventsConfig = null;
+    let scanCounts = {};
     let editingEventIndex = null;
 
     // API base URL
@@ -782,6 +783,16 @@
       try {
         const response = await apiCall('/events');
         eventsConfig = response.data;
+
+        // Load scan counts
+        try {
+          const scansResponse = await apiCall('/scans');
+          scanCounts = scansResponse.data || {};
+        } catch (error) {
+          console.warn('Failed to load scan counts:', error);
+          scanCounts = {};
+        }
+
         renderEvents();
         return true;
       } catch (error) {
@@ -809,6 +820,7 @@
           </h3>
           <div class="event-meta">
             ${formatDate(event.date)} • ${event.startTime} - ${event.endTime}
+            ${scanCounts[event.id] ? ` • <span style="color: #5ED9A6; font-weight: 500;">📊 ${scanCounts[event.id]} unique scans</span>` : ''}
           </div>
           ${event.meetingLink ? `<div class="event-meta">💻 <a href="${event.meetingLink}" target="_blank" style="color: #5ED9A6;">Meeting Link</a></div>` : ''}
           <div class="event-meta">📍 ${event.location}</div>
