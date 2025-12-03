@@ -66,32 +66,63 @@ function fromBase62(str) {
 
 /**
  * Parse event ID to extract event number and timestamp
- * Format: "kinn-treff-{number}-{timestamp}"
+ * Supports two formats:
+ * - New: "kinn-treff-{number}-{timestamp}"
+ * - Old (legacy): "kinn-{YYYY-MM-DD}" (auto-converted)
  */
 function parseEventId(eventId) {
   if (!eventId || typeof eventId !== 'string') {
     throw new Error(`Invalid event ID type: ${typeof eventId}`);
   }
 
-  const match = eventId.match(/kinn-treff-(\d+)-(\d+)/);
+  // Try new format first: kinn-treff-{number}-{timestamp}
+  let match = eventId.match(/^kinn-treff-(\d+)-(\d+)$/);
 
-  if (!match) {
-    throw new Error(`Invalid event ID format: "${eventId}" (expected: kinn-treff-{number}-{timestamp})`);
+  if (match) {
+    const eventNumber = parseInt(match[1], 10);
+    const timestamp = parseInt(match[2], 10);
+
+    // Validate ranges
+    if (eventNumber < 1 || eventNumber > 65535) {
+      throw new Error(`Event number out of range: ${eventNumber} (must be 1-65535)`);
+    }
+
+    if (timestamp < 1600000000 || timestamp > 2500000000) {
+      throw new Error(`Timestamp out of range: ${timestamp} (must be valid Unix timestamp)`);
+    }
+
+    return { eventNumber, timestamp };
   }
 
-  const eventNumber = parseInt(match[1], 10);
-  const timestamp = parseInt(match[2], 10);
+  // Try old format: kinn-{YYYY-MM-DD} (legacy support)
+  match = eventId.match(/^kinn-(\d{4})-(\d{2})-(\d{2})$/);
 
-  // Validate ranges
-  if (eventNumber < 1 || eventNumber > 65535) {
-    throw new Error(`Event number out of range: ${eventNumber} (must be 1-65535)`);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const day = parseInt(match[3], 10);
+
+    // Create date and get timestamp (midnight UTC)
+    const date = new Date(Date.UTC(year, month - 1, day));
+    const timestamp = Math.floor(date.getTime() / 1000);
+
+    // Generate pseudo event number from date hash
+    // This ensures same old ID always gets same short link
+    const dateHash = (year * 10000 + month * 100 + day) % 10000;
+    const eventNumber = Math.max(1, dateHash); // Min 1
+
+    console.log('[Shortlink] Legacy format detected, converted:', {
+      originalId: eventId,
+      date: `${year}-${month}-${day}`,
+      eventNumber,
+      timestamp
+    });
+
+    return { eventNumber, timestamp };
   }
 
-  if (timestamp < 1600000000 || timestamp > 2500000000) {
-    throw new Error(`Timestamp out of range: ${timestamp} (must be valid Unix timestamp)`);
-  }
-
-  return { eventNumber, timestamp };
+  // Neither format matched
+  throw new Error(`Invalid event ID format: "${eventId}" (expected: kinn-treff-{number}-{timestamp} or kinn-YYYY-MM-DD)`);
 }
 
 /**
