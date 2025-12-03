@@ -153,13 +153,9 @@ export function encodeEventId(eventId) {
     const combined = (BigInt(eventNumber) << 32n) | BigInt(timestamp);
     console.log('[Shortlink] Combined BigInt:', combined.toString());
 
-    // Base62 encode (no XOR - keeps it simple and fits in 6 chars)
-    let shortId = toBase62(combined);
+    // Base62 encode (no XOR - typically 7-8 chars for event IDs)
+    const shortId = toBase62(combined);
     console.log('[Shortlink] Base62 encoded:', shortId, 'length:', shortId.length);
-
-    // Pad to exactly 6 characters
-    shortId = shortId.padStart(6, '0');
-    console.log('[Shortlink] Final short ID:', shortId);
 
     return shortId;
   } catch (error) {
@@ -180,7 +176,7 @@ export function encodeEventId(eventId) {
  */
 export function decodeShortId(shortId) {
   try {
-    if (!shortId || shortId.length !== 6) {
+    if (!shortId || shortId.length < 6 || shortId.length > 10) {
       throw new Error('Invalid short ID length');
     }
 
