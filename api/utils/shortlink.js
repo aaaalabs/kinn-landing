@@ -69,16 +69,29 @@ function fromBase62(str) {
  * Format: "kinn-treff-{number}-{timestamp}"
  */
 function parseEventId(eventId) {
+  if (!eventId || typeof eventId !== 'string') {
+    throw new Error(`Invalid event ID type: ${typeof eventId}`);
+  }
+
   const match = eventId.match(/kinn-treff-(\d+)-(\d+)/);
 
   if (!match) {
-    throw new Error('Invalid event ID format');
+    throw new Error(`Invalid event ID format: "${eventId}" (expected: kinn-treff-{number}-{timestamp})`);
   }
 
-  return {
-    eventNumber: parseInt(match[1], 10),
-    timestamp: parseInt(match[2], 10)
-  };
+  const eventNumber = parseInt(match[1], 10);
+  const timestamp = parseInt(match[2], 10);
+
+  // Validate ranges
+  if (eventNumber < 1 || eventNumber > 65535) {
+    throw new Error(`Event number out of range: ${eventNumber} (must be 1-65535)`);
+  }
+
+  if (timestamp < 1600000000 || timestamp > 2500000000) {
+    throw new Error(`Timestamp out of range: ${timestamp} (must be valid Unix timestamp)`);
+  }
+
+  return { eventNumber, timestamp };
 }
 
 /**

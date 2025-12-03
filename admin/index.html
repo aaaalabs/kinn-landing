@@ -1301,7 +1301,13 @@
         });
 
         if (!response.ok) {
-          throw new Error('Failed to generate short link');
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          console.error('Short link API error:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData
+          });
+          throw new Error(`API Error: ${errorData.error || response.statusText}`);
         }
 
         const data = await response.json();

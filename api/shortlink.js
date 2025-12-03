@@ -50,12 +50,14 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log('Generating short link for event:', eventId);
+
     // Generate short link
     const shortId = encodeEventId(eventId);
     const baseUrl = process.env.BASE_URL || 'https://kinn.at';
     const shortUrl = `${baseUrl}/s?id=${shortId}`;
 
-    console.log('Short link generated', { eventId, shortId, shortUrl });
+    console.log('Short link generated successfully', { eventId, shortId, shortUrl });
 
     return res.status(200).json({
       success: true,
@@ -66,11 +68,16 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('Short link generation error:', error);
+    console.error('Short link generation error:', {
+      eventId,
+      error: error.message,
+      stack: error.stack
+    });
 
     return res.status(500).json({
       error: 'Failed to generate short link',
-      message: error.message
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 }
