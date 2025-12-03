@@ -20,6 +20,10 @@
   ],
   "rewrites": [
     {
+      "source": "/s",
+      "destination": "/api/s"
+    },
+    {
       "source": "/pages/:path*",
       "destination": "/pages/:path*"
     }
