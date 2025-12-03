@@ -59,19 +59,26 @@ export default async function handler(req, res) {
         return res.redirect(302, '/pages/discord-error.html?reason=event_not_found');
       }
 
-      // Same validation as auth endpoint
-      const eventDate = new Date(event.date).toDateString();
-      const today = new Date().toDateString();
+      // Same validation as auth endpoint: allow future, block only if grace period expired
       const eventEnd = new Date(event.end);
       const now = new Date();
-      const gracePeriodMs = 4 * 60 * 60 * 1000; // 4 hours
+      const gracePeriodMs = 4 * 60 * 60 * 1000; // 4 hours after event end
 
-      if (eventDate !== today || now > new Date(eventEnd.getTime() + gracePeriodMs)) {
-        console.log('Discord OAuth: Event expired during OAuth flow:', { eventDate, today, eventEnd, now });
+      // Only block if event ended more than 4h ago
+      if (now > new Date(eventEnd.getTime() + gracePeriodMs)) {
+        console.log('Discord OAuth: Event expired during OAuth flow:', {
+          eventEnd: eventEnd.toISOString(),
+          now: now.toISOString(),
+          eventId: stateData.event
+        });
         return res.redirect(302, '/pages/discord-error.html?reason=event_invalid');
       }
 
-      console.log('Discord OAuth: Event re-validated in callback:', { eventId: stateData.event });
+      console.log('Discord OAuth: Event re-validated in callback:', {
+        eventId: stateData.event,
+        eventEnd: eventEnd.toISOString(),
+        gracePeriodEnd: new Date(eventEnd.getTime() + gracePeriodMs).toISOString()
+      });
     } catch (validationError) {
       console.error('Discord OAuth: Event validation error:', validationError);
       return res.redirect(302, '/pages/discord-error.html?reason=auth_failed');

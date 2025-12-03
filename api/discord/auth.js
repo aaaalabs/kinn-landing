@@ -61,24 +61,28 @@ export default async function handler(req, res) {
       return res.redirect(302, '/pages/discord-error.html?reason=event_not_found');
     }
 
-    // Simple validation: Event must be today + within grace period
-    const eventDate = new Date(event.date).toDateString();
-    const today = new Date().toDateString();
+    // Validation: Allow future events, block only if grace period expired
     const eventEnd = new Date(event.end);
     const now = new Date();
-    const gracePeriodMs = 4 * 60 * 60 * 1000; // 4 hours
+    const gracePeriodMs = 4 * 60 * 60 * 1000; // 4 hours after event end
 
-    if (eventDate !== today) {
-      console.log('Discord OAuth: Event wrong date:', { eventDate, today, eventId });
-      return res.redirect(302, '/pages/discord-error.html?reason=event_invalid');
-    }
-
+    // Only block if event ended more than 4h ago
     if (now > new Date(eventEnd.getTime() + gracePeriodMs)) {
-      console.log('Discord OAuth: Event grace period expired:', { eventEnd, now, eventId });
+      console.log('Discord OAuth: Event grace period expired:', {
+        eventEnd: eventEnd.toISOString(),
+        now: now.toISOString(),
+        eventId
+      });
       return res.redirect(302, '/pages/discord-error.html?reason=event_invalid');
     }
 
-    console.log('Discord OAuth: Event validated:', { eventId, title: event.title });
+    // Allow: future events, current events, recent past events (< 4h)
+    console.log('Discord OAuth: Event validated:', {
+      eventId,
+      title: event.title,
+      eventEnd: eventEnd.toISOString(),
+      gracePeriodEnd: new Date(eventEnd.getTime() + gracePeriodMs).toISOString()
+    });
 
     // Generate CSRF protection state with event ID
     const state = Buffer.from(JSON.stringify({
