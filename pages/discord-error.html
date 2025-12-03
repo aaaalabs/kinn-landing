@@ -317,6 +317,27 @@
   <script>
     // Error messages based on reason
     const errorMessages = {
+      // Event validation errors (new)
+      missing_event: {
+        title: 'Ungültiger Link',
+        description: 'Dieser Link enthält keine Event-Information.',
+        details: 'Bitte scanne den QR Code direkt am KINN Event.',
+        showTroubleshooting: false
+      },
+      event_not_found: {
+        title: 'Event nicht gefunden',
+        description: 'Dieser QR Code ist ungültig.',
+        details: 'Der Code könnte veraltet sein. Bitte frage beim KINN Team nach dem aktuellen QR Code.',
+        showTroubleshooting: false
+      },
+      event_invalid: {
+        title: 'QR Code nicht aktiv',
+        description: 'Dieser Code funktioniert nur am Event-Tag.',
+        details: 'Discord-Zugang ist nur während KINN Events möglich. Komm beim nächsten Treff vorbei!',
+        showTroubleshooting: false
+      },
+
+      // OAuth errors (existing)
       cancelled: {
         title: 'Autorisierung abgebrochen',
         description: 'Du hast die Discord-Autorisierung abgebrochen.',

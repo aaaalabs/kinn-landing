@@ -1,7 +1,10 @@
 /**
  * Discord OAuth2 - Authorization Callback
- * Handles the OAuth2 callback, assigns KINNder role, and redirects to success/error page
+ * Handles the OAuth2 callback, assigns KINN'der role, and redirects to success/error page
+ * Re-validates event to ensure it's still active (OAuth flow can take time)
  */
+
+import { getEventsConfig } from '../utils/redis.js';
 
 export default async function handler(req, res) {
   // CORS headers
@@ -34,6 +37,45 @@ export default async function handler(req, res) {
   if (!code) {
     console.error('Discord OAuth Error: Missing authorization code');
     return res.redirect(302, '/pages/discord-error.html?reason=missing_code');
+  }
+
+  // Decode and validate state (contains event ID)
+  let stateData;
+  try {
+    stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+  } catch (e) {
+    console.error('Discord OAuth: Invalid state:', e);
+    return res.redirect(302, '/pages/discord-error.html?reason=auth_failed');
+  }
+
+  // Re-validate event (OAuth flow can take time, event might have expired)
+  if (stateData.event) {
+    try {
+      const eventsConfig = await getEventsConfig();
+      const event = eventsConfig?.events?.find(e => e.id === stateData.event);
+
+      if (!event) {
+        console.error('Discord OAuth: Event disappeared:', stateData.event);
+        return res.redirect(302, '/pages/discord-error.html?reason=event_not_found');
+      }
+
+      // Same validation as auth endpoint
+      const eventDate = new Date(event.date).toDateString();
+      const today = new Date().toDateString();
+      const eventEnd = new Date(event.end);
+      const now = new Date();
+      const gracePeriodMs = 4 * 60 * 60 * 1000; // 4 hours
+
+      if (eventDate !== today || now > new Date(eventEnd.getTime() + gracePeriodMs)) {
+        console.log('Discord OAuth: Event expired during OAuth flow:', { eventDate, today, eventEnd, now });
+        return res.redirect(302, '/pages/discord-error.html?reason=event_invalid');
+      }
+
+      console.log('Discord OAuth: Event re-validated in callback:', { eventId: stateData.event });
+    } catch (validationError) {
+      console.error('Discord OAuth: Event validation error:', validationError);
+      return res.redirect(302, '/pages/discord-error.html?reason=auth_failed');
+    }
   }
 
   try {

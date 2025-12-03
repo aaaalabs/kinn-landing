@@ -1,7 +1,10 @@
 /**
  * Discord OAuth2 - Authorization Start
  * Initiates the OAuth2 flow by redirecting to Discord's authorization page
+ * Validates that request is from an active event (same-day verification)
  */
+
+import { getEventsConfig } from '../utils/redis.js';
 
 export default async function handler(req, res) {
   // CORS headers
@@ -34,11 +37,54 @@ export default async function handler(req, res) {
     });
   }
 
+  // Event validation - QR codes only work on event day
+  const { event: eventId } = req.query;
+
+  if (!eventId) {
+    console.error('Discord OAuth: Missing event ID');
+    return res.redirect(302, '/pages/discord-error.html?reason=missing_event');
+  }
+
   try {
-    // Generate CSRF protection state
+    // Fetch event from Redis
+    const eventsConfig = await getEventsConfig();
+
+    if (!eventsConfig || !eventsConfig.events) {
+      console.error('Discord OAuth: No events in Redis');
+      return res.redirect(302, '/pages/discord-error.html?reason=event_not_found');
+    }
+
+    const event = eventsConfig.events.find(e => e.id === eventId);
+
+    if (!event) {
+      console.error('Discord OAuth: Event not found:', eventId);
+      return res.redirect(302, '/pages/discord-error.html?reason=event_not_found');
+    }
+
+    // Simple validation: Event must be today + within grace period
+    const eventDate = new Date(event.date).toDateString();
+    const today = new Date().toDateString();
+    const eventEnd = new Date(event.end);
+    const now = new Date();
+    const gracePeriodMs = 4 * 60 * 60 * 1000; // 4 hours
+
+    if (eventDate !== today) {
+      console.log('Discord OAuth: Event wrong date:', { eventDate, today, eventId });
+      return res.redirect(302, '/pages/discord-error.html?reason=event_invalid');
+    }
+
+    if (now > new Date(eventEnd.getTime() + gracePeriodMs)) {
+      console.log('Discord OAuth: Event grace period expired:', { eventEnd, now, eventId });
+      return res.redirect(302, '/pages/discord-error.html?reason=event_invalid');
+    }
+
+    console.log('Discord OAuth: Event validated:', { eventId, title: event.title });
+
+    // Generate CSRF protection state with event ID
     const state = Buffer.from(JSON.stringify({
       ts: Date.now(),
-      nonce: Math.random().toString(36).substring(7)
+      nonce: Math.random().toString(36).substring(7),
+      event: eventId  // Store for callback validation
     })).toString('base64');
 
     // Build Discord OAuth2 authorization URL
