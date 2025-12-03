@@ -11,7 +11,7 @@
  */
 
 import { decodeShortId, validateShortId } from './utils/shortlink.js';
-import { getEventsConfig } from './utils/redis.js';
+import { getEventsConfig, redis } from './utils/redis.js';
 
 export default async function handler(req, res) {
   // Only allow GET requests
@@ -112,6 +112,10 @@ export default async function handler(req, res) {
       eventId,
       eventTitle: event.title
     });
+
+    // Track unique scan (IP-based)
+    const userIp = req.headers['x-forwarded-for']?.split(',')[0] || req.headers['x-real-ip'] || 'unknown';
+    await redis.sadd(`scan:${eventId}:unique`, userIp);
 
     // Redirect to Discord OAuth with full event ID
     const redirectUrl = `/api/discord/auth?event=${eventId}`;
