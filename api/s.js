@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     return res.redirect(302, '/pages/discord-error.html?reason=event_not_found');
   }
 
-  const eventId = validation.eventId;
+  let eventId = validation.eventId; // Use 'let' to allow reassignment for legacy events
   console.log('[Short Link] Decoded successfully:', { shortId, eventId });
 
   try {
