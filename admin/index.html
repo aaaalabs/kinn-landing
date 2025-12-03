@@ -469,9 +469,9 @@
 
           <div class="form-group">
             <label>Event ID (wird automatisch generiert)</label>
-            <input type="text" id="event-id" placeholder="kinn-2025-02-15" readonly style="background: #e9ecef; cursor: not-allowed;" />
+            <input type="text" id="event-id" placeholder="kinn-treff-13-1733234567" readonly style="background: #e9ecef; cursor: not-allowed;" />
             <small style="display: block; margin-top: 0.5rem; color: #6B6B6B; font-size: 0.875rem;">
-              Format: kinn-YYYY-MM-DD (basierend auf Event-Datum)
+              Format: kinn-treff-{nummer}-{timestamp} - Nummer zählt automatisch hoch
             </small>
           </div>
 
@@ -894,6 +894,10 @@
       } else {
         // Add mode
         clearEventForm();
+
+        // Show next event number in placeholder
+        const nextEventNumber = (eventsConfig.events || []).length + 1;
+        document.getElementById('event-id').placeholder = `kinn-treff-${nextEventNumber}-[timestamp]`;
       }
 
       // Scroll to form
@@ -907,9 +911,25 @@
         return;
       }
 
-      // Format: kinn-YYYY-MM-DD
-      const eventId = `kinn-${dateInput}`;
+      // Automatic sequential numbering: count existing events + 1
+      const existingEvents = eventsConfig.events || [];
+      const nextEventNumber = existingEvents.length + 1;
+
+      // Generate timestamp from selected date (00:00:00 local time)
+      const selectedDate = new Date(dateInput + 'T00:00:00');
+      const timestamp = Math.floor(selectedDate.getTime() / 1000);
+
+      // Format: kinn-treff-{number}-{timestamp}
+      const eventId = `kinn-treff-${nextEventNumber}-${timestamp}`;
       document.getElementById('event-id').value = eventId;
+
+      console.log('Auto-generated Event ID:', {
+        eventNumber: nextEventNumber,
+        totalEvents: existingEvents.length,
+        date: dateInput,
+        timestamp,
+        eventId
+      });
     }
 
     function clearEventForm() {
