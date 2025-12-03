@@ -827,12 +827,14 @@
           ` : ''}
 
           <div class="event-actions">
-            <button class="btn btn-small" style="background: #5ED9A6; color: #000;" onclick="sendEventInvites('${event.id}', '${event.title}')">
-              📧 Send Invites
-            </button>
-            <button class="btn btn-small" style="background: #7C3AED; color: white;" onclick="showDiscordQR('${event.id}', '${event.title}')">
-              🔗 Discord QR
-            </button>
+            ${isUpcomingOrToday(event.date) ? `
+              <button class="btn btn-small" style="background: #5ED9A6; color: #000;" onclick="sendEventInvites('${event.id}', '${event.title}')">
+                📧 Send Invites
+              </button>
+              <button class="btn btn-small" style="background: #7C3AED; color: white;" onclick="showDiscordQR('${event.id}', '${event.title}')">
+                🔗 Discord QR
+              </button>
+            ` : ''}
             <button class="btn btn-small" style="background: #3B82F6; color: white;" onclick="openEngagement('${event.id}')">
               📊 Engagement
             </button>
@@ -869,6 +871,14 @@
         'hybrid': '<span style="display: inline-block; padding: 4px 12px; background: #8B5CF6; color: white; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem;">Hybrid</span>'
       };
       return badges[type] || '<span style="display: inline-block; padding: 4px 12px; background: #999; color: white; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem;">Präsenz</span>';
+    }
+
+    function isUpcomingOrToday(dateStr) {
+      const eventDate = new Date(dateStr);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      eventDate.setHours(0, 0, 0, 0);
+      return eventDate >= today;
     }
 
     function showEventForm(event = null) {

@@ -46,7 +46,36 @@ export default async function handler(req, res) {
       return res.redirect(302, '/pages/discord-error.html?reason=event_not_found');
     }
 
-    const event = eventsConfig.events.find(e => e.id === eventId);
+    // Try to find event by exact ID match first
+    let event = eventsConfig.events.find(e => e.id === eventId);
+
+    // If not found, try to find by date (for legacy events)
+    if (!event) {
+      console.log('Short link: Exact ID not found, trying date match', { eventId, shortId });
+
+      // Extract timestamp from decoded event ID
+      const timestampMatch = eventId.match(/-(\d+)$/);
+      if (timestampMatch) {
+        const timestamp = parseInt(timestampMatch[1], 10);
+        const date = new Date(timestamp * 1000);
+        const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+
+        // Try to find event with matching date (old format: kinn-YYYY-MM-DD)
+        const legacyEventId = `kinn-${dateStr}`;
+        event = eventsConfig.events.find(e => e.id === legacyEventId);
+
+        if (event) {
+          console.log('Short link: Found legacy event by date', {
+            shortId,
+            decodedId: eventId,
+            actualId: legacyEventId,
+            eventTitle: event.title
+          });
+          // Use the actual event ID for redirect
+          eventId = event.id;
+        }
+      }
+    }
 
     if (!event) {
       console.error('Short link: Event not found in Redis', { eventId, shortId });
