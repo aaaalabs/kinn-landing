@@ -11,7 +11,7 @@
  */
 
 import { decodeShortId, validateShortId } from './utils/shortlink.js';
-import { getEventsConfig, redis } from './utils/redis.js';
+import { getEventsConfig, getRedisClient } from './utils/redis.js';
 
 export default async function handler(req, res) {
   // Only allow GET requests
@@ -114,6 +114,7 @@ export default async function handler(req, res) {
     });
 
     // Track unique scan (IP-based)
+    const redis = getRedisClient();
     const userIp = req.headers['x-forwarded-for']?.split(',')[0] || req.headers['x-real-ip'] || 'unknown';
     await redis.sadd(`scan:${eventId}:unique`, userIp);
 
