@@ -147,32 +147,21 @@ export function encodeEventId(eventId) {
 
     const { eventNumber, timestamp } = parsed;
 
-    // Combine into 64-bit number:
+    // Combine into 48-bit number (fits in 6 Base62 chars):
     // Upper 16 bits: event number (0-65535)
-    // Lower 48 bits: timestamp (good until year 8921)
-    const combined = (BigInt(eventNumber) << 48n) | BigInt(timestamp);
+    // Lower 32 bits: timestamp (Unix time, good until year 2106)
+    const combined = (BigInt(eventNumber) << 32n) | BigInt(timestamp);
     console.log('[Shortlink] Combined BigInt:', combined.toString());
 
-    // XOR with cipher key for security
-    const cipherKey = getCipherKey();
-    console.log('[Shortlink] Cipher key generated:', typeof cipherKey);
-
-    const encoded = combined ^ cipherKey;
-    console.log('[Shortlink] XOR encoded:', encoded.toString());
-
-    // Base62 encode
-    let shortId = toBase62(encoded);
-    console.log('[Shortlink] Base62 encoded:', shortId);
+    // Base62 encode (no XOR - keeps it simple and fits in 6 chars)
+    let shortId = toBase62(combined);
+    console.log('[Shortlink] Base62 encoded:', shortId, 'length:', shortId.length);
 
     // Pad to exactly 6 characters
     shortId = shortId.padStart(6, '0');
-    console.log('[Shortlink] Padded:', shortId);
+    console.log('[Shortlink] Final short ID:', shortId);
 
-    // Take first 6 chars (in case encoding is longer)
-    const result = shortId.substring(0, 6);
-    console.log('[Shortlink] Final short ID:', result);
-
-    return result;
+    return shortId;
   } catch (error) {
     console.error('[Shortlink] Encoding error:', {
       eventId,
@@ -196,22 +185,18 @@ export function decodeShortId(shortId) {
     }
 
     // Base62 decode
-    const encoded = fromBase62(shortId);
-
-    // XOR decrypt
-    const cipherKey = getCipherKey();
-    const combined = encoded ^ cipherKey;
+    const combined = fromBase62(shortId);
 
     console.log('[Shortlink] Decoding details:', {
       shortId,
-      encoded: encoded.toString(),
-      cipherKey: cipherKey.toString(),
       combined: combined.toString()
     });
 
-    // Extract event number and timestamp
-    const eventNumber = Number(combined >> 48n);
-    const timestamp = Number(combined & 0xFFFFFFFFFFFFn);
+    // Extract event number and timestamp (no XOR, simple bit extraction)
+    // Upper 16 bits: event number
+    // Lower 32 bits: timestamp
+    const eventNumber = Number(combined >> 32n);
+    const timestamp = Number(combined & 0xFFFFFFFFn);
 
     console.log('[Shortlink] Extracted values:', {
       eventNumber,
