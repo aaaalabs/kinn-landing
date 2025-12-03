@@ -202,16 +202,31 @@ export function decodeShortId(shortId) {
     const cipherKey = getCipherKey();
     const combined = encoded ^ cipherKey;
 
+    console.log('[Shortlink] Decoding details:', {
+      shortId,
+      encoded: encoded.toString(),
+      cipherKey: cipherKey.toString(),
+      combined: combined.toString()
+    });
+
     // Extract event number and timestamp
     const eventNumber = Number(combined >> 48n);
     const timestamp = Number(combined & 0xFFFFFFFFFFFFn);
 
+    console.log('[Shortlink] Extracted values:', {
+      eventNumber,
+      timestamp,
+      timestampDate: new Date(timestamp * 1000).toISOString()
+    });
+
     // Validate extracted values
     if (eventNumber < 1 || eventNumber > 65535) {
+      console.error('[Shortlink] Invalid event number:', eventNumber);
       throw new Error('Invalid event number');
     }
 
     if (timestamp < 1600000000 || timestamp > 2500000000) {
+      console.error('[Shortlink] Invalid timestamp:', timestamp, 'Expected range: 1600000000-2500000000');
       throw new Error('Invalid timestamp');
     }
 
