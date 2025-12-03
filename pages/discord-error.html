@@ -242,8 +242,8 @@
     <!-- Status indicator -->
     <div class="error-indicator">
       <svg viewBox="0 0 24 24">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
       </svg>
     </div>
 
@@ -289,7 +289,7 @@
       event_invalid: {
         title: 'QR Code abgelaufen',
         description: 'QR Codes funktionieren bis 4 Stunden nach Event-Ende.',
-        details: 'Du warst beim Event und willst auf Discord? Melde dich kurz via WhatsApp (+43 660 123 81 72) oder LinkedIn (thomas-seiger) – Thomas verifiziert und schickt dir den Discord-Link.',
+        details: 'Du warst beim Event und willst auf Discord? Melde dich kurz via <a href="https://wa.me/436601238172" target="_blank" style="color: #5ED9A6; font-weight: 600;">WhatsApp</a> oder <a href="https://www.linkedin.com/in/thomasseiger/" target="_blank" style="color: #5ED9A6; font-weight: 600;">LinkedIn</a> – Thomas verifiziert und schickt dir den Discord-Link.',
         showTroubleshooting: false
       },
 
@@ -322,7 +322,7 @@
     // Update page content - simple, no card wrapper
     document.getElementById('error-title').textContent = errorInfo.title;
     document.getElementById('error-description').textContent = errorInfo.description;
-    document.getElementById('error-details').textContent = errorInfo.details;
+    document.getElementById('error-details').innerHTML = errorInfo.details; // Use innerHTML for links
   </script>
 </body>
 </html>
