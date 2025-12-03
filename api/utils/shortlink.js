@@ -109,28 +109,46 @@ function constructEventId(eventNumber, timestamp) {
  */
 export function encodeEventId(eventId) {
   try {
-    const { eventNumber, timestamp } = parseEventId(eventId);
+    console.log('[Shortlink] Starting encoding for:', eventId);
+
+    const parsed = parseEventId(eventId);
+    console.log('[Shortlink] Parsed:', parsed);
+
+    const { eventNumber, timestamp } = parsed;
 
     // Combine into 64-bit number:
     // Upper 16 bits: event number (0-65535)
     // Lower 48 bits: timestamp (good until year 8921)
     const combined = (BigInt(eventNumber) << 48n) | BigInt(timestamp);
+    console.log('[Shortlink] Combined BigInt:', combined.toString());
 
     // XOR with cipher key for security
     const cipherKey = getCipherKey();
+    console.log('[Shortlink] Cipher key generated:', typeof cipherKey);
+
     const encoded = combined ^ cipherKey;
+    console.log('[Shortlink] XOR encoded:', encoded.toString());
 
     // Base62 encode
     let shortId = toBase62(encoded);
+    console.log('[Shortlink] Base62 encoded:', shortId);
 
     // Pad to exactly 6 characters
     shortId = shortId.padStart(6, '0');
+    console.log('[Shortlink] Padded:', shortId);
 
     // Take first 6 chars (in case encoding is longer)
-    return shortId.substring(0, 6);
+    const result = shortId.substring(0, 6);
+    console.log('[Shortlink] Final short ID:', result);
+
+    return result;
   } catch (error) {
-    console.error('Shortlink encoding error:', error);
-    throw new Error('Failed to encode event ID');
+    console.error('[Shortlink] Encoding error:', {
+      eventId,
+      error: error.message,
+      stack: error.stack
+    });
+    throw new Error(`Failed to encode event ID: ${error.message}`);
   }
 }
 
