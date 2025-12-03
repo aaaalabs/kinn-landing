@@ -1280,22 +1280,53 @@
     }
 
     // Open Engagement Tracking Page
-    function showDiscordQR(eventId, eventTitle) {
-      const baseUrl = 'https://kinn.at';
-      const discordUrl = `${baseUrl}/api/discord/auth?event=${eventId}`;
+    async function showDiscordQR(eventId, eventTitle) {
+      // Show loading modal first
+      const loadingHtml = `
+        <div id="qr-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+          <div style="background: white; border-radius: 16px; padding: 2rem; max-width: 600px; width: 90%; text-align: center;">
+            <h2 style="margin-bottom: 1rem; color: #2C3E50;">Generiere Short Link...</h2>
+            <p style="color: #6B6B6B;">Einen Moment bitte...</p>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', loadingHtml);
 
-      const modalHtml = `
-        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 10000;" onclick="this.remove()">
+      try {
+        // Fetch short link from API
+        const response = await fetch(`/api/shortlink?eventId=${encodeURIComponent(eventId)}`, {
+          headers: {
+            'Authorization': `Bearer ${adminPassword}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to generate short link');
+        }
+
+        const data = await response.json();
+        const shortUrl = data.shortUrl;
+        const shortId = data.shortId;
+
+        // Replace loading modal with full modal
+        const modal = document.getElementById('qr-modal');
+        modal.innerHTML = `
           <div style="background: white; border-radius: 16px; padding: 2rem; max-width: 600px; width: 90%;" onclick="event.stopPropagation()">
             <h2 style="margin-bottom: 1rem; color: #2C3E50;">Discord QR Code</h2>
-            <p style="margin-bottom: 1rem; color: #6B6B6B;"><strong>${eventTitle}</strong></p>
+            <p style="margin-bottom: 1.5rem; color: #6B6B6B;"><strong>${eventTitle}</strong></p>
 
-            <div style="background: #f9f9f9; border: 2px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; font-family: monospace; font-size: 0.9rem; word-break: break-all;">
-              ${discordUrl}
+            <!-- Short Link (Primary) -->
+            <div style="margin-bottom: 0.5rem;">
+              <label style="display: block; font-size: 0.75rem; font-weight: 600; color: #7C3AED; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                🔗 Short Link (für QR Code)
+              </label>
+              <div style="background: linear-gradient(135deg, #7C3AED 0%, #6366F1 100%); border: none; border-radius: 8px; padding: 1rem; font-family: monospace; font-size: 1rem; font-weight: 600; color: white; word-break: break-all;">
+                ${shortUrl}
+              </div>
             </div>
 
             <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
-              <button onclick="copyToClipboard('${discordUrl}')" style="flex: 1; padding: 12px; background: #5ED9A6; color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+              <button onclick="copyToClipboard('${shortUrl}')" style="flex: 1; padding: 12px; background: #5ED9A6; color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
                 📋 URL kopieren
               </button>
               <button onclick="window.open('https://qr-code-generator.com/', '_blank')" style="flex: 1; padding: 12px; background: #7C3AED; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
@@ -1303,22 +1334,43 @@
               </button>
             </div>
 
-            <div style="background: rgba(94, 217, 166, 0.08); border-radius: 8px; padding: 1rem; font-size: 0.875rem; color: #333; line-height: 1.6;">
-              <strong>📱 QR Code erstellen:</strong><br>
-              1. Klick auf "QR erstellen" (öffnet qr-code-generator.com)<br>
-              2. Paste die URL (Cmd/Ctrl+V)<br>
-              3. Download als PNG oder SVG<br>
-              4. QR Code beim Event auslegen
+            <!-- Info Box -->
+            <div style="background: rgba(94, 217, 166, 0.08); border-radius: 8px; padding: 1rem; font-size: 0.875rem; color: #333; line-height: 1.6; margin-bottom: 1rem;">
+              <strong>✅ Vorteile Short Link:</strong><br>
+              • Einfacherer QR Code (besser scanbar)<br>
+              • 6-Zeichen verschlüsselt (${shortId})<br>
+              • Schwerer zu faken<br>
+              • Professioneller Look
             </div>
 
-            <button onclick="this.closest('[style*=fixed]').remove()" style="margin-top: 1rem; width: 100%; padding: 12px; background: #f0f0f0; color: #333; border: none; border-radius: 8px; font-weight: 500; cursor: pointer;">
+            <!-- Full URL (Reference only) -->
+            <details style="margin-bottom: 1rem;">
+              <summary style="cursor: pointer; font-size: 0.875rem; color: #999; padding: 0.5rem;">
+                🔍 Vollständige URL anzeigen
+              </summary>
+              <div style="background: #f9f9f9; border: 2px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-top: 0.5rem; font-family: monospace; font-size: 0.75rem; word-break: break-all; color: #666;">
+                https://kinn.at/api/discord/auth?event=${eventId}
+              </div>
+            </details>
+
+            <button onclick="document.getElementById('qr-modal').remove()" style="width: 100%; padding: 12px; background: #f0f0f0; color: #333; border: none; border-radius: 8px; font-weight: 500; cursor: pointer;">
               Schließen
             </button>
           </div>
-        </div>
-      `;
+        `;
 
-      document.body.insertAdjacentHTML('beforeend', modalHtml);
+        // Click outside to close
+        modal.onclick = (e) => {
+          if (e.target.id === 'qr-modal') {
+            modal.remove();
+          }
+        };
+
+      } catch (error) {
+        console.error('Error generating short link:', error);
+        document.getElementById('qr-modal').remove();
+        showMessage('❌ Fehler beim Generieren des Short Links', 'error');
+      }
     }
 
     function copyToClipboard(text) {
