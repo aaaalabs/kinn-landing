@@ -36,6 +36,7 @@ export default async function handler(req, res) {
   }
 
   const eventId = validation.eventId;
+  console.log('[Short Link] Decoded successfully:', { shortId, eventId });
 
   try {
     // Verify event exists in Redis
@@ -46,33 +47,57 @@ export default async function handler(req, res) {
       return res.redirect(302, '/pages/discord-error.html?reason=event_not_found');
     }
 
+    // Log all events for debugging
+    console.log('[Short Link] Available events:', {
+      count: eventsConfig.events.length,
+      eventIds: eventsConfig.events.map(e => e.id)
+    });
+
     // Try to find event by exact ID match first
     let event = eventsConfig.events.find(e => e.id === eventId);
+    console.log('[Short Link] Exact ID match:', { eventId, found: !!event });
 
     // If not found, try to find by date (for legacy events)
     if (!event) {
-      console.log('Short link: Exact ID not found, trying date match', { eventId, shortId });
+      console.log('[Short Link] Trying date match for legacy event...');
 
       // Extract timestamp from decoded event ID
       const timestampMatch = eventId.match(/-(\d+)$/);
       if (timestampMatch) {
         const timestamp = parseInt(timestampMatch[1], 10);
         const date = new Date(timestamp * 1000);
-        const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+        const dateUTC = date.toISOString().split('T')[0]; // YYYY-MM-DD (UTC)
 
-        // Try to find event with matching date (old format: kinn-YYYY-MM-DD)
-        const legacyEventId = `kinn-${dateStr}`;
-        event = eventsConfig.events.find(e => e.id === legacyEventId);
+        // Also try local date (might differ due to timezone)
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateLocal = `${year}-${month}-${day}`; // YYYY-MM-DD (Local)
+
+        console.log('[Short Link] Timestamp conversion:', {
+          timestamp,
+          dateUTC,
+          dateLocal,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        });
+
+        // Try both UTC and local date formats
+        const legacyIdUTC = `kinn-${dateUTC}`;
+        const legacyIdLocal = `kinn-${dateLocal}`;
+
+        event = eventsConfig.events.find(e => e.id === legacyIdUTC || e.id === legacyIdLocal);
 
         if (event) {
-          console.log('Short link: Found legacy event by date', {
+          console.log('[Short Link] Found legacy event by date:', {
             shortId,
             decodedId: eventId,
-            actualId: legacyEventId,
+            actualId: event.id,
             eventTitle: event.title
           });
           // Use the actual event ID for redirect
           eventId = event.id;
+        } else {
+          console.log('[Short Link] No match found for:', { legacyIdUTC, legacyIdLocal });
         }
       }
     }
