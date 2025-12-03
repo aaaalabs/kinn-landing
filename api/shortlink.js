@@ -54,7 +54,7 @@ export default async function handler(req, res) {
 
     // Generate short link
     const shortId = encodeEventId(eventId);
-    const baseUrl = process.env.BASE_URL || 'https://kinn.at';
+    const baseUrl = (process.env.BASE_URL || 'https://kinn.at').trim();
     const shortUrl = `${baseUrl}/s?id=${shortId}`;
 
     console.log('Short link generated successfully', { eventId, shortId, shortUrl });

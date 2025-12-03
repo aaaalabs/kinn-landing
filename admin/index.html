@@ -1352,7 +1352,7 @@
             </div>
 
             <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
-              <button onclick="copyToClipboard('${shortUrl}')" style="flex: 1; padding: 12px; background: #5ED9A6; color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+              <button id="copy-shortlink-btn" data-url="${shortUrl}" style="flex: 1; padding: 12px; background: #5ED9A6; color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
                 📋 URL kopieren
               </button>
               <button onclick="window.open('https://www.adobe.com/express/feature/image/qr-code-generator', '_blank')" style="flex: 1; padding: 12px; background: #7C3AED; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
@@ -1391,6 +1391,15 @@
             modal.remove();
           }
         };
+
+        // Copy button event listener
+        const copyBtn = document.getElementById('copy-shortlink-btn');
+        if (copyBtn) {
+          copyBtn.addEventListener('click', () => {
+            const url = copyBtn.getAttribute('data-url');
+            copyToClipboard(url);
+          });
+        }
 
       } catch (error) {
         console.error('Error generating short link:', error);
