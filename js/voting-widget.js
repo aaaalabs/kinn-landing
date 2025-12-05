@@ -183,6 +183,12 @@ export function initVotingWidget(container, token) {
     const sorted = [...topics].sort((a, b) => b.votes - a.votes);
     const totalVotes = sorted.reduce((sum, t) => sum + t.votes, 0);
 
+    // Update vote count in Dashboard if element exists
+    const voteCountElement = document.getElementById('vote-count');
+    if (voteCountElement) {
+      voteCountElement.textContent = totalVotes > 0 ? `${totalVotes} ${totalVotes === 1 ? 'Stimme' : 'Stimmen'}` : '';
+    }
+
     // HTML structure
     container.innerHTML = `
       <div class="voting-widget">
