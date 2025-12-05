@@ -203,7 +203,6 @@ export function initVotingWidget(container, token) {
                  data-topic-id="${topic.id}">
               <div class="topic-info">
                 <div class="topic-title">${escapeHtml(topic.title)}</div>
-                <div class="topic-author">${escapeHtml(topic.authorName)}</div>
               </div>
               <div class="topic-votes">${topic.votes}</div>
             </div>
@@ -306,17 +305,6 @@ export function initVotingWidget(container, token) {
           line-height: 1.4;
         }
 
-        .topic-author {
-          font-size: 0.75rem;
-          font-weight: 400;
-          color: #999;
-          opacity: 0;
-          transition: opacity 0.2s;
-        }
-
-        .topic-card:hover .topic-author {
-          opacity: 1;
-        }
 
         .topic-votes {
           font-size: 1rem;
