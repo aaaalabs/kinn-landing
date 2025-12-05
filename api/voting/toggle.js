@@ -86,8 +86,10 @@ export default async function handler(req, res) {
     // Get all topics and flatten any nested structure
     let topics = [];
     try {
-      const rawData = await redis.json.get(TOPICS_KEY);
-      topics = flattenTopics(rawData);
+      const rawData = await redis.json.get(TOPICS_KEY, '$');
+      // Unwrap the array response from JSONPath
+      const data = rawData?.[0] || rawData || [];
+      topics = flattenTopics(data);
     } catch (error) {
       return res.status(404).json({
         error: 'Not found',
@@ -132,8 +134,8 @@ export default async function handler(req, res) {
     // Update the topic in the array
     topics[topicIndex] = topic;
 
-    // Save back to Redis as a clean array (using . path for direct set)
-    await redis.json.set(TOPICS_KEY, '.', topics);
+    // Save back to Redis as a clean array (using $ path)
+    await redis.json.set(TOPICS_KEY, '$', topics);
 
     return res.status(200).json({
       voted: !hasVoted,

@@ -93,8 +93,11 @@ export default async function handler(req, res) {
       return topics;
     }
 
-    // Get existing data (using direct path, not $)
-    const existing = await redis.json.get(TOPICS_KEY);
+    // Get existing data (using $ path)
+    const rawData = await redis.json.get(TOPICS_KEY, '$');
+
+    // Unwrap the array response from JSONPath
+    const existing = rawData?.[0] || rawData;
 
     if (!existing) {
       return res.status(404).json({
@@ -129,8 +132,8 @@ export default async function handler(req, res) {
     // Sort by creation date (oldest first) to maintain order
     uniqueTopics.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-    // Save back as a clean array (using . path for direct set)
-    await redis.json.set(TOPICS_KEY, '.', uniqueTopics);
+    // Save back as a clean array (using $ path)
+    await redis.json.set(TOPICS_KEY, '$', uniqueTopics);
 
     console.log(`[ADMIN] Successfully converted ${topics.length} topics to array format`);
 

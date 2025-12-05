@@ -67,11 +67,14 @@ export default async function handler(req, res) {
     try {
       console.log('[VOTING] Fetching topics for:', email);
 
-      // Get topics from Redis (using . path for direct access)
-      let rawData = await redis.json.get(TOPICS_KEY);
+      // Get topics from Redis (using $ path)
+      let rawData = await redis.json.get(TOPICS_KEY, '$');
+
+      // Unwrap the array response from JSONPath
+      const data = rawData?.[0] || rawData || [];
 
       // Flatten any nested structure into a simple array of topics
-      const topics = flattenTopics(rawData);
+      const topics = flattenTopics(data);
 
       // Sort by votes (highest first) for consistent ordering
       topics.sort((a, b) => b.votes - a.votes);
@@ -163,8 +166,10 @@ export default async function handler(req, res) {
       // Get existing topics and flatten any nested structure
       let topics = [];
       try {
-        const rawData = await redis.json.get(TOPICS_KEY);
-        topics = flattenTopics(rawData);
+        const rawData = await redis.json.get(TOPICS_KEY, '$');
+        // Unwrap the array response from JSONPath
+        const data = rawData?.[0] || rawData;
+        topics = flattenTopics(data);
       } catch (error) {
         // Key doesn't exist yet, start with empty array
         console.log('[VOTING] No existing topics, creating new array');
@@ -185,8 +190,8 @@ export default async function handler(req, res) {
       // Add new topic
       topics.push(newTopic);
 
-      // Save back to Redis as a clean array (using . path for direct set)
-      await redis.json.set(TOPICS_KEY, '.', topics);
+      // Save back to Redis as a clean array (using $ path)
+      await redis.json.set(TOPICS_KEY, '$', topics);
 
       console.log('[VOTING] Topic created successfully:', newTopic.id);
       console.log('[VOTING] Total topics now:', topics.length);
