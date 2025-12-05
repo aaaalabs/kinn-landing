@@ -4,7 +4,6 @@
   "description": "KINN KI Treff Innsbruck Landing Page",
   "type": "module",
   "scripts": {
-    "dev": "vercel dev",
     "build": "echo 'No build needed - static HTML'",
     "deploy": "vercel --prod",
     "email:dev": "email dev --dir emails --port 3001",
