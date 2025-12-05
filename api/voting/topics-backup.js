@@ -4,42 +4,6 @@ import { getRedisClient } from '../utils/redis.js';
 const redis = getRedisClient();
 const TOPICS_KEY = 'voting:kinn-6:topics';
 
-// Helper function to flatten nested objects/arrays into a flat array of topics
-function flattenTopics(data) {
-  const topics = [];
-
-  function extractTopics(obj, level = 0) {
-    // Safety check for deep recursion
-    if (level > 10) {
-      console.error('[VOTING] Too many nesting levels, stopping recursion');
-      return;
-    }
-
-    if (!obj) return;
-
-    // If it's an array, process each element
-    if (Array.isArray(obj)) {
-      obj.forEach(item => extractTopics(item, level + 1));
-      return;
-    }
-
-    // If it's an object
-    if (typeof obj === 'object') {
-      // Check if it looks like a topic (has id, title, votes)
-      if (obj.id && obj.title && typeof obj.votes === 'number') {
-        topics.push(obj);
-        return;
-      }
-
-      // Otherwise, it might be a container object, extract its values
-      Object.values(obj).forEach(value => extractTopics(value, level + 1));
-    }
-  }
-
-  extractTopics(data);
-  return topics;
-}
-
 export default async function handler(req, res) {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -67,14 +31,16 @@ export default async function handler(req, res) {
     try {
       console.log('[VOTING] Fetching topics for:', email);
 
-      // Get topics from Redis (using . path for direct access)
-      let rawData = await redis.json.get(TOPICS_KEY);
+      // Get topics from Redis
+      let topics = await redis.json.get(TOPICS_KEY, '$');
 
-      // Flatten any nested structure into a simple array of topics
-      const topics = flattenTopics(rawData);
-
-      // Sort by votes (highest first) for consistent ordering
-      topics.sort((a, b) => b.votes - a.votes);
+      // Handle empty or non-existent topics
+      if (!topics || !Array.isArray(topics) || topics.length === 0) {
+        topics = [];
+      } else {
+        // Flatten if nested array
+        topics = topics.flat();
+      }
 
       // Find which topics the user has voted for
       const userVotes = topics
@@ -90,15 +56,6 @@ export default async function handler(req, res) {
 
     } catch (error) {
       console.error('[VOTING] Error fetching topics:', error);
-
-      // If Redis key doesn't exist, return empty array
-      if (error.message?.includes('not found')) {
-        return res.status(200).json({
-          topics: [],
-          userVotes: []
-        });
-      }
-
       return res.status(500).json({
         error: 'Failed to fetch topics',
         message: error.message
@@ -141,9 +98,9 @@ export default async function handler(req, res) {
       let authorName = email.split('@')[0]; // Default to email prefix
 
       try {
-        const profile = await redis.json.get(`profile:${email}`);
-        if (profile?.identity?.name) {
-          authorName = profile.identity.name;
+        const profile = await redis.json.get(`profile:${email}`, '$');
+        if (profile && profile[0]?.identity?.name) {
+          authorName = profile[0].identity.name;
         }
       } catch (profileError) {
         console.log('[VOTING] Could not fetch profile, using email prefix');
@@ -160,36 +117,23 @@ export default async function handler(req, res) {
         createdAt: new Date().toISOString()
       };
 
-      // Get existing topics and flatten any nested structure
-      let topics = [];
-      try {
-        const rawData = await redis.json.get(TOPICS_KEY);
-        topics = flattenTopics(rawData);
-      } catch (error) {
-        // Key doesn't exist yet, start with empty array
-        console.log('[VOTING] No existing topics, creating new array');
-      }
+      // Get existing topics
+      let topics = await redis.json.get(TOPICS_KEY, '$');
 
-      // Check for duplicate titles (optional)
-      const duplicate = topics.find(t =>
-        t.title.toLowerCase() === trimmedTitle.toLowerCase()
-      );
-
-      if (duplicate) {
-        return res.status(400).json({
-          error: 'Duplicate topic',
-          message: 'Ein Thema mit diesem Titel existiert bereits'
-        });
+      // Initialize if doesn't exist
+      if (!topics || !Array.isArray(topics)) {
+        topics = [];
+      } else {
+        topics = topics.flat();
       }
 
       // Add new topic
       topics.push(newTopic);
 
-      // Save back to Redis as a clean array (using . path for direct set)
-      await redis.json.set(TOPICS_KEY, '.', topics);
+      // Save back to Redis
+      await redis.json.set(TOPICS_KEY, '$', topics);
 
       console.log('[VOTING] Topic created successfully:', newTopic.id);
-      console.log('[VOTING] Total topics now:', topics.length);
 
       return res.status(201).json({
         topic: newTopic

@@ -4,42 +4,6 @@ import { getRedisClient } from '../utils/redis.js';
 const redis = getRedisClient();
 const TOPICS_KEY = 'voting:kinn-6:topics';
 
-// Helper function to flatten nested objects/arrays into a flat array of topics
-function flattenTopics(data) {
-  const topics = [];
-
-  function extractTopics(obj, level = 0) {
-    // Safety check for deep recursion
-    if (level > 10) {
-      console.error('[VOTING] Too many nesting levels, stopping recursion');
-      return;
-    }
-
-    if (!obj) return;
-
-    // If it's an array, process each element
-    if (Array.isArray(obj)) {
-      obj.forEach(item => extractTopics(item, level + 1));
-      return;
-    }
-
-    // If it's an object
-    if (typeof obj === 'object') {
-      // Check if it looks like a topic (has id, title, votes)
-      if (obj.id && obj.title && typeof obj.votes === 'number') {
-        topics.push(obj);
-        return;
-      }
-
-      // Otherwise, it might be a container object, extract its values
-      Object.values(obj).forEach(value => extractTopics(value, level + 1));
-    }
-  }
-
-  extractTopics(data);
-  return topics;
-}
-
 export default async function handler(req, res) {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -83,17 +47,19 @@ export default async function handler(req, res) {
 
     console.log('[VOTING] Toggle vote for topic:', topicId, 'by:', email);
 
-    // Get all topics and flatten any nested structure
-    let topics = [];
-    try {
-      const rawData = await redis.json.get(TOPICS_KEY);
-      topics = flattenTopics(rawData);
-    } catch (error) {
+    // Get all topics
+    let topics = await redis.json.get(TOPICS_KEY, '$');
+
+    // Handle empty or non-existent topics
+    if (!topics || !Array.isArray(topics) || topics.length === 0) {
       return res.status(404).json({
         error: 'Not found',
         message: 'Keine Topics gefunden'
       });
     }
+
+    // Flatten if nested array
+    topics = topics.flat();
 
     // Find the topic
     const topicIndex = topics.findIndex(t => t.id === topicId);
@@ -132,8 +98,8 @@ export default async function handler(req, res) {
     // Update the topic in the array
     topics[topicIndex] = topic;
 
-    // Save back to Redis as a clean array (using . path for direct set)
-    await redis.json.set(TOPICS_KEY, '.', topics);
+    // Save back to Redis
+    await redis.json.set(TOPICS_KEY, '$', topics);
 
     return res.status(200).json({
       voted: !hasVoted,

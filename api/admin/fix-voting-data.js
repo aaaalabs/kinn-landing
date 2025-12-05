@@ -57,58 +57,80 @@ export default async function handler(req, res) {
   try {
     console.log('[ADMIN] Fixing voting topics data format...');
 
-    // Get existing data
-    const existing = await redis.json.get(TOPICS_KEY, '$');
+    // Helper function to flatten nested objects/arrays into a flat array of topics
+    function flattenTopics(data) {
+      const topics = [];
 
-    if (!existing || !existing[0]) {
+      function extractTopics(obj, level = 0) {
+        // Safety check for deep recursion
+        if (level > 10) {
+          console.error('[ADMIN] Too many nesting levels, stopping recursion');
+          return;
+        }
+
+        if (!obj) return;
+
+        // If it's an array, process each element
+        if (Array.isArray(obj)) {
+          obj.forEach(item => extractTopics(item, level + 1));
+          return;
+        }
+
+        // If it's an object
+        if (typeof obj === 'object') {
+          // Check if it looks like a topic (has id, title, votes)
+          if (obj.id && obj.title && typeof obj.votes === 'number') {
+            topics.push(obj);
+            return;
+          }
+
+          // Otherwise, it might be a container object, extract its values
+          Object.values(obj).forEach(value => extractTopics(value, level + 1));
+        }
+      }
+
+      extractTopics(data);
+      return topics;
+    }
+
+    // Get existing data (using direct path, not $)
+    const existing = await redis.json.get(TOPICS_KEY);
+
+    if (!existing) {
       return res.status(404).json({
         error: 'No data found',
         message: `No data found at ${TOPICS_KEY}`
       });
     }
 
-    const data = existing[0];
+    console.log('[ADMIN] Current data structure:', JSON.stringify(existing, null, 2).substring(0, 500));
 
-    // Check if it's already an array
-    if (Array.isArray(data)) {
-      return res.status(200).json({
-        message: 'Data is already in correct array format',
-        topicCount: data.length
-      });
-    }
+    // Flatten any nested structure into a simple array of topics
+    const topics = flattenTopics(existing);
 
-    // Convert object to array
-    console.log('[ADMIN] Converting object to array...');
-    const topics = [];
+    // Deduplicate topics by ID (in case of any duplication)
+    const uniqueTopics = [];
+    const seenIds = new Set();
 
-    // Sort keys and convert to array
-    const keys = Object.keys(data).sort((a, b) => {
-      // Try numeric sort first
-      const numA = parseInt(a);
-      const numB = parseInt(b);
-      if (!isNaN(numA) && !isNaN(numB)) {
-        return numA - numB;
-      }
-      // Fall back to string sort
-      return a.localeCompare(b);
-    });
-
-    for (const key of keys) {
-      const topic = data[key];
-      if (topic && typeof topic === 'object') {
+    for (const topic of topics) {
+      if (!seenIds.has(topic.id)) {
         // Ensure all required fields exist
-        topic.id = topic.id || `topic-${Date.now()}-${key}`;
+        topic.id = topic.id || `topic-${Date.now()}-${uniqueTopics.length}`;
         topic.votes = topic.votes || 0;
         topic.voterEmails = topic.voterEmails || [];
         topic.createdAt = topic.createdAt || new Date().toISOString();
 
-        topics.push(topic);
-        console.log(`  Added topic: "${topic.title}" (${topic.votes} votes)`);
+        seenIds.add(topic.id);
+        uniqueTopics.push(topic);
+        console.log(`  Processed topic: "${topic.title}" (${topic.votes} votes)`);
       }
     }
 
-    // Save back as array
-    await redis.json.set(TOPICS_KEY, '$', topics);
+    // Sort by creation date (oldest first) to maintain order
+    uniqueTopics.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+    // Save back as a clean array (using . path for direct set)
+    await redis.json.set(TOPICS_KEY, '.', uniqueTopics);
 
     console.log(`[ADMIN] Successfully converted ${topics.length} topics to array format`);
 
