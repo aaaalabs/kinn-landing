@@ -219,80 +219,67 @@ export function initVotingWidget(container, token) {
 
       <style>
         .voting-widget {
-          max-width: 400px;
+          max-width: 100%;
           font-family: 'Work Sans', system-ui, -apple-system, sans-serif;
-          background: white;
-          border-radius: 16px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-          overflow: hidden;
+          /* Removed card styling - no background, border-radius, or shadow */
         }
 
         .voting-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 16px 20px;
-          border-bottom: 1px solid #f0f0f0;
+          display: none; /* Hide header - will be in Dashboard card */
         }
 
         .voting-header h3 {
-          font-size: 16px;
-          font-weight: 600;
-          color: #2C3E50;
-          margin: 0;
+          display: none;
         }
 
         .vote-total {
-          font-size: 14px;
-          font-weight: 600;
-          color: #5ED9A6;
+          display: none;
         }
 
         .topics {
-          max-height: 320px;
-          overflow-y: auto;
-          padding: 12px;
-        }
-
-        .topics::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .topics::-webkit-scrollbar-track {
-          background: #f0f0f0;
-          border-radius: 3px;
-        }
-
-        .topics::-webkit-scrollbar-thumb {
-          background: #ccc;
-          border-radius: 3px;
-        }
-
-        .topics::-webkit-scrollbar-thumb:hover {
-          background: #999;
+          max-height: none; /* Remove height restriction */
+          overflow-y: visible;
+          padding: 0;
         }
 
         .topic-card {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 12px;
-          margin-bottom: 8px;
-          background: #fafcfb;
-          border: 1px solid transparent;
-          border-radius: 12px;
+          padding: 0.75rem 1rem;
+          margin-bottom: 0.5rem;
+          background: rgba(255, 255, 255, 0.6);
+          border: 1px solid rgba(0, 0, 0, 0.04);
+          border-radius: 8px;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+          position: relative;
         }
 
         .topic-card:hover {
-          box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-          transform: translateY(-1px);
+          background: rgba(255, 255, 255, 0.8);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
         .topic-card.voted {
-          background: rgba(94, 217, 166, 0.08);
-          border-color: rgba(94, 217, 166, 0.3);
+          background: linear-gradient(90deg,
+            rgba(94, 217, 166, 0.05) 0%,
+            rgba(255, 255, 255, 0.6) 100%);
+          border-left: 2px solid #5ED9A6;
+          padding-left: calc(1rem - 1px); /* Compensate for border */
+        }
+
+        /* Subtle vote indicator dot */
+        .topic-card.voted::before {
+          content: '';
+          position: absolute;
+          left: 0.5rem;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #5ED9A6;
         }
 
         .topic-info {
@@ -301,30 +288,41 @@ export function initVotingWidget(container, token) {
         }
 
         .topic-title {
-          font-size: 14px;
+          font-size: 0.9375rem;
           font-weight: 500;
           color: #3A3A3A;
-          margin-bottom: 4px;
+          margin-bottom: 2px;
           overflow: hidden;
           text-overflow: ellipsis;
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
+          line-height: 1.4;
         }
 
         .topic-author {
-          font-size: 12px;
+          font-size: 0.75rem;
           font-weight: 400;
           color: #999;
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+
+        .topic-card:hover .topic-author {
+          opacity: 1;
         }
 
         .topic-votes {
-          font-size: 18px;
-          font-weight: 700;
-          color: #5ED9A6;
+          font-size: 1rem;
+          font-weight: 600;
+          color: #6B6B6B;
           margin-left: 12px;
           min-width: 30px;
           text-align: center;
+        }
+
+        .topic-card.voted .topic-votes {
+          color: #5ED9A6;
         }
 
         .empty-state {
@@ -336,42 +334,54 @@ export function initVotingWidget(container, token) {
 
         .add-topic-form {
           display: flex;
-          padding: 12px;
-          border-top: 1px solid #f0f0f0;
+          margin-top: 1rem;
           gap: 8px;
+          opacity: 0.6;
+          transition: opacity 0.2s;
+        }
+
+        .add-topic-form:hover,
+        .add-topic-form:focus-within {
+          opacity: 1;
         }
 
         .topic-input {
           flex: 1;
-          padding: 10px 12px;
-          border: 1px solid #e0e0e0;
-          border-radius: 10px;
-          font-size: 14px;
+          padding: 8px 12px;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          border-radius: 6px;
+          font-size: 0.875rem;
           font-family: inherit;
-          transition: border-color 0.2s ease;
+          background: rgba(255, 255, 255, 0.8);
+          transition: all 0.2s ease;
+        }
+
+        .topic-input::placeholder {
+          color: #999;
         }
 
         .topic-input:focus {
           outline: none;
-          border-color: #5ED9A6;
+          border-color: rgba(94, 217, 166, 0.4);
+          background: white;
         }
 
         .btn-add {
-          width: 40px;
-          height: 40px;
-          border: none;
-          background: #5ED9A6;
-          color: white;
-          border-radius: 10px;
-          font-size: 24px;
+          width: 36px;
+          height: 36px;
+          border: 1px solid rgba(94, 217, 166, 0.3);
+          background: rgba(94, 217, 166, 0.1);
+          color: #5ED9A6;
+          border-radius: 6px;
+          font-size: 20px;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
         .btn-add:hover {
-          background: #4EC995;
-          transform: scale(1.05);
+          background: rgba(94, 217, 166, 0.2);
+          border-color: rgba(94, 217, 166, 0.5);
         }
 
         .btn-add:active {

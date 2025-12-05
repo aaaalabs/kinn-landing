@@ -1518,21 +1518,19 @@
 
     function handleHashChange() {
       const hash = window.location.hash.replace('#', '');
-      if (hash === 'dashboard' || hash === 'profil' || hash === 'settings' || hash === 'kinn6') {
+      if (hash === 'dashboard' || hash === 'profil' || hash === 'settings') {
         activeTab = hash;
       } else {
         activeTab = 'dashboard';
       }
       renderProfile();
 
-      // Load events when switching to dashboard
+      // Load events and voting widget when switching to dashboard
       if (activeTab === 'dashboard') {
-        setTimeout(() => loadEvents(), 100);
-      }
-
-      // Load voting widget when switching to kinn6 tab
-      if (activeTab === 'kinn6') {
-        setTimeout(() => loadVotingWidget(), 100);
+        setTimeout(() => {
+          loadEvents();
+          loadVotingWidget();
+        }, 100);
       }
     }
 
@@ -1542,14 +1540,12 @@
       window.location.hash = `#${tab}`;
       renderProfile();
 
-      // Load events when switching to dashboard
+      // Load events and voting widget when switching to dashboard
       if (tab === 'dashboard') {
-        setTimeout(() => loadEvents(), 100);
-      }
-
-      // Load voting widget when switching to kinn6 tab
-      if (tab === 'kinn6') {
-        setTimeout(() => loadVotingWidget(), 100);
+        setTimeout(() => {
+          loadEvents();
+          loadVotingWidget();
+        }, 100);
       }
     }
 
@@ -1569,9 +1565,6 @@
           <button class="tab-button ${activeTab === 'profil' ? 'active' : ''}" onclick="switchTab('profil')">
             Mein Profil
           </button>
-          <button class="tab-button ${activeTab === 'kinn6' ? 'active' : ''}" onclick="switchTab('kinn6')">
-            KINN #6
-          </button>
           <button class="tab-button ${activeTab === 'settings' ? 'active' : ''}" onclick="switchTab('settings')">
             Einstellungen
           </button>
@@ -1583,7 +1576,6 @@
         <div id="tab-content">
           ${activeTab === 'dashboard' ? renderDashboardTab() :
             activeTab === 'settings' ? renderSettingsTab() :
-            activeTab === 'kinn6' ? renderKinn6Tab() :
             renderProfilTab()}
         </div>
       `;
@@ -1614,9 +1606,12 @@
         }, 0);
       }
 
-      // Load events on initial dashboard render
+      // Load events and voting widget on initial dashboard render
       if (activeTab === 'dashboard') {
-        setTimeout(() => loadEvents(), 100);
+        setTimeout(() => {
+          loadEvents();
+          loadVotingWidget();
+        }, 100);
       }
     }
 
@@ -1690,6 +1685,22 @@
           <div id="eventsContainer" class="loading">
             <div class="spinner"></div>
             <p>Lade Events...</p>
+          </div>
+        </div>
+
+        <!-- KINN #6 Voting Widget -->
+        <div class="card">
+          <h2 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.75rem;">
+            Themen für KINN #6
+            <span id="vote-count" style="font-size: 0.75rem; color: #999; font-weight: 400; margin-left: 0.5rem;"></span>
+          </h2>
+          <p style="margin-bottom: 1rem; color: #6B6B6B; font-size: 0.875rem;">
+            Vote für Themen, die dich beim nächsten Treff interessieren.
+          </p>
+          <div id="voting-widget-container">
+            <div style="text-align: center; padding: 20px; color: #999;">
+              <p style="font-size: 0.875rem;">Widget wird geladen...</p>
+            </div>
           </div>
         </div>
 
@@ -2145,24 +2156,6 @@
     };
 
     // Render KINN #6 Voting Tab
-    function renderKinn6Tab() {
-      return `
-        <div class="card">
-          <h2>KINN #6 - Themen vorschlagen</h2>
-          <p style="margin-bottom: 1.5rem;">
-            Schlage Themen vor und vote für die, die dich interessieren.
-            Die Top 6 Themen werden Thementische beim nächsten KINN Treff.
-          </p>
-
-          <div id="voting-widget-container">
-            <!-- Voting widget will be loaded here -->
-            <div style="text-align: center; padding: 40px; color: #999;">
-              <p>Widget wird geladen...</p>
-            </div>
-          </div>
-        </div>
-      `;
-    }
 
     // Load voting widget
     let votingWidgetCleanup = null;
