@@ -412,6 +412,23 @@ export function initVotingWidget(container, token) {
 
           .topics {
             max-height: 280px;
+            overflow-y: auto;
+            padding-bottom: 80px;  /* Reserve space for input field + margin */
+            -webkit-overflow-scrolling: touch;  /* Smooth iOS scrolling */
+          }
+
+          /* Ensure the last topic card has additional margin */
+          .topic-card:last-child {
+            margin-bottom: 16px;
+          }
+
+          /* Add subtle visual separator for input field */
+          .add-topic-form {
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            padding-top: 12px;
+            background: white;
+            position: relative;
+            z-index: 10;
           }
         }
       </style>
