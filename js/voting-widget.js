@@ -6,10 +6,16 @@ export function initVotingWidget(container, token) {
   let topics = [];
   let userVotes = new Set();
   let isLoading = false;
+  let isUserTyping = false;
+  let typingTimeout = null;
 
   // Fetch topics from API
   async function fetchTopics() {
     if (isLoading) return;
+
+    // Skip polling if user is typing
+    if (isUserTyping) return;
+
     isLoading = true;
 
     try {
@@ -188,6 +194,13 @@ export function initVotingWidget(container, token) {
     if (voteCountElement) {
       voteCountElement.textContent = totalVotes > 0 ? `${totalVotes} ${totalVotes === 1 ? 'Stimme' : 'Stimmen'}` : '';
     }
+
+    // Preserve input value before re-rendering
+    const existingInput = container.querySelector('.topic-input');
+    const inputValue = existingInput ? existingInput.value : '';
+    const inputSelectionStart = existingInput ? existingInput.selectionStart : 0;
+    const inputSelectionEnd = existingInput ? existingInput.selectionEnd : 0;
+    const inputHasFocus = document.activeElement === existingInput;
 
     // HTML structure
     container.innerHTML = `
@@ -406,6 +419,20 @@ export function initVotingWidget(container, token) {
 
     // Attach event listeners
     attachEventListeners();
+
+    // Restore input value and state after re-rendering
+    const newInput = container.querySelector('.topic-input');
+    if (newInput && inputValue) {
+      newInput.value = inputValue;
+      // Restore cursor position
+      if (inputSelectionStart !== undefined && inputSelectionEnd !== undefined) {
+        newInput.setSelectionRange(inputSelectionStart, inputSelectionEnd);
+      }
+      // Restore focus if it had focus
+      if (inputHasFocus) {
+        newInput.focus();
+      }
+    }
   }
 
   // Attach event listeners after render
@@ -428,6 +455,31 @@ export function initVotingWidget(container, token) {
           addTopic(input.value);
         }
       });
+
+      // Track when user is typing to prevent polling interruptions
+      const input = form.querySelector('.topic-input');
+      if (input) {
+        input.addEventListener('input', () => {
+          isUserTyping = true;
+          // Clear existing timeout
+          if (typingTimeout) clearTimeout(typingTimeout);
+          // Set user as not typing after 2 seconds of inactivity
+          typingTimeout = setTimeout(() => {
+            isUserTyping = false;
+          }, 2000);
+        });
+
+        input.addEventListener('focus', () => {
+          isUserTyping = true;
+        });
+
+        input.addEventListener('blur', () => {
+          // Small delay to allow for form submission
+          setTimeout(() => {
+            isUserTyping = false;
+          }, 500);
+        });
+      }
     }
   }
 
@@ -440,7 +492,7 @@ export function initVotingWidget(container, token) {
 
   // Initial load and start polling
   fetchTopics();
-  const pollInterval = setInterval(fetchTopics, 5000);
+  const pollInterval = setInterval(fetchTopics, 10000); // Poll every 10 seconds instead of 5
 
   // Return cleanup function
   return () => {
