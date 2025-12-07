@@ -59,7 +59,7 @@ function generateOptInEmail(confirmUrl) {
 
         <div style="margin: 24px 0; padding: 16px; background: rgba(94, 217, 166, 0.08); border-left: 3px solid #5ED9A6; border-radius: 4px;">
           <p style="font-size: 14px; line-height: 1.6; color: #333; margin: 0;">
-            <strong>Nach der Anmeldung:</strong> Du erhältst Zugang zum Dashboard mit Event-Infos und unserer Discord Community für direkten Austausch mit AI Devs aus Tirol.
+            <strong>Nach der Anmeldung:</strong> Du erhältst Zugang zum Dashboard mit Event-Infos. Discord-Zugang gibt's bei den Events direkt für aktive Teilnehmer.
           </p>
         </div>
 
@@ -109,7 +109,7 @@ Damit stellen wir sicher, dass nur du Zugriff auf deine Anmeldung hast und niema
 
 Dieser Bestätigungslink ist 48 Stunden gültig.
 
-Nach der Anmeldung: Du erhältst Zugang zum Dashboard mit Event-Infos und unserer Discord Community für direkten Austausch mit AI Devs aus Tirol.
+Nach der Anmeldung: Du erhältst Zugang zum Dashboard mit Event-Infos. Discord-Zugang gibt's bei den Events direkt für aktive Teilnehmer.
 
 Viele Grüße,
 Thomas
@@ -165,7 +165,7 @@ function generateMagicLinkEmail(loginUrl) {
 
         <div style="margin: 24px 0; padding: 16px; background: rgba(94, 217, 166, 0.08); border-left: 3px solid #5ED9A6; border-radius: 4px;">
           <p style="font-size: 14px; line-height: 1.6; color: #333; margin: 0;">
-            <strong>Tipp:</strong> Im Dashboard findest du auch den Link zu unserer Discord Community zum direkten Austausch mit anderen KINN Mitgliedern.
+            <strong>Tipp:</strong> Im Dashboard findest du alle Event-Infos. Discord-Zugang gibt's bei den Events direkt für aktive Teilnehmer.
           </p>
         </div>
 
@@ -209,7 +209,7 @@ ${loginUrl}
 
 Dieser Link ist 24 Stunden gültig.
 
-Tipp: Im Dashboard findest du auch den Link zu unserer Discord Community zum direkten Austausch mit anderen KINN Mitgliedern.
+Tipp: Im Dashboard findest du alle Event-Infos. Discord-Zugang gibt's bei den Events direkt für aktive Teilnehmer.
 
 Viele Grüße,
 Thomas
