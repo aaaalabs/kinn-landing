@@ -41,12 +41,19 @@ export default async function handler(req, res) {
 
     const { from, to, subject, html, text } = req.body;
 
-    // Log receipt
-    console.log(`[RADAR] Newsletter received from ${from}: ${subject}`);
+    // Log receipt with full details for debugging
+    console.log(`[RADAR] Email received - From: ${from}, To: ${to}, Subject: ${subject}`);
 
-    // Check if this is for RADAR
-    if (!to?.includes('radar@')) {
-      console.log('[RADAR] Not a RADAR email, ignoring');
+    // Check if this is for RADAR - handle various formats
+    const isRadarEmail = to && (
+      to.includes('radar@') ||
+      to.includes('radar+') ||
+      to.toLowerCase() === 'radar@in.kinn.at' ||
+      to.toLowerCase().includes('radar')
+    );
+
+    if (!isRadarEmail) {
+      console.log(`[RADAR] Not a RADAR email (to: ${to}), ignoring`);
       return res.status(200).json({ ignored: true });
     }
 
