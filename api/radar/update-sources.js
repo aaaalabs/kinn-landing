@@ -137,16 +137,7 @@ const ALL_SOURCES = [
     expectedMonthly: 10,
     active: false
   },
-  {
-    name: 'Werkstätte Wattens',
-    url: 'https://www.werkstaette-wattens.at',
-    type: 'Website',
-    category: 'Innovation Hub',
-    priority: 'MEDIUM',
-    frequency: 'Weekly',
-    expectedMonthly: 12,
-    active: false
-  },
+  // Removed: Werkstätte Wattens - no events page
   // Removed: Coworking Tirol - domain does not exist
 
   // COMMUNITY & TECH PLATFORMS

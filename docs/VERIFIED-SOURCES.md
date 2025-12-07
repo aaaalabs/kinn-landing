@@ -29,11 +29,12 @@
 | **Meetup Innsbruck** | https://www.meetup.com/find/at--innsbruck/ | Complex, needs login |
 | **Engineering Kiosk Alps** | https://engineeringkiosk.dev/meetup/alps/ | Need to verify |
 
-## ❌ Removed (Don't Exist)
+## ❌ Removed (Don't Exist or No Events)
 
 | Source | Issue |
 |--------|-------|
 | **Coworking Tirol** | Domain coworking-tirol.com does not exist |
+| **Werkstätte Wattens** | Site exists but no events page |
 
 ## Notes
 

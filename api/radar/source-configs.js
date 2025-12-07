@@ -258,23 +258,15 @@ export const SOURCE_CONFIGS = {
 
   // ================== CULTURAL VENUES ==================
 
-  'Werkstätte Wattens': {
-    url: 'https://www.werkstaette-wattens.at',
-    active: false,
-    extraction: {
-      method: 'custom',
-      instructions: `
-        Werkstätte Wattens innovation space.
-        Look for:
-        - Program or events section
-        - Mix of FREE and paid events
-        - Include workshops and community events
-        - Location: Wattens (near Innsbruck)
-        - Categories: Innovation, Maker, Tech
-      `,
-      maxChars: 20000
-    }
-  },
+  // 'Werkstätte Wattens': {
+  //   url: 'NO EVENTS PAGE - REMOVED',
+  //   active: false,
+  //   extraction: {
+  //     method: 'custom',
+  //     instructions: 'Source removed - no events page exists',
+  //     maxChars: 0
+  //   }
+  // },
 
   // 'Coworking Tirol': {
   //   url: 'DOMAIN DOES NOT EXIST - REMOVED',
