@@ -294,8 +294,9 @@ export default async function handler(req, res) {
 }
 
 async function checkDuplicate(event) {
-  const location = event.location || event.city || 'unknown';
-  const eventKey = `${event.title}-${event.date}-${location}`.toLowerCase()
+  // Check duplicates based on title and date only (not location)
+  // This prevents same event with different location formats being added multiple times
+  const eventKey = `${event.title}-${event.date}`.toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '');
 
@@ -304,8 +305,8 @@ async function checkDuplicate(event) {
 }
 
 async function storeEvent(event, source) {
-  const location = event.location || event.city || 'unknown';
-  const eventId = `${event.title}-${event.date}-${location}`.toLowerCase()
+  // Use title-date for ID (not location) to ensure consistent duplicate detection
+  const eventId = `${event.title}-${event.date}`.toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '');
 
@@ -313,6 +314,7 @@ async function storeEvent(event, source) {
     id: eventId,
     ...event,
     source: source,
+    location: event.location || event.city || 'unknown', // Store location in data
     createdAt: new Date().toISOString(),
     reviewed: false
   };
