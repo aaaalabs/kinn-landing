@@ -235,14 +235,16 @@ export default async function handler(req, res) {
       // Calculate status emoji
       let status = '⏸️ Inactive';
       if (source.active) {
-        const lastCheck = new Date(source.lastChecked);
-        const hoursSinceCheck = (Date.now() - lastCheck) / (1000 * 60 * 60);
-        if (hoursSinceCheck < 24) {
-          status = '✅ Active';
-        } else if (hoursSinceCheck < 72) {
-          status = '⚠️ Stale';
-        } else {
-          status = '❌ Error';
+        if (source.lastChecked && source.lastChecked !== 'Never') {
+          const lastCheck = new Date(source.lastChecked);
+          const hoursSinceCheck = (Date.now() - lastCheck) / (1000 * 60 * 60);
+          if (hoursSinceCheck < 24) {
+            status = '✅ Active';
+          } else if (hoursSinceCheck < 72) {
+            status = '⚠️ Stale';
+          } else {
+            status = '❌ Error';
+          }
         }
       }
 
@@ -273,12 +275,16 @@ export default async function handler(req, res) {
     // Clear and update Sources sheet
     const range = 'Sources!A:I';  // 9 columns now
 
+    // Log what we're about to write
+    console.log(`[RADAR Sources] Writing ${rows.length} rows to Sources tab`);
+    console.log(`[RADAR Sources] First row sample:`, rows[0]);
+
     await sheets.spreadsheets.values.clear({
       spreadsheetId: SHEET_ID,
       range: range
     });
 
-    await sheets.spreadsheets.values.update({
+    const updateResponse = await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
       range: 'Sources!A1',
       valueInputOption: 'RAW',
@@ -286,6 +292,8 @@ export default async function handler(req, res) {
         values: [headers, ...rows]
       }
     });
+
+    console.log(`[RADAR Sources] Update response:`, updateResponse.data);
 
     // Add ACTIONABLE summary statistics
     const summaryHeaders = ['Status', 'Count'];
