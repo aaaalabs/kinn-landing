@@ -328,18 +328,24 @@ function validateEvent(event) {
 }
 
 async function checkDuplicate(event) {
-  // Create a unique key for the event
-  const eventKey = `${event.title}-${event.date}`.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  // Create a unique key for the event including location/city for better deduplication
+  const location = event.location || event.city || 'unknown';
+  const eventKey = `${event.title}-${event.date}-${location}`.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
   // Check if this event already exists
   const exists = await kv.exists(`radar:event:${eventKey}`);
+
+  if (exists) {
+    console.log(`[RADAR] Duplicate check: Event "${event.title}" on ${event.date} at ${location} already exists`);
+  }
 
   return exists;
 }
 
 async function storeEvent(event, source) {
-  // Create event ID
-  const eventId = `${event.title}-${event.date}`.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  // Create event ID including location/city to match duplicate check logic
+  const location = event.location || event.city || 'unknown';
+  const eventId = `${event.title}-${event.date}-${location}`.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
   // Prepare event data
   const eventData = {
