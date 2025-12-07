@@ -203,7 +203,7 @@ export const SOURCE_CONFIGS = {
   },
 
   'MCI': {
-    url: 'https://www.mci4me.at/events',
+    url: 'https://www.mci4me.at/de/events',
     active: false,
     extraction: {
       method: 'custom',
@@ -221,7 +221,7 @@ export const SOURCE_CONFIGS = {
   },
 
   'FH Kufstein': {
-    url: 'https://www.fh-kufstein.ac.at/events',
+    url: 'https://www.fh-kufstein.ac.at/service/events',
     active: false,
     extraction: {
       method: 'custom',
@@ -276,22 +276,15 @@ export const SOURCE_CONFIGS = {
     }
   },
 
-  'Coworking Tirol': {
-    url: 'https://coworking-tirol.com/events',
-    active: false,
-    extraction: {
-      method: 'custom',
-      instructions: `
-        Coworking space events.
-        Look for:
-        - Community events and workshops
-        - Many FREE for members, some public
-        - Categories: Networking, Workshop, Community
-        - Location: "Coworking Tirol, Innsbruck"
-      `,
-      maxChars: 15000
-    }
-  },
+  // 'Coworking Tirol': {
+  //   url: 'DOMAIN DOES NOT EXIST - REMOVED',
+  //   active: false,
+  //   extraction: {
+  //     method: 'custom',
+  //     instructions: 'Source removed - domain does not exist',
+  //     maxChars: 0
+  //   }
+  // },
 
   'Das Wundervoll': {
     url: 'https://www.daswundervoll.at/en/about-wundervoll/events',

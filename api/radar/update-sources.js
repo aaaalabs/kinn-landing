@@ -99,7 +99,7 @@ const ALL_SOURCES = [
   },
   {
     name: 'MCI',
-    url: 'https://www.mci4me.at/events',
+    url: 'https://www.mci4me.at/de/events',
     type: 'Website',
     category: 'Academic/Business',
     priority: 'MEDIUM',
@@ -129,7 +129,7 @@ const ALL_SOURCES = [
   },
   {
     name: 'FH Kufstein',
-    url: 'https://www.fh-kufstein.ac.at/events',
+    url: 'https://www.fh-kufstein.ac.at/service/events',
     type: 'Website',
     category: 'Academic',
     priority: 'MEDIUM',
@@ -147,16 +147,7 @@ const ALL_SOURCES = [
     expectedMonthly: 12,
     active: false
   },
-  {
-    name: 'Coworking Tirol',
-    url: 'https://coworking-tirol.com/events',
-    type: 'Website',
-    category: 'Coworking/Community',
-    priority: 'MEDIUM',
-    frequency: 'Weekly',
-    expectedMonthly: 8,
-    active: false
-  },
+  // Removed: Coworking Tirol - domain does not exist
 
   // COMMUNITY & TECH PLATFORMS
   {
