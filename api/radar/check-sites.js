@@ -30,6 +30,8 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  const startTime = Date.now();
+
   try {
     console.log('[RADAR-SITES] Starting site check...');
     const allEvents = [];
@@ -45,11 +47,11 @@ export default async function handler(req, res) {
       }
 
       const html = await response.text();
-      console.log(`[RADAR-SITES] Fetched ${html.length} chars from ${site.name}`);
+      console.log(`[RADAR-SITES] Fetched ${html.length} chars from ${site.name} (${Date.now() - startTime}ms)`);
 
       // Extract events using Groq
       const events = await extractEventsFromHTML(html, site.url, site.name);
-      console.log(`[RADAR-SITES] Found ${events.length} events from ${site.name}`);
+      console.log(`[RADAR-SITES] Found ${events.length} events from ${site.name} (${Date.now() - startTime}ms total)`);
 
       allEvents.push(...events);
     }
@@ -88,7 +90,31 @@ export default async function handler(req, res) {
   }
 }
 
+// Helper to extract main content and reduce HTML size
+function extractMainContent(html) {
+  // Remove script tags, style tags, comments
+  let cleaned = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  cleaned = cleaned.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+  cleaned = cleaned.replace(/<!--[\s\S]*?-->/g, '');
+
+  // Try to find main content area
+  const mainMatch = cleaned.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
+  if (mainMatch) return mainMatch[1];
+
+  const contentMatch = cleaned.match(/<div[^>]*class="[^"]*content[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+  if (contentMatch) return contentMatch[1];
+
+  const articleMatch = cleaned.match(/<article[^>]*>([\s\S]*?)<\/article>/gi);
+  if (articleMatch) return articleMatch.join('\n');
+
+  // Fallback: return cleaned HTML
+  return cleaned;
+}
+
 async function extractEventsFromHTML(html, url, siteName) {
+  // Extract just the main content area to reduce token count
+  const mainContent = extractMainContent(html);
+
   const prompt = `
 You are extracting events from a website HTML. This is from ${siteName} (${url}).
 
@@ -97,8 +123,8 @@ Extract ALL events that meet these criteria:
 2. Located in TYROL (Innsbruck, Hall, Wattens, Kufstein, etc.) - REJECT if outside Tyrol
 3. PUBLIC (open registration) - REJECT if members-only
 
-HTML Content (first 20000 chars):
-${html.substring(0, 20000)}
+HTML Content (main section only):
+${mainContent.substring(0, 8000)}
 
 For each qualifying FREE event in TYROL, extract:
 {
@@ -133,13 +159,13 @@ Return as JSON object:
 
   try {
     const response = await groq.chat.completions.create({
-      model: "openai/gpt-oss-120b",
+      model: "openai/gpt-oss-20b", // Using faster 20B model for site checking
       messages: [{
         role: "user",
         content: prompt
       }],
       temperature: 0.1,
-      max_tokens: 4096,
+      max_tokens: 2048, // Reduced for speed
       response_format: { type: "json_object" }
     });
 
