@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KINN-RADAR - Test New Sources</title>
+    <style>
+        body {
+            font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { color: #2C3E50; }
+        button {
+            background: #5ED9A6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover:not(:disabled) { background: #4BC997; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #results {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .source-card {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #5ED9A6;
+        }
+        .source-card.error { border-left-color: #ff6b6b; }
+        .source-card.success { border-left-color: #5ED9A6; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .stat-box {
+            text-align: center;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+        .stat-number { font-size: 24px; font-weight: bold; color: #2C3E50; }
+        .stat-label { font-size: 12px; color: #666; text-transform: uppercase; }
+        .priority-high { border-left-color: #ff6b6b; }
+        .priority-medium { border-left-color: #ffa500; }
+        .priority-low { border-left-color: #4A90E2; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 KINN-RADAR - New Sources Test</h1>
+    <p>Test the new event sources you just added to the system:</p>
+
+    <div id="sources">
+        <h3>🎯 New Sources to Test:</h3>
+        <div class="source-card priority-high">
+            <strong>Meetup Innsbruck</strong> - HIGH Priority<br>
+            <small>https://www.meetup.com/find/at--innsbruck/</small><br>
+            <button onclick="testSource('Meetup', 'https://www.meetup.com/find/at--innsbruck/')">Test Meetup</button>
+        </div>
+
+        <div class="source-card priority-high">
+            <strong>Engineering Kiosk Alps</strong> - HIGH Priority<br>
+            <small>https://engineeringkiosk.dev/meetup/alps/</small><br>
+            <button onclick="testSource('EngineeringKiosk', 'https://engineeringkiosk.dev/meetup/alps/')">Test Engineering Kiosk</button>
+        </div>
+
+        <div class="source-card priority-medium">
+            <strong>Das Wundervoll</strong> - MEDIUM Priority<br>
+            <small>https://www.daswundervoll.at/en/about-wundervoll/events</small><br>
+            <button onclick="testSource('DasWundervoll', 'https://www.daswundervoll.at/en/about-wundervoll/events')">Test Wundervoll</button>
+        </div>
+
+        <div class="source-card priority-medium">
+            <strong>WeLocally Innsbruck</strong> - MEDIUM Priority<br>
+            <small>https://innsbruck.welocally.at/region/treffen</small><br>
+            <button onclick="testSource('WeLocally', 'https://innsbruck.welocally.at/region/treffen')">Test WeLocally</button>
+        </div>
+
+        <hr style="margin: 30px 0;">
+
+        <button onclick="testAllNewSources()" style="background: #E74C3C; font-size: 18px; padding: 15px 30px;">
+            🚀 Test All New Sources
+        </button>
+
+        <button onclick="runFullSystemTest()" style="background: #3498DB; font-size: 18px; padding: 15px 30px;">
+            🔄 Run Complete System Test
+        </button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        async function testSource(name, url) {
+            const results = document.getElementById('results');
+            results.innerHTML = `<div class="source-card">⏳ Testing ${name}...</div>`;
+
+            try {
+                // Note: This would need a custom endpoint to test individual sources
+                // For now, showing the approach
+                const testUrl = `/api/radar/test-source?name=${encodeURIComponent(name)}&url=${encodeURIComponent(url)}`;
+
+                results.innerHTML = `
+                    <div class="source-card">
+                        <h3>Testing ${name}</h3>
+                        <p>URL: ${url}</p>
+                        <p style="color: #666;">
+                            Note: Individual source testing endpoint not yet implemented.<br>
+                            Use "Test All New Sources" to test via check-sites endpoint.
+                        </p>
+                    </div>
+                `;
+            } catch (error) {
+                results.innerHTML = `<div class="source-card error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testAllNewSources() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="source-card">⏳ Testing all SECONDARY sources (includes new ones)...</div>';
+
+            try {
+                const response = await fetch('/api/radar/check-sites?priority=secondary');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Test failed');
+                }
+
+                displayResults(data, 'New Sources Test');
+            } catch (error) {
+                results.innerHTML = `<div class="source-card error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function runFullSystemTest() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="source-card">⏳ Running complete RADAR system test...</div>';
+
+            try {
+                // Test all sources
+                const response = await fetch('/api/radar/check-sites?priority=all');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Test failed');
+                }
+
+                displayResults(data, 'Complete System Test');
+
+                // Also update sources sheet
+                setTimeout(async () => {
+                    results.innerHTML += '<div class="source-card">📊 Updating Sources sheet...</div>';
+                    await fetch('/api/radar/update-sources');
+                    results.innerHTML += '<div class="source-card success">✅ Sources sheet updated!</div>';
+                }, 2000);
+
+            } catch (error) {
+                results.innerHTML = `<div class="source-card error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function displayResults(data, title) {
+            const results = document.getElementById('results');
+
+            let html = `<h2>✅ ${title} Complete</h2>`;
+
+            html += '<div class="stats">';
+            html += `<div class="stat-box">
+                <div class="stat-number">${data.sites_checked || 0}</div>
+                <div class="stat-label">Sites Checked</div>
+            </div>`;
+            html += `<div class="stat-box">
+                <div class="stat-number">${data.events_found || 0}</div>
+                <div class="stat-label">Events Found</div>
+            </div>`;
+            html += `<div class="stat-box">
+                <div class="stat-number" style="color: #5ED9A6;">${data.events_added || 0}</div>
+                <div class="stat-label">New Events</div>
+            </div>`;
+            html += `<div class="stat-box">
+                <div class="stat-number" style="color: #FFA500;">${data.duplicates || 0}</div>
+                <div class="stat-label">Duplicates</div>
+            </div>`;
+            html += '</div>';
+
+            if (data.sites && data.sites.length > 0) {
+                html += '<h3>Sites Tested:</h3>';
+                data.sites.forEach(site => {
+                    html += `<div class="source-card priority-${site.priority.toLowerCase()}">
+                        ${site.name} (${site.priority})
+                    </div>`;
+                });
+            }
+
+            if (data.events && data.events.length > 0) {
+                html += `<h3>Sample Events Found (${data.events.length} total):</h3>`;
+                data.events.slice(0, 5).forEach(event => {
+                    html += `<div class="source-card">
+                        <strong>${event.title}</strong><br>
+                        📅 ${event.date} at ${event.time}<br>
+                        📍 ${event.location || event.city}<br>
+                        🏷️ ${event.category}
+                    </div>`;
+                });
+            }
+
+            html += '<details style="margin-top: 20px;">';
+            html += '<summary>Debug Data</summary>';
+            html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            html += '</details>';
+
+            results.innerHTML = html;
+        }
+    </script>
+
+    <div style="margin-top: 40px; padding: 20px; background: white; border-radius: 8px;">
+        <h3>📊 Expected Coverage with New Sources</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background: #f5f5f5;">
+                <th style="padding: 10px; text-align: left;">Source</th>
+                <th style="padding: 10px; text-align: left;">Type</th>
+                <th style="padding: 10px; text-align: left;">Priority</th>
+                <th style="padding: 10px; text-align: left;">Expected Monthly</th>
+            </tr>
+            <tr>
+                <td style="padding: 10px;">Meetup Innsbruck</td>
+                <td style="padding: 10px;">International Platform</td>
+                <td style="padding: 10px;">HIGH</td>
+                <td style="padding: 10px;">25-30</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px;">Engineering Kiosk</td>
+                <td style="padding: 10px;">Tech Community</td>
+                <td style="padding: 10px;">HIGH</td>
+                <td style="padding: 10px;">3-5</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px;">Das Wundervoll</td>
+                <td style="padding: 10px;">Cultural Venue</td>
+                <td style="padding: 10px;">MEDIUM</td>
+                <td style="padding: 10px;">15-20</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px;">WeLocally</td>
+                <td style="padding: 10px;">Local Platform</td>
+                <td style="padding: 10px;">MEDIUM</td>
+                <td style="padding: 10px;">10-15</td>
+            </tr>
+            <tr style="background: #e8f5f0; font-weight: bold;">
+                <td style="padding: 10px;">NEW TOTAL</td>
+                <td style="padding: 10px;" colspan="2">Additional Coverage</td>
+                <td style="padding: 10px;">+53-70 events/month</td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

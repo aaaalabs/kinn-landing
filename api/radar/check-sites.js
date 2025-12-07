@@ -60,10 +60,40 @@ const SECONDARY_SITES = [
     priority: 'MEDIUM'
   },
   {
+    name: 'DasWundervoll',
+    url: 'https://www.daswundervoll.at/en/about-wundervoll/events',
+    description: 'Cultural venue events',
+    priority: 'MEDIUM'
+  },
+  {
+    name: 'WeLocally',
+    url: 'https://innsbruck.welocally.at/region/treffen',
+    description: 'Local meetup platform',
+    priority: 'MEDIUM'
+  },
+  {
+    name: 'Meetup',
+    url: 'https://www.meetup.com/find/at--innsbruck/',
+    description: 'International meetup platform',
+    priority: 'HIGH'
+  },
+  {
+    name: 'EngineeringKiosk',
+    url: 'https://engineeringkiosk.dev/meetup/alps/',
+    description: 'Engineering & Tech meetups',
+    priority: 'HIGH'
+  },
+  {
     name: 'InnsbruckInfo',
     url: 'https://www.innsbruck.info/veranstaltungskalender.html',
     description: 'City tourism events',
     priority: 'LOW'
+  },
+  {
+    name: 'CMI',
+    url: 'https://www.cmi.at/de/veranstaltungskalender',
+    description: 'Congress Messe Innsbruck',
+    priority: 'MEDIUM'
   }
 ];
 

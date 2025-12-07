@@ -42,6 +42,22 @@ Forward these newsletters to: **radar@in.kinn.at**
 - **Why**: Digital Innovation Hub events
 - **Expected**: 5-10 events/month
 
+## Community & Tech Platforms (HIGH VALUE)
+
+### Meetup Innsbruck
+- **Website**: https://www.meetup.com/find/at--innsbruck/
+- **Newsletter**: Create account and subscribe to groups
+- **Why**: International tech & startup meetups
+- **Expected**: 25-30 events/month
+- **Note**: Many AI, Dev, and Startup groups
+
+### Engineering Kiosk Alps
+- **Website**: https://engineeringkiosk.dev/meetup/alps/
+- **Newsletter**: Subscribe on website
+- **Why**: Engineering & tech community events
+- **Expected**: 3-5 events/month
+- **Note**: High-quality tech talks
+
 ## Secondary Sources (MEDIUM VALUE)
 
 ### 7. MCI
@@ -63,6 +79,18 @@ Forward these newsletters to: **radar@in.kinn.at**
 - **Website**: https://coworking-tirol.com
 - **Newsletter**: Member newsletter
 - **Expected**: 5-8 events/month
+
+### 11. Das Wundervoll
+- **Website**: https://www.daswundervoll.at
+- **Newsletter**: Subscribe for event updates
+- **Expected**: 15-20 events/month
+- **Note**: Cultural venue with tech/creative events
+
+### 12. WeLocally Innsbruck
+- **Website**: https://innsbruck.welocally.at
+- **Newsletter**: Platform notifications
+- **Expected**: 10-15 events/month
+- **Note**: Local community meetups
 
 ## Setup Instructions
 

@@ -148,6 +148,48 @@ const ALL_SOURCES = [
     active: false
   },
 
+  // COMMUNITY & TECH PLATFORMS
+  {
+    name: 'Meetup Innsbruck',
+    url: 'https://www.meetup.com/find/at--innsbruck/',
+    type: 'Website',
+    category: 'Community Platform',
+    priority: 'HIGH',
+    frequency: 'Daily',
+    expectedMonthly: 30,
+    active: false // Complex DOM structure
+  },
+  {
+    name: 'Engineering Kiosk Alps',
+    url: 'https://engineeringkiosk.dev/meetup/alps/',
+    type: 'Website',
+    category: 'Tech Meetups',
+    priority: 'HIGH',
+    frequency: 'Weekly',
+    expectedMonthly: 5,
+    active: false // New source
+  },
+  {
+    name: 'Das Wundervoll',
+    url: 'https://www.daswundervoll.at/en/about-wundervoll/events',
+    type: 'Website',
+    category: 'Cultural Venue',
+    priority: 'MEDIUM',
+    frequency: 'Weekly',
+    expectedMonthly: 20,
+    active: false // New source
+  },
+  {
+    name: 'WeLocally Innsbruck',
+    url: 'https://innsbruck.welocally.at/region/treffen',
+    type: 'Website',
+    category: 'Local Platform',
+    priority: 'MEDIUM',
+    frequency: 'Daily',
+    expectedMonthly: 15,
+    active: false // New source
+  },
+
   // LOW PRIORITY
   {
     name: 'Innsbruck.info',
