@@ -209,7 +209,7 @@ export const SOURCE_CONFIGS = {
 
   'MCI': {
     url: 'https://www.mci4me.at/de/events',
-    active: false,
+    active: true,
     extraction: {
       method: 'custom',
       instructions: `
@@ -227,7 +227,7 @@ export const SOURCE_CONFIGS = {
 
   'FH Kufstein': {
     url: 'https://www.fh-kufstein.ac.at/service/events',
-    active: false,
+    active: true,
     extraction: {
       method: 'custom',
       instructions: `
@@ -285,7 +285,7 @@ export const SOURCE_CONFIGS = {
 
   'Das Wundervoll': {
     url: 'https://www.daswundervoll.at/en/about-wundervoll/events',
-    active: false,
+    active: true,
     extraction: {
       method: 'custom',
       instructions: `
@@ -348,7 +348,7 @@ export const SOURCE_CONFIGS = {
 
   'DIH West': {
     url: 'https://www.dih-west.at/events',
-    active: false,
+    active: true,
     extraction: {
       method: 'custom',
       instructions: `
