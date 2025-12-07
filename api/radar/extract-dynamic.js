@@ -127,20 +127,40 @@ export default async function handler(req, res) {
 
     console.log(`[EXTRACT-DYNAMIC] Processing ${sourceName}`);
 
-    // Get extraction patterns from Google Sheets
-    const patterns = await getExtractionPatterns(sourceName);
+    // Get extraction patterns from Google Sheets first, then fallback to source configs
+    let patterns = await getExtractionPatterns(sourceName);
+
+    // If not in Google Sheets, try to get from source-configs.js
+    if (!patterns) {
+      try {
+        const { SOURCE_CONFIGS } = await import('../source-configs.js');
+        const sourceConfig = SOURCE_CONFIGS[sourceName];
+
+        if (sourceConfig && sourceConfig.extraction) {
+          patterns = {
+            url: sourceConfig.url || sourceConfig.extraction.searchUrl || '',
+            htmlPattern: sourceConfig.extraction.htmlPattern || '',
+            dateFormat: sourceConfig.extraction.dateFormat || '',
+            extractNotes: sourceConfig.extraction.extractNotes || sourceConfig.extraction.instructions || ''
+          };
+          console.log(`[EXTRACT-DYNAMIC] Using patterns from source-configs.js for ${sourceName}`);
+        }
+      } catch (configError) {
+        console.error(`[EXTRACT-DYNAMIC] Could not load source configs:`, configError);
+      }
+    }
 
     if (!patterns) {
       return res.status(404).json({
-        error: `Source "${sourceName}" not found in Google Sheets`,
-        hint: 'Please add source to Sources tab in Google Sheets'
+        error: `Source "${sourceName}" not found in Google Sheets or source configs`,
+        hint: 'Please add source to Google Sheets or update source-configs.js'
       });
     }
 
     if (!patterns.url) {
       return res.status(400).json({
         error: `No URL configured for "${sourceName}"`,
-        hint: 'Please add URL in column I of Sources tab'
+        hint: 'Please add URL configuration'
       });
     }
 
@@ -149,6 +169,13 @@ export default async function handler(req, res) {
       dateFormat: patterns.dateFormat ? 'yes' : 'no',
       extractNotes: patterns.extractNotes ? 'yes' : 'no'
     });
+
+    // Check if source needs special handling (e.g., SPAs)
+    if (patterns.extractNotes && patterns.extractNotes.includes('Angular SPA')) {
+      console.warn(`[EXTRACT-DYNAMIC] ${sourceName} is an SPA - events may not be in initial HTML!`);
+      // TODO: Implement headless browser solution or find API endpoint
+      // For now, we'll try anyway but likely get 0 events
+    }
 
     // Fetch the webpage
     const response = await fetch(patterns.url, {
@@ -169,6 +196,11 @@ export default async function handler(req, res) {
 
     const html = await response.text();
     console.log(`[EXTRACT-DYNAMIC] Fetched ${html.length} chars from ${sourceName}`);
+
+    // Warn if we detect an Angular/React/Vue app shell
+    if (html.includes('<app-root') || html.includes('ng-version') || html.includes('__NEXT_DATA__')) {
+      console.warn(`[EXTRACT-DYNAMIC] Detected SPA framework - events likely loaded via JavaScript`);
+    }
 
     // Build extraction instructions from patterns
     const instructions = buildInstructions(patterns, sourceName);

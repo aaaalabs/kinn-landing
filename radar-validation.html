@@ -549,13 +549,21 @@
             if (!source) return;
 
             addLog(`Testing ${sourceName}...`, 'info');
-            showModal(`Testing ${sourceName}`, '<div class="loading">⏳ Using source-specific extraction rules...</div>');
+            showModal(`Testing ${sourceName}`, '<div class="loading">🔥 Using Firecrawl with JavaScript rendering...</div>');
 
             try {
-                // Use NEW source-specific extraction endpoint
-                const response = await fetch('/api/radar/extract-with-config', {
+                // Use Firecrawl for ALL sources - handles both static and JavaScript sites!
+                const adminToken = localStorage.getItem('radarAdminToken') || prompt('Enter RADAR Admin Token:');
+                if (adminToken) {
+                    localStorage.setItem('radarAdminToken', adminToken);
+                }
+
+                const response = await fetch('/api/radar/extract-firecrawl', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
                     body: JSON.stringify({
                         sourceName: sourceName,
                         testMode: true  // Don't store in DB during test
@@ -618,6 +626,7 @@
 
                 <div class="test-results">
                     <h3>Extraction Summary</h3>
+                    <p>Method: 🔥 Firecrawl (with JavaScript rendering)</p>
                     <p>Events Found: ${data.events_found || 0}</p>
                     <p>New Events: ${data.events_added || 0}</p>
                     <p>Duplicates: ${data.duplicates || 0}</p>

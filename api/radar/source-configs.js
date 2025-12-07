@@ -8,19 +8,35 @@ export const SOURCE_CONFIGS = {
     url: 'https://www.inncubator.at/events',
     active: true,
     extraction: {
-      method: 'custom',
+      method: 'dynamic-spa',
       instructions: `
-        InnCubator Events are in a grid layout.
-        Look for:
-        - Event cards with class "event-item" or similar
-        - Dates in format "15. Jänner 2025"
-        - Most events are FREE (workshops, meetups, pitch nights)
-        - Location is usually "InnCubator, Zollerstraße 7, Innsbruck"
-        - If no price mentioned = FREE
-        - Categories: Mainly Startup, Workshop, Networking
+        InnCubator is an ANGULAR SPA - events load dynamically!
+
+        VERIFIED PATTERNS from actual HTML:
+        - Event container: article.event-item
+        - Date structure:
+          - Weekday: span.event-weekday (e.g., "Freitag")
+          - Day: span.event-day (e.g., "31.10")
+          - Year: span.event-year (e.g., "2025")
+        - Title: h2.event-title
+        - Event details in table rows:
+          - Time: th contains "Uhrzeit", td has time (e.g., "09:00-12:45 Uhr")
+          - Location: th contains "Ort", td has venue (e.g., "InnCubator" or "Online")
+          - Format: th contains "Format", td has category
+          - Price: th contains "Preis", td has "kostenlos" for free events
+        - Link: a.event-link contains href to event details
+
+        IMPORTANT: Only include events where Preis = "kostenlos" (free)
+        Skip events with "siehe Website" or other price indicators
+
+        Categories found: ews, innc-programm, offenes-event, partnerformat, iotlab
       `,
-      contentSelector: 'main, .events-container, .content',
-      maxChars: 20000
+      requiresJS: true,
+      contentSelector: 'app-event-item',
+      htmlPattern: 'article.event-item',
+      dateFormat: 'Weekday DD.MM in separate spans',
+      extractNotes: 'Angular SPA - needs JS. Events in article.event-item. Date split across 3 spans. Only "kostenlos" events!',
+      maxChars: 50000
     }
   },
 
@@ -44,21 +60,27 @@ export const SOURCE_CONFIGS = {
   },
 
   'WKO Tirol': {
-    url: 'https://www.wko.at/veranstaltungen/start',
+    url: 'https://www.wko.at/veranstaltungen/start?bundesland=T',
     active: true,
     extraction: {
-      method: 'search-params',
+      method: 'custom',
       searchUrl: 'https://www.wko.at/veranstaltungen/start?bundesland=T',
       instructions: `
-        WKO needs Tirol filter (?bundesland=T).
-        Look for:
-        - .searchResultItem containers
-        - Dates in .date or .termin fields
-        - Many are FREE for WKO members
-        - Include if "kostenlos", "gratis", or no price
+        WKO Tirol SPECIFIC PATTERNS (verified from HTML):
+        - REQUIRED: Must use ?bundesland=T parameter in URL
+        - Event containers: li.col-md-6.col-lg-4 with div.card.card-eventbox inside
+        - Date structure: Three separate dd elements (day, month, year)
+        - Date format: "Mi 10 Dez" (weekday abbreviation, day number, month name)
+        - Title: in h4 element after the date
+        - Location: after pin icon (bi-geo-alt-fill)
+        - Description: in p element
+        - Link: in a.stretched-link href
+        - Include events with "kostenlos", "gratis" or no price mentioned
         - Categories: Business, Workshop, Seminar, Webinar
-        - Locations: Often "WKO Tirol" or online
       `,
+      htmlPattern: 'li.col-md-6.col-lg-4 div.card.card-eventbox',
+      dateFormat: 'Weekday DD Month (e.g., Mi 10 Dez)',
+      extractNotes: 'MUST use ?bundesland=T. Events in cards, date split in 3 dd elements, location after pin icon',
       maxChars: 25000
     }
   },

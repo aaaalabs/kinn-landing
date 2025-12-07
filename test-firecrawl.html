@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KINN-RADAR Firecrawl Test - JavaScript-Rendered Pages</title>
+    <style>
+        body {
+            font-family: 'Work Sans', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2C3E50;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            background: #f0f9ff;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-box h3 {
+            margin: 0 0 10px 0;
+            color: #2980b9;
+        }
+        .source-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .source-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        .source-card:hover {
+            border-color: #5ED9A6;
+            box-shadow: 0 4px 12px rgba(94, 217, 166, 0.15);
+        }
+        .source-card.requires-js {
+            border-color: #f39c12;
+            background: #fff9e6;
+        }
+        .source-name {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #2C3E50;
+        }
+        .source-url {
+            font-size: 12px;
+            color: #7f8c8d;
+            word-break: break-all;
+            margin-bottom: 15px;
+        }
+        .source-meta {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge.js-required {
+            background: #f39c12;
+            color: white;
+        }
+        .badge.spa {
+            background: #e74c3c;
+            color: white;
+        }
+        .badge.api {
+            background: #3498db;
+            color: white;
+        }
+        button {
+            background: #5ED9A6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        button:hover:not(:disabled) {
+            background: #4BC997;
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .results {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .event-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 4px solid #5ED9A6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .event-title {
+            font-weight: 600;
+            color: #2C3E50;
+            margin-bottom: 8px;
+        }
+        .event-details {
+            font-size: 14px;
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+        .success {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        .error {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        .warning {
+            color: #f39c12;
+            font-weight: 600;
+        }
+        .loading {
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            background: #fff;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        .status-indicator.active {
+            background: #27ae60;
+        }
+        .status-indicator.missing {
+            background: #e74c3c;
+            animation: none;
+        }
+        pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .comparison-box {
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        .comparison-box h4 {
+            margin: 0 0 10px 0;
+            color: #2C3E50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 KINN-RADAR Firecrawl Test</h1>
+        <p class="subtitle">Test JavaScript-rendered pages with Firecrawl API</p>
+
+        <div class="api-status">
+            <span class="status-indicator" id="apiStatus"></span>
+            <span id="apiStatusText">Checking Firecrawl API key...</span>
+        </div>
+
+        <div class="info-box">
+            <h3>What is Firecrawl?</h3>
+            <p>Firecrawl is a web scraping API that can:</p>
+            <ul>
+                <li>✅ Execute JavaScript and wait for content to load</li>
+                <li>✅ Handle SPAs (Angular, React, Vue)</li>
+                <li>✅ Extract clean HTML and Markdown</li>
+                <li>✅ Remove navigation, ads, and clutter</li>
+                <li>✅ Perfect for sites like InnCubator that load events dynamically</li>
+            </ul>
+        </div>
+
+        <h2>Sources Requiring JavaScript</h2>
+        <div class="source-grid" id="sourceGrid">
+            <!-- Sources will be loaded here -->
+        </div>
+
+        <div class="results" id="results" style="display:none;">
+            <h3 id="resultsTitle">Test Results</h3>
+            <div id="resultsContent"></div>
+        </div>
+
+        <div class="comparison-grid" style="display:none;" id="comparisonGrid">
+            <div class="comparison-box">
+                <h4>🐌 Regular Extraction</h4>
+                <div id="regularResults">Not tested yet</div>
+            </div>
+            <div class="comparison-box">
+                <h4>🔥 Firecrawl Extraction</h4>
+                <div id="firecrawlResults">Not tested yet</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sources that need JavaScript rendering
+        const jsSources = [
+            {
+                name: 'InnCubator',
+                url: 'https://www.inncubator.at/events',
+                type: 'Angular SPA',
+                requiresJS: true,
+                description: 'Angular app - events load via JavaScript'
+            },
+            {
+                name: 'Impact Hub Tirol',
+                url: 'https://tirol.impacthub.net/en/collection/?_sf_tag=upcoming-events',
+                type: 'Dynamic Filter',
+                requiresJS: true,
+                description: 'JavaScript filtering system'
+            },
+            {
+                name: 'Meetup Innsbruck',
+                url: 'https://www.meetup.com/find/at--innsbruck/',
+                type: 'React SPA',
+                requiresJS: true,
+                description: 'React app with dynamic content'
+            },
+            {
+                name: 'Die Bäckerei',
+                url: 'https://diebaeckerei.at/programm',
+                type: 'Unknown',
+                requiresJS: false,
+                description: 'Might need JS for calendar'
+            }
+        ];
+
+        let apiKeyPresent = false;
+
+        async function checkApiKey() {
+            try {
+                const response = await fetch('/api/radar/extract-firecrawl', {
+                    method: 'OPTIONS'
+                });
+
+                // If we get here, the endpoint exists
+                document.getElementById('apiStatus').className = 'status-indicator active';
+                document.getElementById('apiStatusText').textContent = 'Firecrawl endpoint ready (key status unknown)';
+                apiKeyPresent = true;
+            } catch (error) {
+                document.getElementById('apiStatus').className = 'status-indicator missing';
+                document.getElementById('apiStatusText').textContent = 'Firecrawl endpoint not deployed';
+                apiKeyPresent = false;
+            }
+        }
+
+        function loadSources() {
+            const grid = document.getElementById('sourceGrid');
+
+            jsSources.forEach(source => {
+                const card = document.createElement('div');
+                card.className = `source-card ${source.requiresJS ? 'requires-js' : ''}`;
+
+                card.innerHTML = `
+                    <div class="source-name">${source.name}</div>
+                    <div class="source-url">${source.url}</div>
+                    <div class="source-meta">
+                        ${source.requiresJS ? '<span class="badge js-required">JS Required</span>' : ''}
+                        <span class="badge spa">${source.type}</span>
+                    </div>
+                    <p style="font-size: 14px; color: #7f8c8d; margin: 10px 0;">
+                        ${source.description}
+                    </p>
+                    <button onclick="testFirecrawl('${source.name}')" ${!apiKeyPresent ? 'disabled' : ''}>
+                        Test with Firecrawl
+                    </button>
+                    <button onclick="compareExtractions('${source.name}')" ${!apiKeyPresent ? 'disabled' : ''} style="margin-left: 10px; background: #3498db;">
+                        Compare Methods
+                    </button>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        async function testFirecrawl(sourceName) {
+            const resultsDiv = document.getElementById('results');
+            const content = document.getElementById('resultsContent');
+
+            resultsDiv.style.display = 'block';
+            document.getElementById('resultsTitle').innerHTML = `<span class="loading">Testing ${sourceName} with Firecrawl...</span>`;
+            content.innerHTML = '';
+
+            const adminToken = prompt('Enter RADAR Admin Token:');
+            if (!adminToken) return;
+
+            try {
+                const response = await fetch('/api/radar/extract-firecrawl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({
+                        sourceName: sourceName,
+                        testMode: true
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 400 && data.error === 'FIRECRAWL_API_KEY not configured') {
+                    document.getElementById('resultsTitle').innerHTML = `<span class="error">❌ Firecrawl API Key Missing</span>`;
+                    content.innerHTML = `
+                        <div class="info-box" style="border-color: #e74c3c; background: #ffe6e6;">
+                            <h3 style="color: #c0392b;">Configuration Required</h3>
+                            <p>To use Firecrawl, you need to:</p>
+                            <ol>
+                                <li>Sign up at <a href="https://firecrawl.dev" target="_blank">firecrawl.dev</a></li>
+                                <li>Get your API key from the dashboard</li>
+                                <li>Add to Vercel environment variables:</li>
+                            </ol>
+                            <pre>FIRECRAWL_API_KEY=fc-your-key-here</pre>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (data.success) {
+                    document.getElementById('resultsTitle').innerHTML = `<span class="success">✅ ${sourceName}: Found ${data.events_found} events</span>`;
+
+                    let html = `
+                        <div style="margin-bottom: 20px;">
+                            <strong>Method:</strong> ${data.scrapeMethod}<br>
+                            <strong>Content Length:</strong> ${data.contentLength} characters<br>
+                            <strong>Events Found:</strong> ${data.events_found}
+                        </div>
+                    `;
+
+                    if (data.events && data.events.length > 0) {
+                        html += '<h4>Sample Events:</h4>';
+                        data.events.forEach(event => {
+                            html += `
+                                <div class="event-item">
+                                    <div class="event-title">${event.title}</div>
+                                    <div class="event-details">
+                                        📅 ${event.date} at ${event.time}<br>
+                                        📍 ${event.location || event.city}<br>
+                                        🏷️ ${event.category}
+                                        ${event.description ? `<br>📝 ${event.description}` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html += '<p class="warning">No events found. The page might not have any upcoming events.</p>';
+                    }
+
+                    content.innerHTML = html;
+                } else {
+                    document.getElementById('resultsTitle').innerHTML = `<span class="error">❌ ${sourceName}: ${data.error}</span>`;
+                    content.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+
+            } catch (error) {
+                document.getElementById('resultsTitle').innerHTML = `<span class="error">❌ Error</span>`;
+                content.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function compareExtractions(sourceName) {
+            const comparisonGrid = document.getElementById('comparisonGrid');
+            comparisonGrid.style.display = 'grid';
+
+            const adminToken = prompt('Enter RADAR Admin Token:');
+            if (!adminToken) return;
+
+            // Test regular extraction
+            document.getElementById('regularResults').innerHTML = '<span class="loading">Testing regular extraction...</span>';
+
+            try {
+                const regularResponse = await fetch('/api/radar/extract-dynamic', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({
+                        sourceName: sourceName,
+                        testMode: true
+                    })
+                });
+
+                const regularData = await regularResponse.json();
+                document.getElementById('regularResults').innerHTML = `
+                    <strong>Events found:</strong> ${regularData.events_found || 0}<br>
+                    <small>${regularData.error || 'Success'}</small>
+                `;
+            } catch (error) {
+                document.getElementById('regularResults').innerHTML = `<span class="error">Failed: ${error.message}</span>`;
+            }
+
+            // Test Firecrawl extraction
+            document.getElementById('firecrawlResults').innerHTML = '<span class="loading">Testing Firecrawl extraction...</span>';
+
+            try {
+                const firecrawlResponse = await fetch('/api/radar/extract-firecrawl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({
+                        sourceName: sourceName,
+                        testMode: true
+                    })
+                });
+
+                const firecrawlData = await firecrawlResponse.json();
+
+                if (firecrawlData.error === 'FIRECRAWL_API_KEY not configured') {
+                    document.getElementById('firecrawlResults').innerHTML = `<span class="warning">API key not configured</span>`;
+                } else {
+                    document.getElementById('firecrawlResults').innerHTML = `
+                        <strong>Events found:</strong> ${firecrawlData.events_found || 0}<br>
+                        <small>${firecrawlData.error || 'Success with JS rendering'}</small>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('firecrawlResults').innerHTML = `<span class="error">Failed: ${error.message}</span>`;
+            }
+        }
+
+        // Initialize on load
+        checkApiKey();
+        loadSources();
+    </script>
+</body>
+</html>
