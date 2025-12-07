@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RADAR Debug - Analyze Newsletter</title>
+    <style>
+        body {
+            font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #2C3E50;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        button {
+            background: #5ED9A6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #4BC997;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #results {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .event {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #ddd;
+            border-radius: 4px;
+        }
+        .event.rejected {
+            border-left-color: #ff6b6b;
+        }
+        .event.maybe {
+            border-left-color: #ffd93d;
+        }
+        .event.accepted {
+            border-left-color: #5ED9A6;
+        }
+        .event h3 {
+            margin: 0 0 10px 0;
+            color: #2C3E50;
+        }
+        .event p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .filter-reason {
+            color: #ff6b6b;
+            font-weight: 500;
+            background: #fff5f5;
+            padding: 5px 10px;
+            border-radius: 3px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .error {
+            background: #fff5f5;
+            color: #ff6b6b;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .summary {
+            background: #e8f5f0;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 KINN-RADAR Debug Analyzer</h1>
+    <p>Paste the newsletter HTML content below to see what events are found and why they might be filtered out:</p>
+
+    <textarea id="content" placeholder="Paste newsletter HTML content here..."></textarea>
+    <br>
+    <button id="analyze" onclick="analyzeContent()">Analyze Newsletter</button>
+
+    <div id="results"></div>
+
+    <script>
+        async function analyzeContent() {
+            const content = document.getElementById('content').value;
+            const button = document.getElementById('analyze');
+            const results = document.getElementById('results');
+
+            if (!content.trim()) {
+                alert('Please paste newsletter content first');
+                return;
+            }
+
+            button.disabled = true;
+            results.innerHTML = '<div class="loading">⏳ Analyzing newsletter content...</div>';
+
+            try {
+                const response = await fetch('/api/radar/debug', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ content })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Analysis failed');
+                }
+
+                displayResults(data.debug_analysis);
+
+            } catch (error) {
+                results.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        function displayResults(analysis) {
+            const results = document.getElementById('results');
+
+            if (!analysis || !analysis.all_events) {
+                results.innerHTML = '<div class="error">No events found in newsletter</div>';
+                return;
+            }
+
+            let html = '<h2>📊 Analysis Results</h2>';
+
+            // Summary
+            if (analysis.summary) {
+                html += `<div class="summary"><strong>Summary:</strong> ${analysis.summary}</div>`;
+            }
+
+            html += `<p><strong>Total Events Found:</strong> ${analysis.all_events.length}</p>`;
+
+            // Events
+            analysis.all_events.forEach((event, index) => {
+                const isRejected = event.filter_reason && event.filter_reason !== 'None';
+                const className = isRejected ? 'rejected' : (event.ai_relevant ? 'accepted' : 'maybe');
+
+                html += `<div class="event ${className}">`;
+                html += `<h3>${index + 1}. ${event.title || 'Unnamed Event'}</h3>`;
+
+                if (event.date) html += `<p><strong>📅 Date:</strong> ${event.date}</p>`;
+                if (event.location) html += `<p><strong>📍 Location:</strong> ${event.location}</p>`;
+                if (event.cost) html += `<p><strong>💰 Cost:</strong> ${event.cost}</p>`;
+                html += `<p><strong>🤖 AI Relevant:</strong> ${event.ai_relevant ? 'Yes ✅' : 'No ❌'}</p>`;
+
+                if (event.filter_reason) {
+                    html += `<div class="filter-reason">⚠️ Filter: ${event.filter_reason}</div>`;
+                }
+
+                html += '</div>';
+            });
+
+            results.innerHTML = html;
+        }
+
+        // Allow Ctrl+Enter to submit
+        document.getElementById('content').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                analyzeContent();
+            }
+        });
+    </script>
+</body>
+</html>
