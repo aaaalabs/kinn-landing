@@ -5,13 +5,24 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
  * Inbound Email Webhook Handler
- * Receives email.received events from Resend and sends AI-powered auto-replies
+ * DEACTIVATED - Caused bounce loops and spam issues
+ *
+ * Original purpose unclear - no current use case for auto-replies
+ * All user replies go to thomas@kinn.at directly
  *
  * [CP01] KISS: Simple webhook → fetch email → AI reply → send
  * [EH02] User-friendly error handling
  * [SC02] Input validation
  */
 export default async function handler(req, res) {
+  // WEBHOOK DEACTIVATED - Return success to prevent Resend retries
+  console.log('[INBOUND] Webhook deactivated - ignoring all inbound emails');
+  return res.status(200).json({
+    ok: true,
+    message: 'Inbound webhook is deactivated'
+  });
+
+  /* Original code below - kept for reference
   // Only accept POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({
@@ -146,4 +157,5 @@ export default async function handler(req, res) {
       ...(process.env.NODE_ENV === 'development' && { details: error.stack })
     });
   }
+  */
 }
