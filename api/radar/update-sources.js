@@ -218,42 +218,60 @@ export default async function handler(req, res) {
       });
     }
 
-    // Prepare data for Google Sheets
+    // Prepare data for Google Sheets - SIMPLIFIED SLC VERSION
     const headers = [
-      'Source Name',
-      'URL',
-      'Type',
-      'Category',
-      'Priority',
-      'Status',
-      'Check Frequency',
-      'Expected/Month',
-      'Found Total',
-      'Added Total',
-      'Success Rate',
-      'Last Checked'
+      'Source',           // Name
+      'Status',          // Active/Inactive/Error
+      'Quality',         // HIGH/MED/LOW
+      'This Month',      // Events found this month
+      'Last 30 Days',    // Events in last 30 days
+      'Last Check',      // When we last checked
+      'Type',           // Web/Newsletter
+      'Schedule',       // Daily/Weekly/On Receipt
+      'URL'             // Reference link
     ];
 
-    const rows = sourcesWithMetrics.map(source => [
-      source.name,
-      source.url,
-      source.type,
-      source.category,
-      source.priority,
-      source.active ? '✅ Active' : '⏸️ Inactive',
-      source.frequency,
-      source.expectedMonthly,
-      source.eventsFound,
-      source.eventsAdded,
-      source.successRate,
-      source.lastChecked
-    ]);
+    const rows = sourcesWithMetrics.map(source => {
+      // Calculate status emoji
+      let status = '⏸️ Inactive';
+      if (source.active) {
+        const lastCheck = new Date(source.lastChecked);
+        const hoursSinceCheck = (Date.now() - lastCheck) / (1000 * 60 * 60);
+        if (hoursSinceCheck < 24) {
+          status = '✅ Active';
+        } else if (hoursSinceCheck < 72) {
+          status = '⚠️ Stale';
+        } else {
+          status = '❌ Error';
+        }
+      }
+
+      // Quality indicator based on priority
+      const qualityMap = {
+        'HIGH': '⭐⭐⭐',
+        'MEDIUM': '⭐⭐',
+        'LOW': '⭐',
+        'TEST': '🧪'
+      };
+
+      return [
+        source.name,
+        status,
+        qualityMap[source.priority] || '⭐',
+        source.eventsFound || 0,      // This month
+        source.eventsAdded || 0,      // Last 30 days (simplified)
+        source.lastChecked === 'Never' ? 'Never' : new Date(source.lastChecked).toLocaleDateString(),
+        source.type,
+        source.frequency,
+        source.url
+      ];
+    });
 
     // Get sheets client
     const sheets = await getSheetsClient();
 
     // Clear and update Sources sheet
-    const range = 'Sources!A:L';
+    const range = 'Sources!A:I';  // 9 columns now
 
     await sheets.spreadsheets.values.clear({
       spreadsheetId: SHEET_ID,
@@ -269,17 +287,22 @@ export default async function handler(req, res) {
       }
     });
 
-    // Add summary statistics
-    const summaryHeaders = ['Summary', 'Value'];
+    // Add ACTIONABLE summary statistics
+    const summaryHeaders = ['Status', 'Count'];
+
+    const activeCount = rows.filter(r => r[1].includes('✅')).length;
+    const staleCount = rows.filter(r => r[1].includes('⚠️')).length;
+    const errorCount = rows.filter(r => r[1].includes('❌')).length;
+    const inactiveCount = rows.filter(r => r[1].includes('⏸️')).length;
+
     const summary = [
-      ['Total Sources', ALL_SOURCES.length],
-      ['Active Sources', ALL_SOURCES.filter(s => s.active).length],
-      ['HIGH Priority', ALL_SOURCES.filter(s => s.priority === 'HIGH').length],
-      ['Website Sources', ALL_SOURCES.filter(s => s.type === 'Website').length],
-      ['Newsletter Sources', ALL_SOURCES.filter(s => s.type === 'Newsletter').length],
-      ['Expected Events/Month', ALL_SOURCES.reduce((sum, s) => sum + s.expectedMonthly, 0)],
+      ['✅ Working', activeCount],
+      ['⚠️ Need Check', staleCount],
+      ['❌ Broken', errorCount],
+      ['⏸️ Inactive', inactiveCount],
       ['', ''],
-      ['Last Updated', new Date().toISOString()]
+      ['Total Sources', ALL_SOURCES.length],
+      ['Last Update', new Date().toLocaleString('de-AT', { timeZone: 'Europe/Vienna' })]
     ];
 
     await sheets.spreadsheets.values.update({
