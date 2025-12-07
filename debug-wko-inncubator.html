@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug WKO & InnCubator</title>
+    <style>
+        body {
+            font-family: 'Work Sans', monospace;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 { color: #5ED9A6; }
+        button {
+            background: #5ED9A6;
+            color: black;
+            border: none;
+            padding: 12px 24px;
+            margin: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover { background: #4BC997; }
+        .debug-panel {
+            background: #2d2d2d;
+            border: 1px solid #444;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .success { color: #5ED9A6; }
+        .error { color: #ff6b6b; }
+        .warning { color: #ffa500; }
+        .info { color: #3498db; }
+        pre {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .metric {
+            background: #2d2d2d;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .metric-label {
+            color: #999;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .metric-value {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug: WKO & InnCubator Event Extraction</h1>
+
+    <div>
+        <button onclick="debugSource('https://www.wko.at/veranstaltungen/start')">🏢 Debug WKO</button>
+        <button onclick="debugSource('https://www.inncubator.at/events')">🚀 Debug InnCubator</button>
+        <button onclick="testBothWithDifferentPrompts()">🧪 Test Different Prompts</button>
+    </div>
+
+    <div id="results" class="debug-panel">
+        <p class="info">Click a button to start debugging...</p>
+    </div>
+
+    <script>
+        async function debugSource(url) {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p class="loading">⏳ Analyzing ' + url + '...</p>';
+
+            try {
+                const response = await fetch('/api/radar/debug-source?url=' + encodeURIComponent(url));
+                const data = await response.json();
+
+                let html = '<h2>Debug Results: ' + url + '</h2>';
+
+                // Basic info
+                html += '<div class="grid">';
+                html += '<div class="metric"><div class="metric-label">HTML Size</div><div class="metric-value">' + data.debug.html_length + ' chars</div></div>';
+                html += '<div class="metric"><div class="metric-label">Is SPA</div><div class="metric-value ' + (data.debug.is_spa ? 'warning' : 'success') + '">' + (data.debug.is_spa ? 'YES ⚠️' : 'NO ✅') + '</div></div>';
+                html += '</div>';
+
+                // CMS Detection
+                html += '<h3>CMS/Framework Detection:</h3>';
+                html += '<pre>' + JSON.stringify(data.debug.cms_detected, null, 2) + '</pre>';
+
+                // Pattern matches
+                if (Object.keys(data.debug.pattern_matches).length > 0) {
+                    html += '<h3 class="success">✅ Event Patterns Found:</h3>';
+                    html += '<pre>' + JSON.stringify(data.debug.pattern_matches, null, 2) + '</pre>';
+                } else {
+                    html += '<h3 class="error">❌ No Event Patterns Found</h3>';
+                }
+
+                // Date occurrences
+                if (Object.keys(data.debug.date_occurrences).length > 0) {
+                    html += '<h3 class="success">✅ Dates Found:</h3>';
+                    html += '<pre>' + JSON.stringify(data.debug.date_occurrences, null, 2) + '</pre>';
+                } else {
+                    html += '<h3 class="warning">⚠️ No Dates Found</h3>';
+                }
+
+                // Site-specific extraction
+                if (url.includes('wko') && data.debug.wko_specific) {
+                    html += '<h3>WKO Specific Extraction:</h3>';
+                    html += '<pre>' + JSON.stringify(data.debug.wko_specific, null, 2) + '</pre>';
+                }
+
+                if (url.includes('inncubator') && data.debug.inncubator_specific) {
+                    html += '<h3>InnCubator Specific Extraction:</h3>';
+                    html += '<pre>' + JSON.stringify(data.debug.inncubator_specific, null, 2) + '</pre>';
+                }
+
+                // Event keyword samples
+                html += '<h3>Event Keyword Context:</h3>';
+                html += '<pre>' + JSON.stringify(data.debug.event_keyword_samples, null, 2) + '</pre>';
+
+                // AI Extraction
+                html += '<h3>AI Extraction Result:</h3>';
+                if (data.debug.ai_extraction.events && data.debug.ai_extraction.events.length > 0) {
+                    html += '<p class="success">✅ Found ' + data.debug.ai_extraction.events.length + ' events</p>';
+                    html += '<pre>' + JSON.stringify(data.debug.ai_extraction.events, null, 2) + '</pre>';
+                } else {
+                    html += '<p class="error">❌ No events extracted by AI</p>';
+                    html += '<p>Debug info: ' + (data.debug.ai_extraction.debug_info || 'No debug info') + '</p>';
+                }
+
+                // First 500 chars of HTML
+                html += '<h3>First 500 chars of HTML:</h3>';
+                html += '<pre>' + escapeHtml(data.debug.first_500_chars) + '</pre>';
+
+                results.innerHTML = html;
+
+            } catch (error) {
+                results.innerHTML = '<p class="error">❌ Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function testBothWithDifferentPrompts() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p class="loading">⏳ Testing both sources with multiple extraction strategies...</p>';
+
+            const sources = [
+                { name: 'WKO', url: 'https://www.wko.at/veranstaltungen/start' },
+                { name: 'InnCubator', url: 'https://www.inncubator.at/events' }
+            ];
+
+            let html = '<h2>Multi-Strategy Test</h2>';
+
+            for (const source of sources) {
+                html += '<h3>' + source.name + '</h3>';
+
+                // Test 1: Regular extraction
+                try {
+                    const response1 = await fetch('/api/radar/check-sites', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            sites: [{ name: source.name, url: source.url }]
+                        })
+                    });
+                    const data1 = await response1.json();
+                    html += '<p>Standard extraction: ' + (data1.events_found || 0) + ' events</p>';
+                } catch (e) {
+                    html += '<p class="error">Standard extraction failed</p>';
+                }
+
+                // Test 2: Debug extraction
+                try {
+                    const response2 = await fetch('/api/radar/debug-source?url=' + encodeURIComponent(source.url));
+                    const data2 = await response2.json();
+                    const aiEvents = data2.debug.ai_extraction?.events?.length || 0;
+                    html += '<p>Debug extraction: ' + aiEvents + ' events</p>';
+
+                    // Show why it might be failing
+                    if (data2.debug.is_spa) {
+                        html += '<p class="warning">⚠️ This is a Single Page Application (SPA) - content may be loaded dynamically via JavaScript</p>';
+                    }
+                    if (!data2.debug.pattern_matches || Object.keys(data2.debug.pattern_matches).length === 0) {
+                        html += '<p class="warning">⚠️ No standard event HTML patterns found</p>';
+                    }
+                } catch (e) {
+                    html += '<p class="error">Debug extraction failed</p>';
+                }
+            }
+
+            results.innerHTML = html;
+
+            // Conclusions
+            html += '<h2>Likely Issues:</h2>';
+            html += '<ul>';
+            html += '<li>🔸 JavaScript-rendered content (SPA) - events loaded after page load</li>';
+            html += '<li>🔸 Complex HTML structure not matching our patterns</li>';
+            html += '<li>🔸 Events not clearly marked as "FREE" so AI filters them out</li>';
+            html += '<li>🔸 Need custom extraction logic for each site</li>';
+            html += '</ul>';
+
+            html += '<h2>Solutions:</h2>';
+            html += '<ul>';
+            html += '<li>✅ Use headless browser (Puppeteer) to render JavaScript</li>';
+            html += '<li>✅ Create site-specific extractors</li>';
+            html += '<li>✅ Adjust AI prompt to be less strict about "FREE" requirement</li>';
+            html += '<li>✅ Use API endpoints if available (check for /api/events)</li>';
+            html += '</ul>';
+
+            results.innerHTML = html;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            console.log('Debug page ready. Testing WKO and InnCubator event extraction...');
+        });
+    </script>
+</body>
+</html>

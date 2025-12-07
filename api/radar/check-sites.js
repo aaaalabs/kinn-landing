@@ -219,16 +219,29 @@ async function extractEventsFromHTML(html, url, siteName) {
   // Extract just the main content area to reduce token count
   const mainContent = extractMainContent(html);
 
+  // Use more content for better extraction
+  const contentLength = 15000; // Increased from 8000
+  const content = mainContent.substring(0, contentLength);
+
   const prompt = `
 You are extracting events from a website HTML. This is from ${siteName} (${url}).
 
-Extract ALL events that meet these criteria:
-1. FREE (kostenlos, gratis, no cost, Eintritt frei) - REJECT if any price mentioned
-2. Located in TYROL (Innsbruck, Hall, Wattens, Kufstein, etc.) - REJECT if outside Tyrol
-3. PUBLIC (open registration) - REJECT if members-only
+IMPORTANT: Extract ALL events, workshops, seminars, and meetings from this page.
 
-HTML Content (main section only):
-${mainContent.substring(0, 8000)}
+Criteria:
+1. PREFER FREE events but INCLUDE events where price is not mentioned (might be free)
+2. Must be in TYROL (Innsbruck, Hall, Wattens, Kufstein, etc.)
+3. PUBLIC events (open registration)
+
+Special rules for ${siteName}:
+${siteName.includes('WKO') ? '- WKO events are often free for members, include them' : ''}
+${siteName.includes('InnCubator') ? '- InnCubator events are usually free, include even if not explicitly stated' : ''}
+${siteName.includes('Uni') ? '- University events are typically free and public' : ''}
+- If no price is mentioned, ASSUME it might be free and INCLUDE it
+- Look for dates in format: 15.01.2025, 15. Jänner, January 15, etc.
+
+HTML Content:
+${content}
 
 For each qualifying FREE event in TYROL, extract:
 {
