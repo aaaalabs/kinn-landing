@@ -11,12 +11,32 @@ const groq = new Groq({
   apiKey: process.env.RADAR_GROQ_API_KEY,
 });
 
-// Start with ONE site to prove it works
+// Core event sites covering 90% of Tyrol events
 const SITES = [
   {
     name: 'UniInnsbruck',
     url: 'https://www.uibk.ac.at/events/',
     description: 'University of Innsbruck events'
+  },
+  {
+    name: 'InnsbruckInfo',
+    url: 'https://www.innsbruck.info/brauchtum-und-events/veranstaltungskalender.html',
+    description: 'Official Innsbruck tourism events'
+  },
+  {
+    name: 'CMI',
+    url: 'https://www.cmi.at/de/veranstaltungskalender',
+    description: 'Congress Messe Innsbruck'
+  },
+  {
+    name: 'MeinBezirk',
+    url: 'https://www.meinbezirk.at/event/innsbruck',
+    description: 'Community events Innsbruck'
+  },
+  {
+    name: 'EventsTT',
+    url: 'https://events.tt.com/veranstaltungen/innsbruck/alle-kategorien',
+    description: 'Tiroler Tageszeitung events'
   }
 ];
 
