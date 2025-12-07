@@ -230,6 +230,10 @@ Return ONLY a JSON array of events, no other text.`;
         return parsed;
       } else if (parsed.events && Array.isArray(parsed.events)) {
         return parsed.events;
+      } else if (parsed.title && parsed.date) {
+        // Single event object returned
+        console.log('[RADAR] Groq returned single event object');
+        return [parsed];
       } else {
         console.log('[RADAR] Unexpected response format from Groq:', JSON.stringify(parsed).substring(0, 200));
         // Try to extract events from any structure
@@ -237,8 +241,13 @@ Return ONLY a JSON array of events, no other text.`;
           // Check for any array property that might contain events
           const possibleEventArrays = Object.values(parsed).filter(v => Array.isArray(v));
           if (possibleEventArrays.length > 0) {
-            console.log('[RADAR] Found array in response, using first one');
+            console.log('[RADAR] Found array in response, attempting to use it');
             return possibleEventArrays[0];
+          }
+          // If it looks like an event object, wrap it in an array
+          if (parsed.title || parsed.date || parsed.location) {
+            console.log('[RADAR] Treating response as single event');
+            return [parsed];
           }
         }
         return [];
