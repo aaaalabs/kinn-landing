@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   try {
     // Verify Resend webhook signature (optional for MVP)
     const signature = req.headers['svix-signature'];
-    const expectedSecret = process.env.RESEND_WEBHOOK_SECRET;
+    const expectedSecret = process.env.RESEND_RADAR_WEBHOOK_SECRET || process.env.RESEND_WEBHOOK_SECRET;
 
     // Skip signature validation if no secret configured (development)
     if (expectedSecret && signature !== expectedSecret) {
