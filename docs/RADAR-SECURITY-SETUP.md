@@ -19,8 +19,7 @@ Only the following email addresses can send to radar@in.kinn.at:
 - **admin@libralab.ai** - Admin account
 
 ### Personal Accounts
-- **thomas.arzt@gmail.com** - Personal Gmail
-- **thomas.seiger@gmail.com** - Alternative Gmail
+- **thomas.seiger@gmail.com** - Personal Gmail
 
 ### System
 - **treff@in.kinn.at** - For testing and system emails
@@ -87,7 +86,6 @@ const ALLOWED_SENDERS = [
   'admin@libralab.ai',
 
   // Personal accounts
-  'thomas.arzt@gmail.com',
   'thomas.seiger@gmail.com',
 
   // System

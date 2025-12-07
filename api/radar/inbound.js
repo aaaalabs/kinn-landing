@@ -66,7 +66,6 @@ export default async function handler(req, res) {
       'admin@libralab.ai',
 
       // Personal accounts
-      'thomas.arzt@gmail.com',
       'thomas.seiger@gmail.com',
 
       // System emails
