@@ -39,7 +39,12 @@ export default async function handler(req, res) {
 
     console.log('[RADAR] Webhook signature check bypassed for MVP');
 
-    const { from, to, subject, html, text } = req.body;
+    // Log the entire request body to understand structure
+    console.log('[RADAR] Full webhook payload:', JSON.stringify(req.body));
+
+    // Resend webhook might have different structure - check for nested data
+    const emailData = req.body.data || req.body;
+    const { from, to, subject, html, text } = emailData;
 
     // Log receipt with full details for debugging
     console.log(`[RADAR] Email received - From: ${from}, To: ${to}, Subject: ${subject}`);
