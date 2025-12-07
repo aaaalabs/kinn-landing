@@ -123,7 +123,8 @@ Return a JSON object with an "events" array:
       "city": "City name",
       "category": "Startup|Workshop|Networking|Tech|Innovation|Other",
       "description": "Brief description (max 200 chars)",
-      "registrationUrl": "URL if available"
+      "registrationUrl": "Direct registration/ticket URL if available",
+      "detailUrl": "URL to event detail page (IMPORTANT - always include!)"
     }
   ]
 }

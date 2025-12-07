@@ -169,14 +169,19 @@ export const SOURCE_CONFIGS = {
     extraction: {
       method: 'custom',
       instructions: `
-        Engineering Kiosk lists tech meetups.
-        Look for:
-        - Event sections with dates
-        - All events are FREE community meetups
-        - Categories: Software Engineering, DevOps, Tech
-        - Location: Rotating venues in Innsbruck
-        - German or English content
+        Engineering Kiosk Alps - ONLY SHOWS NEXT SINGLE EVENT!
+
+        Pattern on page:
+        - "Next Meetup @ ???" or venue name
+        - Date: e.g. "January 15, 2026"
+        - Time: "open doors at 18:30"
+        - Location: Sometimes "???" if not yet determined
+        - All events are FREE tech meetups
+
+        NOTE: This is NOT an event list - just ONE upcoming event
+        Limited value for aggregation (only 1 event at a time)
       `,
+      singleEventOnly: true,  // Only shows next event
       maxChars: 15000
     }
   },
@@ -320,14 +325,23 @@ export const SOURCE_CONFIGS = {
     extraction: {
       method: 'custom',
       instructions: `
-        WeLocally community platform.
-        Look for:
-        - Local meetups and gatherings
-        - Most are FREE community events
-        - Various categories and interests
-        - Location: Various in Innsbruck
-        - German content
+        WeLocally community platform - SURFACE EXTRACTION ONLY!
+
+        What's available on main page:
+        - Event title
+        - Date only (no time)
+        - IMPORTANT: Capture the detail page URL for each event!
+
+        Strategy:
+        1. Extract date and title from main list
+        2. ALWAYS include detailUrl to event page
+        3. Set time to "00:00" if unknown
+        4. Users can click through for full details
+
+        Most are FREE community events
+        German content
       `,
+      surfaceOnly: true,  // Don't deep crawl - just get URLs
       maxChars: 20000
     }
   },
