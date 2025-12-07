@@ -90,10 +90,19 @@ export function shouldAutoReply(emailData) {
   // - No-reply addresses
   // - Auto-responders
   // - Delivery failures
+  // - OUR OWN SYSTEM EMAILS (critical!)
+  // - Known spam patterns
   const skipPatterns = [
     /noreply|no-reply|mailer-daemon|postmaster/i,
     /auto.*reply|automatic.*response/i,
-    /delivery.*failure|undelivered/i,
+    /delivery.*failure|undelivered|bounced/i,
+    // Skip our own system emails to prevent loops
+    /ki@in\.kinn\.at|thomas@kinn\.at|treff@in\.kinn\.at/i,
+    // Skip known spam patterns
+    /medicare|adac|krankenkasse|versicherung|bonus-programm/i,
+    /firebaseapp\.com|newsletter|unsubscribe/i,
+    // Skip bounce notifications about our own emails
+    /Re:\s*(Neue Anmeldung|Newsletter-Anmeldung|KINN)/i,
   ];
 
   const fromEmail = from.toLowerCase();
@@ -104,6 +113,12 @@ export function shouldAutoReply(emailData) {
       console.log('[AI-REPLY] Skipping auto-reply for:', from);
       return false;
     }
+  }
+
+  // Additional check: Skip if subject starts with "Re:" (likely a reply)
+  if (subject?.startsWith('Re:')) {
+    console.log('[AI-REPLY] Skipping auto-reply for reply email:', from);
+    return false;
   }
 
   return true;
