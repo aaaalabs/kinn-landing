@@ -459,7 +459,7 @@
             { name: 'WKO Tirol', url: 'https://www.wko.at/veranstaltungen/start', priority: 'HIGH', category: 'Business/Commerce', active: true },
             { name: 'AI Austria', url: 'https://aiaustria.com/event-calendar', priority: 'HIGH', category: 'AI/ML', active: true },
             { name: 'Standortagentur Tirol', url: 'https://www.standort-tirol.at/veranstaltungen', priority: 'HIGH', category: 'Regional Development', active: true },
-            { name: 'Impact Hub Tirol', url: 'https://tirol.impacthub.net/en/collection/?_sf_tag=upcoming-events', priority: 'HIGH', category: 'Innovation Hub', active: false },
+            { name: 'Impact Hub Tirol', url: 'https://tirol.impacthub.net/en/collection/?_sf_tag=upcoming-events', priority: 'HIGH', category: 'Innovation Hub', active: true },
 
             // Community Platforms
             { name: 'Meetup Innsbruck', url: 'https://www.meetup.com/find/at--innsbruck/', priority: 'HIGH', category: 'Community Platform', active: false },
@@ -473,7 +473,7 @@
             { name: 'Werkstätte Wattens', url: 'https://www.werkstaette-wattens.at', priority: 'MEDIUM', category: 'Innovation Hub', active: false },
             { name: 'Coworking Tirol', url: 'https://coworking-tirol.com/events', priority: 'MEDIUM', category: 'Coworking/Community', active: false },
             { name: 'Das Wundervoll', url: 'https://www.daswundervoll.at/en/about-wundervoll/events', priority: 'MEDIUM', category: 'Cultural Venue', active: false },
-            { name: 'Die Bäckerei', url: 'https://diebaeckerei.at/programm', priority: 'MEDIUM', category: 'Cultural Center', active: false },
+            { name: 'Die Bäckerei', url: 'https://diebaeckerei.at/programm', priority: 'MEDIUM', category: 'Cultural Center', active: true },
             { name: 'WeLocally Innsbruck', url: 'https://innsbruck.welocally.at/region/treffen', priority: 'MEDIUM', category: 'Local Platform', active: false },
             { name: 'DIH West', url: 'https://www.dih-west.at/events', priority: 'MEDIUM', category: 'Digital Innovation', active: false },
 
@@ -549,27 +549,33 @@
             if (!source) return;
 
             addLog(`Testing ${sourceName}...`, 'info');
-            showModal(`Testing ${sourceName}`, '<div class="loading">⏳ Extracting events from website...</div>');
+            showModal(`Testing ${sourceName}`, '<div class="loading">⏳ Using source-specific extraction rules...</div>');
 
             try {
-                // Create test request for individual source
-                const response = await fetch('/api/radar/test-single-source', {
+                // Use NEW source-specific extraction endpoint
+                const response = await fetch('/api/radar/extract-with-config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        name: source.name,
-                        url: source.url,
-                        priority: source.priority
+                        sourceName: sourceName,
+                        testMode: true  // Don't store in DB during test
                     })
                 });
 
-                if (!response.ok) {
-                    // Fallback to regular check-sites with filter
-                    const fallbackResponse = await fetch(`/api/radar/check-sites?source=${encodeURIComponent(sourceName)}`);
-                    const data = await fallbackResponse.json();
-                    displayTestResults(sourceName, data);
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    // Try debug endpoint for more info
+                    const debugResponse = await fetch(`/api/radar/debug-source?url=${encodeURIComponent(source.url)}`);
+                    const debugData = await debugResponse.json();
+
+                    displayTestResults(sourceName, {
+                        ...data,
+                        debug: debugData?.debug,
+                        events_found: data.events_found || 0,
+                        events: data.events || []
+                    });
                 } else {
-                    const data = await response.json();
                     displayTestResults(sourceName, data);
                 }
 

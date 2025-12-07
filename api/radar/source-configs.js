@@ -103,7 +103,7 @@ export const SOURCE_CONFIGS = {
 
   'Impact Hub Tirol': {
     url: 'https://tirol.impacthub.net/en/collection/?_sf_tag=upcoming-events',
-    active: false,
+    active: true,
     extraction: {
       method: 'dynamic',
       instructions: `
@@ -291,7 +291,7 @@ export const SOURCE_CONFIGS = {
 
   'Die Bäckerei': {
     url: 'https://diebaeckerei.at/programm',
-    active: false,
+    active: true,
     extraction: {
       method: 'custom',
       instructions: `

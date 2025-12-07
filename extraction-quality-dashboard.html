@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KINN-RADAR Extraction Quality Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Work Sans', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2C3E50;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            text-transform: uppercase;
+        }
+
+        .sources-table {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f7f9fc;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2C3E50;
+            border-bottom: 2px solid #e0e6ed;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f3f7;
+        }
+
+        tr:hover {
+            background: #f7f9fc;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-testing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .quality-indicator {
+            display: inline-flex;
+            gap: 2px;
+        }
+
+        .quality-bar {
+            width: 20px;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 2px;
+        }
+
+        .quality-bar.filled {
+            background: #5ED9A6;
+        }
+
+        .quality-bar.partial {
+            background: #FFA500;
+        }
+
+        .quality-bar.empty {
+            background: #ff6b6b;
+        }
+
+        .test-button {
+            background: #5ED9A6;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .test-button:hover:not(:disabled) {
+            background: #4BC997;
+            transform: translateY(-1px);
+        }
+
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .test-all-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+
+        .test-all-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .result-modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            width: 90%;
+        }
+
+        .event-preview {
+            background: #f7f9fc;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #5ED9A6;
+        }
+
+        .event-title {
+            font-weight: 600;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }
+
+        .event-meta {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .close-button {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            background: none;
+            border: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #5ED9A6, #4BC997);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .priority-high { border-left: 4px solid #E74C3C !important; }
+        .priority-medium { border-left: 4px solid #FFA500 !important; }
+        .priority-low { border-left: 4px solid #3498DB !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 KINN-RADAR Extraction Quality Dashboard</h1>
+            <p>Real-time testing of all event sources with quality metrics</p>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Sources</div>
+                    <div class="stat-value" id="totalSources">21</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active</div>
+                    <div class="stat-value" id="activeSources">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Success Rate</div>
+                    <div class="stat-value" id="successRate">0%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Events</div>
+                    <div class="stat-value" id="totalEvents">0</div>
+                </div>
+            </div>
+
+            <button class="test-all-button" onclick="testAllSources()">
+                🚀 Test All Active Sources
+            </button>
+
+            <div class="progress-bar" id="progressBar" style="display: none;">
+                <div class="progress-fill" id="progressFill" style="width: 0%;">0%</div>
+            </div>
+        </div>
+
+        <div class="sources-table">
+            <h2>Source Extraction Quality</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Source</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Method</th>
+                        <th>Quality</th>
+                        <th>Events Found</th>
+                        <th>Success Rate</th>
+                        <th>Last Test</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="sourcesTableBody">
+                    <!-- Will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div class="result-modal" id="resultModal">
+        <div class="modal-content">
+            <button class="close-button" onclick="closeModal()">&times;</button>
+            <h2 id="modalTitle">Test Results</h2>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // All sources with priority and status
+        const sources = [
+            // HIGH PRIORITY
+            { name: 'InnCubator', priority: 'HIGH', active: true, method: 'custom', url: 'https://www.inncubator.at/events' },
+            { name: 'Startup.Tirol', priority: 'HIGH', active: true, method: 'wordpress-api', url: 'https://www.startup.tirol/events/' },
+            { name: 'WKO Tirol', priority: 'HIGH', active: true, method: 'search-params', url: 'https://www.wko.at/veranstaltungen/start' },
+            { name: 'AI Austria', priority: 'HIGH', active: true, method: 'custom', url: 'https://aiaustria.com/event-calendar' },
+            { name: 'Standortagentur Tirol', priority: 'HIGH', active: true, method: 'custom', url: 'https://www.standort-tirol.at/veranstaltungen' },
+            { name: 'Impact Hub Tirol', priority: 'HIGH', active: true, method: 'dynamic', url: 'https://tirol.impacthub.net' },
+
+            // COMMUNITY
+            { name: 'Meetup Innsbruck', priority: 'HIGH', active: false, method: 'api', url: 'https://www.meetup.com/find/at--innsbruck/' },
+            { name: 'Engineering Kiosk Alps', priority: 'HIGH', active: false, method: 'custom', url: 'https://engineeringkiosk.dev' },
+
+            // ACADEMIC
+            { name: 'Uni Innsbruck', priority: 'MEDIUM', active: true, method: 'custom', url: 'https://www.uibk.ac.at/events/' },
+            { name: 'MCI', priority: 'MEDIUM', active: false, method: 'custom', url: 'https://www.mci4me.at' },
+            { name: 'FH Kufstein', priority: 'MEDIUM', active: false, method: 'custom', url: 'https://www.fh-kufstein.ac.at' },
+            { name: 'LSZ', priority: 'MEDIUM', active: true, method: 'custom', url: 'https://lsz.at/' },
+
+            // CULTURAL
+            { name: 'Werkstätte Wattens', priority: 'MEDIUM', active: false, method: 'custom', url: 'https://www.werkstaette-wattens.at' },
+            { name: 'Coworking Tirol', priority: 'MEDIUM', active: false, method: 'custom', url: 'https://coworking-tirol.com' },
+            { name: 'Das Wundervoll', priority: 'MEDIUM', active: false, method: 'custom', url: 'https://www.daswundervoll.at' },
+            { name: 'Die Bäckerei', priority: 'MEDIUM', active: true, method: 'custom', url: 'https://diebaeckerei.at/programm' },
+            { name: 'WeLocally Innsbruck', priority: 'MEDIUM', active: false, method: 'custom', url: 'https://innsbruck.welocally.at' },
+            { name: 'DIH West', priority: 'MEDIUM', active: false, method: 'custom', url: 'https://www.dih-west.at' },
+
+            // LOW PRIORITY
+            { name: 'Innsbruck.info', priority: 'LOW', active: true, method: 'custom', url: 'https://www.innsbruck.info' },
+            { name: 'Congress Messe Innsbruck', priority: 'LOW', active: true, method: 'custom', url: 'https://www.cmi.at' }
+        ];
+
+        // Test results storage
+        const testResults = {};
+
+        function initTable() {
+            const tbody = document.getElementById('sourcesTableBody');
+            tbody.innerHTML = '';
+
+            sources.forEach(source => {
+                const row = document.createElement('tr');
+                row.className = `priority-${source.priority.toLowerCase()}`;
+                row.innerHTML = `
+                    <td><strong>${source.name}</strong><br><small>${source.url}</small></td>
+                    <td><span class="status-badge status-${source.active ? 'active' : 'inactive'}">${source.active ? 'Active' : 'Inactive'}</span></td>
+                    <td>${source.priority}</td>
+                    <td>${source.method}</td>
+                    <td id="quality-${source.name.replace(/\s+/g, '-')}">-</td>
+                    <td id="events-${source.name.replace(/\s+/g, '-')}">-</td>
+                    <td id="rate-${source.name.replace(/\s+/g, '-')}">-</td>
+                    <td id="time-${source.name.replace(/\s+/g, '-')}">Never</td>
+                    <td>
+                        <button class="test-button" onclick="testSource('${source.name}')" ${!source.active ? 'disabled' : ''}>
+                            Test
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            updateStats();
+        }
+
+        async function testSource(sourceName) {
+            const source = sources.find(s => s.name === sourceName);
+            if (!source) return;
+
+            // Update UI to show testing
+            const eventsCell = document.getElementById(`events-${sourceName.replace(/\s+/g, '-')}`);
+            eventsCell.innerHTML = '<span class="loading">Testing...</span>';
+
+            try {
+                const response = await fetch('/api/radar/extract-with-config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sourceName: sourceName,
+                        testMode: true
+                    })
+                });
+
+                const data = await response.json();
+
+                // Store result
+                testResults[sourceName] = {
+                    success: data.success && data.events_found > 0,
+                    eventsFound: data.events_found || 0,
+                    events: data.events || [],
+                    timestamp: new Date(),
+                    error: data.error
+                };
+
+                // Update table
+                updateSourceRow(sourceName);
+
+                // Show details
+                if (data.events_found > 0) {
+                    showResults(sourceName, data);
+                }
+
+            } catch (error) {
+                testResults[sourceName] = {
+                    success: false,
+                    eventsFound: 0,
+                    error: error.message,
+                    timestamp: new Date()
+                };
+                updateSourceRow(sourceName);
+            }
+
+            updateStats();
+        }
+
+        function updateSourceRow(sourceName) {
+            const result = testResults[sourceName];
+            const nameId = sourceName.replace(/\s+/g, '-');
+
+            // Quality indicator
+            const qualityCell = document.getElementById(`quality-${nameId}`);
+            const quality = result.success ?
+                (result.eventsFound >= 10 ? 5 : result.eventsFound >= 5 ? 4 : result.eventsFound >= 1 ? 3 : 1) : 0;
+
+            let qualityHTML = '<div class="quality-indicator">';
+            for (let i = 0; i < 5; i++) {
+                if (i < quality) {
+                    qualityHTML += '<div class="quality-bar filled"></div>';
+                } else {
+                    qualityHTML += '<div class="quality-bar empty"></div>';
+                }
+            }
+            qualityHTML += '</div>';
+            qualityCell.innerHTML = qualityHTML;
+
+            // Events found
+            const eventsCell = document.getElementById(`events-${nameId}`);
+            eventsCell.innerHTML = result.eventsFound > 0 ?
+                `<strong style="color: #5ED9A6;">${result.eventsFound}</strong>` :
+                `<span style="color: #ff6b6b;">0</span>`;
+
+            // Success rate
+            const rateCell = document.getElementById(`rate-${nameId}`);
+            rateCell.innerHTML = result.success ?
+                '<span style="color: #5ED9A6;">✅ 100%</span>' :
+                '<span style="color: #ff6b6b;">❌ 0%</span>';
+
+            // Last test time
+            const timeCell = document.getElementById(`time-${nameId}`);
+            timeCell.innerHTML = result.timestamp.toLocaleTimeString();
+        }
+
+        async function testAllSources() {
+            const activeSources = sources.filter(s => s.active);
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+
+            progressBar.style.display = 'block';
+
+            for (let i = 0; i < activeSources.length; i++) {
+                const progress = Math.round(((i + 1) / activeSources.length) * 100);
+                progressFill.style.width = progress + '%';
+                progressFill.textContent = progress + '%';
+
+                await testSource(activeSources[i].name);
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds between tests
+            }
+
+            progressBar.style.display = 'none';
+            alert(`✅ Testing complete! ${Object.values(testResults).filter(r => r.success).length} sources working.`);
+        }
+
+        function updateStats() {
+            const activeSources = sources.filter(s => s.active);
+            document.getElementById('activeSources').textContent = activeSources.length;
+
+            const tested = Object.values(testResults);
+            const successful = tested.filter(r => r.success).length;
+            const rate = tested.length > 0 ? Math.round((successful / tested.length) * 100) : 0;
+            document.getElementById('successRate').textContent = rate + '%';
+
+            const totalEvents = tested.reduce((sum, r) => sum + (r.eventsFound || 0), 0);
+            document.getElementById('totalEvents').textContent = totalEvents;
+        }
+
+        function showResults(sourceName, data) {
+            const modal = document.getElementById('resultModal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+
+            title.textContent = `${sourceName} - ${data.events_found} Events Found`;
+
+            let html = '<div style="max-height: 500px; overflow-y: auto;">';
+            data.events.forEach(event => {
+                html += `
+                    <div class="event-preview">
+                        <div class="event-title">${event.title}</div>
+                        <div class="event-meta">
+                            📅 ${event.date} at ${event.time}<br>
+                            📍 ${event.location || event.city}<br>
+                            🏷️ ${event.category}
+                            ${event.description ? '<br>📝 ' + event.description.substring(0, 100) + '...' : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            body.innerHTML = html;
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('resultModal').classList.remove('show');
+        }
+
+        // Initialize on load
+        initTable();
+    </script>
+</body>
+</html>
