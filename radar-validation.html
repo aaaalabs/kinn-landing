@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KINN-RADAR Source Validation Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2C3E50;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2C3E50;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        button {
+            background: #5ED9A6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            background: #4BC997;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        button.danger {
+            background: #E74C3C;
+        }
+
+        button.danger:hover:not(:disabled) {
+            background: #C0392B;
+        }
+
+        button.primary {
+            background: #3498DB;
+        }
+
+        button.primary:hover:not(:disabled) {
+            background: #2980B9;
+        }
+
+        .sources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 15px;
+        }
+
+        .source-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .source-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .source-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .source-name {
+            font-weight: 600;
+            color: #2C3E50;
+            font-size: 16px;
+        }
+
+        .source-status {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-testing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-working {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .source-url {
+            font-size: 12px;
+            color: #666;
+            margin: 5px 0;
+            word-break: break-all;
+        }
+
+        .source-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+
+        .meta-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .meta-label {
+            color: #999;
+        }
+
+        .meta-value {
+            font-weight: 500;
+            color: #2C3E50;
+        }
+
+        .source-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .source-actions button {
+            flex: 1;
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+
+        .priority-high {
+            border-left: 4px solid #E74C3C;
+        }
+
+        .priority-medium {
+            border-left: 4px solid #FFA500;
+        }
+
+        .priority-low {
+            border-left: 4px solid #3498DB;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .test-results {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .event-item {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 3px solid #5ED9A6;
+        }
+
+        .event-title {
+            font-weight: 500;
+            color: #2C3E50;
+        }
+
+        .event-meta {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-button {
+            background: white;
+            color: #666;
+            border: 1px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .filter-button.active {
+            background: #5ED9A6;
+            color: white;
+            border-color: #5ED9A6;
+        }
+
+        .log-panel {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 2px solid #444;
+        }
+
+        .log-success {
+            border-left-color: #5ED9A6;
+            color: #5ED9A6;
+        }
+
+        .log-error {
+            border-left-color: #E74C3C;
+            color: #E74C3C;
+        }
+
+        .log-info {
+            border-left-color: #3498DB;
+            color: #3498DB;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 KINN-RADAR Source Validation Dashboard</h1>
+        <p>Test and validate all event sources for web extraction</p>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalSources">21</div>
+                <div class="stat-label">Total Sources</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeSources">0</div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="workingSources">0</div>
+                <div class="stat-label">Working</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="failingSources">0</div>
+                <div class="stat-label">Need Fix</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalEvents">0</div>
+                <div class="stat-label">Events Found</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <h3>🎮 Test Controls</h3>
+        <div class="button-group">
+            <button onclick="testAllSources()" class="danger">🚀 Test ALL Sources</button>
+            <button onclick="testPriority('HIGH')" class="primary">⭐ Test HIGH Priority</button>
+            <button onclick="testPriority('MEDIUM')">📊 Test MEDIUM Priority</button>
+            <button onclick="testPriority('LOW')">📉 Test LOW Priority</button>
+            <button onclick="refreshStats()">🔄 Refresh Stats</button>
+            <button onclick="exportResults()">💾 Export Results</button>
+        </div>
+
+        <div class="filter-bar">
+            <span style="margin-right: 10px;">Filter:</span>
+            <button class="filter-button active" data-filter="all">All</button>
+            <button class="filter-button" data-filter="active">Active</button>
+            <button class="filter-button" data-filter="inactive">Inactive</button>
+            <button class="filter-button" data-filter="working">Working</button>
+            <button class="filter-button" data-filter="failing">Need Fix</button>
+            <button class="filter-button" data-filter="high">HIGH Priority</button>
+            <button class="filter-button" data-filter="medium">MEDIUM Priority</button>
+            <button class="filter-button" data-filter="low">LOW Priority</button>
+        </div>
+    </div>
+
+    <div id="sourcesGrid" class="sources-grid">
+        <!-- Sources will be loaded here -->
+    </div>
+
+    <!-- Test Result Modal -->
+    <div id="testModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Test Results</h2>
+                <button class="close-button" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody">
+                <!-- Test results will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Log Panel -->
+    <div class="controls">
+        <h3>📜 Test Log</h3>
+        <div id="logPanel" class="log-panel">
+            <div class="log-entry log-info">System ready. Click on any source to test extraction.</div>
+        </div>
+    </div>
+
+    <script>
+        // All sources configuration
+        const ALL_SOURCES = [
+            // HIGH Priority
+            { name: 'InnCubator', url: 'https://www.inncubator.at/events', priority: 'HIGH', category: 'Startup/Innovation', active: true },
+            { name: 'Startup.Tirol', url: 'https://www.startup.tirol/events/', priority: 'HIGH', category: 'Startup Ecosystem', active: true },
+            { name: 'WKO Tirol', url: 'https://www.wko.at/veranstaltungen/start', priority: 'HIGH', category: 'Business/Commerce', active: true },
+            { name: 'AI Austria', url: 'https://aiaustria.com/event-calendar', priority: 'HIGH', category: 'AI/ML', active: true },
+            { name: 'Standortagentur Tirol', url: 'https://www.standort-tirol.at/veranstaltungen', priority: 'HIGH', category: 'Regional Development', active: true },
+            { name: 'Impact Hub Tirol', url: 'https://tirol.impacthub.net/en/collection/?_sf_tag=upcoming-events', priority: 'HIGH', category: 'Innovation Hub', active: false },
+
+            // Community Platforms
+            { name: 'Meetup Innsbruck', url: 'https://www.meetup.com/find/at--innsbruck/', priority: 'HIGH', category: 'Community Platform', active: false },
+            { name: 'Engineering Kiosk Alps', url: 'https://engineeringkiosk.dev/meetup/alps/', priority: 'HIGH', category: 'Tech Meetups', active: false },
+
+            // MEDIUM Priority
+            { name: 'Uni Innsbruck', url: 'https://www.uibk.ac.at/events/', priority: 'MEDIUM', category: 'Academic/Research', active: true },
+            { name: 'MCI', url: 'https://www.mci4me.at/events', priority: 'MEDIUM', category: 'Academic/Business', active: false },
+            { name: 'FH Kufstein', url: 'https://www.fh-kufstein.ac.at/events', priority: 'MEDIUM', category: 'Academic', active: false },
+            { name: 'LSZ', url: 'https://lsz.at/', priority: 'MEDIUM', category: 'Life Sciences', active: true },
+            { name: 'Werkstätte Wattens', url: 'https://www.werkstaette-wattens.at', priority: 'MEDIUM', category: 'Innovation Hub', active: false },
+            { name: 'Coworking Tirol', url: 'https://coworking-tirol.com/events', priority: 'MEDIUM', category: 'Coworking/Community', active: false },
+            { name: 'Das Wundervoll', url: 'https://www.daswundervoll.at/en/about-wundervoll/events', priority: 'MEDIUM', category: 'Cultural Venue', active: false },
+            { name: 'Die Bäckerei', url: 'https://diebaeckerei.at/programm', priority: 'MEDIUM', category: 'Cultural Center', active: false },
+            { name: 'WeLocally Innsbruck', url: 'https://innsbruck.welocally.at/region/treffen', priority: 'MEDIUM', category: 'Local Platform', active: false },
+            { name: 'DIH West', url: 'https://www.dih-west.at/events', priority: 'MEDIUM', category: 'Digital Innovation', active: false },
+
+            // LOW Priority
+            { name: 'Innsbruck.info', url: 'https://www.innsbruck.info/veranstaltungskalender.html', priority: 'LOW', category: 'Tourism/Culture', active: true },
+            { name: 'Congress Messe Innsbruck', url: 'https://www.cmi.at/de/veranstaltungskalender', priority: 'LOW', category: 'Congress/Trade', active: true },
+
+            // Newsletter Source
+            { name: 'Email Forward', url: 'manual', priority: 'TEST', category: 'Newsletter', active: true }
+        ];
+
+        // Track test results
+        let testResults = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSources();
+            setupFilters();
+            updateStats();
+        });
+
+        function loadSources() {
+            const grid = document.getElementById('sourcesGrid');
+            grid.innerHTML = ALL_SOURCES.map(source => createSourceCard(source)).join('');
+        }
+
+        function createSourceCard(source) {
+            const statusClass = source.active ? 'status-active' : 'status-inactive';
+            const statusText = source.active ? 'Active' : 'Inactive';
+            const priorityClass = `priority-${source.priority.toLowerCase()}`;
+
+            const lastTest = testResults[source.name];
+            const workingClass = lastTest ? (lastTest.success ? 'status-working' : 'status-testing') : '';
+
+            return `
+                <div class="source-card ${priorityClass}" data-name="${source.name}" data-priority="${source.priority}" data-status="${statusText.toLowerCase()}">
+                    <div class="source-header">
+                        <div class="source-name">${source.name}</div>
+                        <div class="source-status ${workingClass || statusClass}">${workingClass ? (lastTest.success ? 'WORKING' : 'FAILED') : statusText}</div>
+                    </div>
+                    <div class="source-url">${source.url}</div>
+                    <div class="source-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Priority:</span>
+                            <span class="meta-value">${source.priority}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Category:</span>
+                            <span class="meta-value">${source.category}</span>
+                        </div>
+                        ${lastTest ? `
+                        <div class="meta-item">
+                            <span class="meta-label">Events Found:</span>
+                            <span class="meta-value">${lastTest.eventsFound || 0}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Last Test:</span>
+                            <span class="meta-value">${new Date(lastTest.timestamp).toLocaleTimeString()}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="source-actions">
+                        <button onclick="testSource('${source.name}')">🧪 Test</button>
+                        <button onclick="viewDetails('${source.name}')">📊 Details</button>
+                        <button onclick="openUrl('${source.url}')">🔗 Visit</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function testSource(sourceName) {
+            const source = ALL_SOURCES.find(s => s.name === sourceName);
+            if (!source) return;
+
+            addLog(`Testing ${sourceName}...`, 'info');
+            showModal(`Testing ${sourceName}`, '<div class="loading">⏳ Extracting events from website...</div>');
+
+            try {
+                // Create test request for individual source
+                const response = await fetch('/api/radar/test-single-source', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: source.name,
+                        url: source.url,
+                        priority: source.priority
+                    })
+                });
+
+                if (!response.ok) {
+                    // Fallback to regular check-sites with filter
+                    const fallbackResponse = await fetch(`/api/radar/check-sites?source=${encodeURIComponent(sourceName)}`);
+                    const data = await fallbackResponse.json();
+                    displayTestResults(sourceName, data);
+                } else {
+                    const data = await response.json();
+                    displayTestResults(sourceName, data);
+                }
+
+            } catch (error) {
+                addLog(`Error testing ${sourceName}: ${error.message}`, 'error');
+                showModal(`Test Failed: ${sourceName}`, `<div class="error">Error: ${error.message}</div>`);
+            }
+        }
+
+        function displayTestResults(sourceName, data) {
+            const success = data.events_found > 0 || data.success;
+
+            // Store result
+            testResults[sourceName] = {
+                success: success,
+                eventsFound: data.events_found || 0,
+                eventsAdded: data.events_added || 0,
+                duplicates: data.duplicates || 0,
+                events: data.events || [],
+                timestamp: new Date().toISOString(),
+                error: data.error
+            };
+
+            // Update UI
+            loadSources();
+            updateStats();
+
+            // Log result
+            if (success) {
+                addLog(`✅ ${sourceName}: Found ${data.events_found || 0} events`, 'success');
+            } else {
+                addLog(`❌ ${sourceName}: No events found`, 'error');
+            }
+
+            // Show detailed results
+            let html = `
+                <div class="${success ? 'success' : 'error'}">
+                    ${success ? `✅ Found ${data.events_found || 0} events` : '❌ No events found'}
+                </div>
+
+                <div class="test-results">
+                    <h3>Extraction Summary</h3>
+                    <p>Events Found: ${data.events_found || 0}</p>
+                    <p>New Events: ${data.events_added || 0}</p>
+                    <p>Duplicates: ${data.duplicates || 0}</p>
+                    ${data.error ? `<p style="color: red;">Error: ${data.error}</p>` : ''}
+                </div>
+            `;
+
+            if (data.events && data.events.length > 0) {
+                html += '<h3>Sample Events:</h3>';
+                data.events.slice(0, 5).forEach(event => {
+                    html += `
+                        <div class="event-item">
+                            <div class="event-title">${event.title}</div>
+                            <div class="event-meta">
+                                📅 ${event.date} at ${event.time}
+                                📍 ${event.location || event.city || 'Unknown'}
+                                🏷️ ${event.category || 'Other'}
+                            </div>
+                            ${event.description ? `<p style="margin-top: 5px; font-size: 12px;">${event.description}</p>` : ''}
+                        </div>
+                    `;
+                });
+            }
+
+            showModal(`Test Results: ${sourceName}`, html);
+        }
+
+        async function testAllSources() {
+            if (!confirm('This will test all 21 sources. It may take 2-3 minutes. Continue?')) return;
+
+            addLog('Starting comprehensive test of all sources...', 'info');
+
+            for (const source of ALL_SOURCES) {
+                await testSource(source.name);
+                await sleep(2000); // Wait 2 seconds between tests
+            }
+
+            addLog('✅ All sources tested!', 'success');
+            updateStats();
+        }
+
+        async function testPriority(priority) {
+            const sources = ALL_SOURCES.filter(s => s.priority === priority);
+            addLog(`Testing ${sources.length} ${priority} priority sources...`, 'info');
+
+            for (const source of sources) {
+                await testSource(source.name);
+                await sleep(2000);
+            }
+
+            addLog(`✅ ${priority} priority sources tested!`, 'success');
+        }
+
+        function updateStats() {
+            const total = ALL_SOURCES.length;
+            const active = ALL_SOURCES.filter(s => s.active).length;
+            const working = Object.values(testResults).filter(r => r.success).length;
+            const failing = Object.values(testResults).filter(r => !r.success).length;
+            const totalEvents = Object.values(testResults).reduce((sum, r) => sum + (r.eventsFound || 0), 0);
+
+            document.getElementById('totalSources').textContent = total;
+            document.getElementById('activeSources').textContent = active;
+            document.getElementById('workingSources').textContent = working;
+            document.getElementById('failingSources').textContent = failing;
+            document.getElementById('totalEvents').textContent = totalEvents;
+        }
+
+        function setupFilters() {
+            document.querySelectorAll('.filter-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    // Update active state
+                    document.querySelectorAll('.filter-button').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    // Apply filter
+                    const filter = e.target.dataset.filter;
+                    filterSources(filter);
+                });
+            });
+        }
+
+        function filterSources(filter) {
+            const cards = document.querySelectorAll('.source-card');
+
+            cards.forEach(card => {
+                let show = true;
+
+                switch(filter) {
+                    case 'active':
+                        show = card.querySelector('.source-status').textContent === 'Active';
+                        break;
+                    case 'inactive':
+                        show = card.querySelector('.source-status').textContent === 'Inactive';
+                        break;
+                    case 'working':
+                        show = card.querySelector('.source-status').textContent === 'WORKING';
+                        break;
+                    case 'failing':
+                        show = card.querySelector('.source-status').textContent === 'FAILED';
+                        break;
+                    case 'high':
+                        show = card.dataset.priority === 'HIGH';
+                        break;
+                    case 'medium':
+                        show = card.dataset.priority === 'MEDIUM';
+                        break;
+                    case 'low':
+                        show = card.dataset.priority === 'LOW';
+                        break;
+                    default:
+                        show = true;
+                }
+
+                card.style.display = show ? 'block' : 'none';
+            });
+        }
+
+        function showModal(title, content) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = content;
+            document.getElementById('testModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('testModal').classList.remove('show');
+        }
+
+        function viewDetails(sourceName) {
+            const source = ALL_SOURCES.find(s => s.name === sourceName);
+            const result = testResults[sourceName];
+
+            let html = `
+                <h3>Source Configuration</h3>
+                <div class="test-results">
+                    <p><strong>Name:</strong> ${source.name}</p>
+                    <p><strong>URL:</strong> <a href="${source.url}" target="_blank">${source.url}</a></p>
+                    <p><strong>Priority:</strong> ${source.priority}</p>
+                    <p><strong>Category:</strong> ${source.category}</p>
+                    <p><strong>Status:</strong> ${source.active ? 'Active' : 'Inactive'}</p>
+                </div>
+            `;
+
+            if (result) {
+                html += `
+                    <h3>Last Test Results</h3>
+                    <div class="test-results">
+                        <p><strong>Success:</strong> ${result.success ? 'Yes' : 'No'}</p>
+                        <p><strong>Events Found:</strong> ${result.eventsFound}</p>
+                        <p><strong>New Events:</strong> ${result.eventsAdded}</p>
+                        <p><strong>Duplicates:</strong> ${result.duplicates}</p>
+                        <p><strong>Tested:</strong> ${new Date(result.timestamp).toLocaleString()}</p>
+                    </div>
+                `;
+            } else {
+                html += '<p style="color: #666;">Not tested yet</p>';
+            }
+
+            showModal(`Details: ${sourceName}`, html);
+        }
+
+        function openUrl(url) {
+            if (url !== 'manual') {
+                window.open(url, '_blank');
+            }
+        }
+
+        function addLog(message, type = 'info') {
+            const logPanel = document.getElementById('logPanel');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logPanel.appendChild(entry);
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+
+        function refreshStats() {
+            updateStats();
+            addLog('Stats refreshed', 'info');
+        }
+
+        function exportResults() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                sources: ALL_SOURCES.map(source => ({
+                    ...source,
+                    testResult: testResults[source.name] || null
+                })),
+                summary: {
+                    total: ALL_SOURCES.length,
+                    active: ALL_SOURCES.filter(s => s.active).length,
+                    tested: Object.keys(testResults).length,
+                    working: Object.values(testResults).filter(r => r.success).length,
+                    totalEvents: Object.values(testResults).reduce((sum, r) => sum + (r.eventsFound || 0), 0)
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `radar-validation-${new Date().toISOString()}.json`;
+            a.click();
+
+            addLog('Results exported', 'success');
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Close modal on outside click
+        document.getElementById('testModal').addEventListener('click', (e) => {
+            if (e.target.id === 'testModal') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
