@@ -66,22 +66,31 @@ export const SOURCE_CONFIGS = {
       method: 'custom',
       searchUrl: 'https://www.wko.at/veranstaltungen/start?bundesland=T',
       instructions: `
-        WKO Tirol SPECIFIC PATTERNS (verified from HTML):
-        - REQUIRED: Must use ?bundesland=T parameter in URL
-        - Event containers: li.col-md-6.col-lg-4 with div.card.card-eventbox inside
-        - Date structure: Three separate dd elements (day, month, year)
-        - Date format: "Mi 10 Dez" (weekday abbreviation, day number, month name)
-        - Title: in h4 element after the date
-        - Location: after pin icon (bi-geo-alt-fill)
-        - Description: in p element
-        - Link: in a.stretched-link href
-        - Include events with "kostenlos", "gratis" or no price mentioned
-        - Categories: Business, Workshop, Seminar, Webinar
+        WKO Tirol extraction (needs authentication):
+
+        IMPORTANT: Site requires login/cookies to show Tirol-specific events!
+        Without auth, it shows general Austria events only.
+
+        HTML STRUCTURE (when authenticated):
+        - Event containers: li.col-md-6.col-lg-4 with div.card.card-eventbox
+        - Date: Three <dd> elements containing day, month abbreviation, year
+        - Title: h4 element within card
+        - Location: Text after bi-geo-alt-fill icon
+        - Link: a.stretched-link href attribute
+        - Price: Look for "kostenlos", "gratis", or absence of price
+
+        EXTRACTION STRATEGY:
+        1. Look for any event cards on the page
+        2. If found, extract normally
+        3. If no events or wrong region, note authentication needed
+
+        Categories: Business, Workshop, Seminar, Webinar, Networking
       `,
       htmlPattern: 'li.col-md-6.col-lg-4 div.card.card-eventbox',
-      dateFormat: 'Weekday DD Month (e.g., Mi 10 Dez)',
-      extractNotes: 'MUST use ?bundesland=T. Events in cards, date split in 3 dd elements, location after pin icon',
-      maxChars: 25000
+      dateFormat: 'DD Month (e.g., 10 Dez)',
+      extractNotes: 'Requires authentication for Tirol events. Without login shows Austria-wide events.',
+      requiresAuth: true,
+      maxChars: 30000
     }
   },
 
@@ -129,16 +138,33 @@ export const SOURCE_CONFIGS = {
     extraction: {
       method: 'dynamic',
       instructions: `
-        Impact Hub uses dynamic filtering.
-        Look for:
+        Impact Hub Tirol - Community innovation space
+
+        CURRENT STATUS: Often has periods with no events listed online.
+        When events are present, look for:
+
+        HTML STRUCTURE:
         - Event cards in grid layout
-        - Mix of FREE and paid events
-        - Include: Community events, Open House, Workshops
-        - Location: "Impact Hub Tirol, Innsbruck"
-        - English content
-        - Dates in format "January 15, 2025"
+        - Filter tag: ?_sf_tag=upcoming-events
+        - Dynamic content loaded via JavaScript
+
+        EVENT TYPES:
+        - Community events (usually FREE)
+        - Open House events (FREE)
+        - Workshops (mix of free/paid)
+        - Networking events
+        - Social innovation meetups
+
+        EXTRACTION:
+        - Location: Always "Impact Hub Tirol, Innsbruck"
+        - Language: English interface
+        - Date format: "January 15, 2025" or similar
+        - Only extract explicitly FREE events
+
+        NOTE: If no events found, this is normal - they don't always have upcoming events listed.
       `,
       requiresJS: true,
+      extractNotes: 'Dynamic JS site. Often has no events online. Check periodically.',
       maxChars: 20000
     }
   },
@@ -231,15 +257,33 @@ export const SOURCE_CONFIGS = {
     extraction: {
       method: 'custom',
       instructions: `
-        FH Kufstein university events.
-        Look for:
-        - Academic and public events
-        - FREE lectures and workshops
-        - Location: Kufstein (still in Tirol)
-        - Categories: Business, Tech, Tourism
-        - German content
+        FH Kufstein - University events with clear HTML structure:
+
+        HTML PATTERN (verified):
+        - Container: div.cards__item
+        - Date structure in div.card__head > h5:
+          - Single date: <span>DD</span> <span>Month</span>
+          - Date range: <span>DD</span> <span>Month</span> - <span>DD</span> <span>Month</span>
+        - Title: div.card__body h5 (first h5)
+        - Location: li.custom-info > p (e.g., "FH Kufstein Tirol", "Online", "Festsaal")
+        - Link: a.text-decoration-none href attribute
+        - Detail URL pattern: /Service/Aktuelles/Events/[event-name]
+
+        EVENTS TO EXTRACT:
+        - Open House (FREE info events)
+        - Master Lounge (FREE info sessions)
+        - Girls! TECH UP (FREE tech events)
+        - Management Forum (public lectures)
+        - Study info sessions (online)
+        - 7€ Cash events (student events)
+
+        NOTE: Most academic events are FREE and open to public
+        Focus on: Tech, Business, Innovation, Education categories
       `,
-      maxChars: 20000
+      htmlPattern: 'div.cards__item',
+      dateFormat: 'DD Month or DD Month - DD Month (e.g., 31 Jan or 31 Jan - 18 Apr)',
+      extractNotes: 'Clear card structure. Events in div.cards__item. Date spans in h5. Many FREE academic events.',
+      maxChars: 30000
     }
   },
 
