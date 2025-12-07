@@ -203,9 +203,10 @@ Important:
 - Convert German dates like "15. März 2025" to "2025-03-15"
 - "Jeden ersten Mittwoch" means recurring monthly
 - Default to 18:00 if no time specified
-- Return empty array [] if no qualifying events found
+- Return {"events": []} if no qualifying events found
 
-Return ONLY a JSON array of events, no other text.`;
+Return your response as a JSON object with an "events" property containing the array:
+{"events": [...array of qualifying events...]}`;
 
   try {
     const response = await groq.chat.completions.create({
@@ -219,7 +220,7 @@ Return ONLY a JSON array of events, no other text.`;
       response_format: { type: "json_object" }
     });
 
-    const content = response.choices[0]?.message?.content || '[]';
+    const content = response.choices[0]?.message?.content || '{"events":[]}';
 
     // Try to parse as JSON
     try {
