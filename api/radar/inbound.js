@@ -57,6 +57,33 @@ export default async function handler(req, res) {
 
     const { from, to, subject, html, text, email_id } = emailData;
 
+    // Whitelist check - only accept from trusted senders
+    const ALLOWED_SENDERS = [
+      // Thomas primary emails
+      'thomas@kinn.at',
+      'thomas@libralab.ai',
+      'thomas@libralab.at',
+      'admin@libralab.ai',
+
+      // Personal accounts
+      'thomas.arzt@gmail.com',
+      'thomas.seiger@gmail.com',
+
+      // System emails
+      'treff@in.kinn.at'  // For testing
+    ];
+
+    // Extract sender email (from can be string or object)
+    const senderEmail = typeof from === 'string' ? from.toLowerCase() : from?.email?.toLowerCase();
+
+    if (!ALLOWED_SENDERS.some(allowed => senderEmail?.includes(allowed.replace('@', '')))) {
+      console.log(`[RADAR] Rejected email from unauthorized sender: ${senderEmail}`);
+      return res.status(200).json({
+        message: 'Email rejected - unauthorized sender',
+        sender: senderEmail
+      });
+    }
+
     // Log receipt with full details for debugging
     console.log(`[RADAR] Email received - From: ${from}, To: ${JSON.stringify(to)}, Subject: ${subject}`);
 
