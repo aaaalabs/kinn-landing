@@ -11,34 +11,64 @@ const groq = new Groq({
   apiKey: process.env.RADAR_GROQ_API_KEY,
 });
 
-// Core event sites covering 90% of Tyrol events
-const SITES = [
+// HIGH-VALUE sources for AI/Tech/Startup events in Tyrol
+const PRIMARY_SITES = [
+  {
+    name: 'InnCubator',
+    url: 'https://www.inncubator.at/events',
+    description: 'Startup incubator events',
+    priority: 'HIGH'
+  },
+  {
+    name: 'StartupTirol',
+    url: 'https://www.startup.tirol/events/',
+    description: 'Startup ecosystem events',
+    priority: 'HIGH'
+  },
+  {
+    name: 'WKO',
+    url: 'https://www.wko.at/veranstaltungen/start',
+    description: 'Chamber of Commerce events',
+    priority: 'HIGH'
+  },
+  {
+    name: 'AIAustria',
+    url: 'https://aiaustria.com/event-calendar',
+    description: 'AI Austria events',
+    priority: 'HIGH'
+  },
+  {
+    name: 'StandortTirol',
+    url: 'https://www.standort-tirol.at/veranstaltungen',
+    description: 'Regional development agency',
+    priority: 'HIGH'
+  }
+];
+
+// SECONDARY sources for broader coverage
+const SECONDARY_SITES = [
   {
     name: 'UniInnsbruck',
     url: 'https://www.uibk.ac.at/events/',
-    description: 'University of Innsbruck events'
+    description: 'University events',
+    priority: 'MEDIUM'
+  },
+  {
+    name: 'LSZ',
+    url: 'https://lsz.at/',
+    description: 'Life Science Center',
+    priority: 'MEDIUM'
   },
   {
     name: 'InnsbruckInfo',
-    url: 'https://www.innsbruck.info/brauchtum-und-events/veranstaltungskalender.html',
-    description: 'Official Innsbruck tourism events'
-  },
-  {
-    name: 'CMI',
-    url: 'https://www.cmi.at/de/veranstaltungskalender',
-    description: 'Congress Messe Innsbruck'
-  },
-  {
-    name: 'MeinBezirk',
-    url: 'https://www.meinbezirk.at/event/innsbruck',
-    description: 'Community events Innsbruck'
-  },
-  {
-    name: 'EventsTT',
-    url: 'https://events.tt.com/veranstaltungen/innsbruck/alle-kategorien',
-    description: 'Tiroler Tageszeitung events'
+    url: 'https://www.innsbruck.info/veranstaltungskalender.html',
+    description: 'City tourism events',
+    priority: 'LOW'
   }
 ];
+
+// For testing, use PRIMARY sites first (most relevant)
+const SITES = PRIMARY_SITES;
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -53,10 +83,21 @@ export default async function handler(req, res) {
   const startTime = Date.now();
 
   try {
-    console.log('[RADAR-SITES] Starting site check...');
+    // Check query param for which sites to check
+    const { priority = 'primary' } = req.query;
+
+    // Select sites based on priority
+    let sitesToCheck = PRIMARY_SITES;
+    if (priority === 'all') {
+      sitesToCheck = [...PRIMARY_SITES, ...SECONDARY_SITES];
+    } else if (priority === 'secondary') {
+      sitesToCheck = SECONDARY_SITES;
+    }
+
+    console.log(`[RADAR-SITES] Checking ${sitesToCheck.length} ${priority} sites...`);
     const allEvents = [];
 
-    for (const site of SITES) {
+    for (const site of sitesToCheck) {
       console.log(`[RADAR-SITES] Checking ${site.name}...`);
 
       // Fetch the HTML
@@ -94,7 +135,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      sites_checked: SITES.length,
+      sites_checked: sitesToCheck.length,
+      sites: sitesToCheck.map(s => ({ name: s.name, priority: s.priority })),
       events_found: allEvents.length,
       events_added: added,
       duplicates: duplicates,
