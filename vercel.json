@@ -7,7 +7,7 @@
       "includeFiles": "emails/**",
       "maxDuration": 15
     },
-    "api/radar/**/*.js": {
+    "api/radar/*.js": {
       "maxDuration": 60
     }
   },
