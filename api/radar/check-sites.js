@@ -42,6 +42,12 @@ const PRIMARY_SITES = [
     url: 'https://www.standort-tirol.at/veranstaltungen',
     description: 'Regional development agency',
     priority: 'HIGH'
+  },
+  {
+    name: 'ImpactHub',
+    url: 'https://tirol.impacthub.net/en/collection/?_sf_tag=upcoming-events',
+    description: 'Impact Hub innovation events',
+    priority: 'HIGH'
   }
 ];
 
@@ -69,6 +75,12 @@ const SECONDARY_SITES = [
     name: 'WeLocally',
     url: 'https://innsbruck.welocally.at/region/treffen',
     description: 'Local meetup platform',
+    priority: 'MEDIUM'
+  },
+  {
+    name: 'DieBaeckerei',
+    url: 'https://diebaeckerei.at/programm',
+    description: 'Cultural center Innsbruck',
     priority: 'MEDIUM'
   },
   {

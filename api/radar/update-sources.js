@@ -75,6 +75,16 @@ const ALL_SOURCES = [
     expectedMonthly: 15,
     active: true
   },
+  {
+    name: 'Impact Hub Tirol',
+    url: 'https://tirol.impacthub.net/en/collection/?_sf_tag=upcoming-events',
+    type: 'Website',
+    category: 'Innovation Hub',
+    priority: 'HIGH',
+    frequency: 'Daily',
+    expectedMonthly: 20,
+    active: false
+  },
 
   // SECONDARY - MEDIUM VALUE
   {
@@ -187,6 +197,16 @@ const ALL_SOURCES = [
     priority: 'MEDIUM',
     frequency: 'Daily',
     expectedMonthly: 15,
+    active: false // New source
+  },
+  {
+    name: 'Die Bäckerei',
+    url: 'https://diebaeckerei.at/programm',
+    type: 'Website',
+    category: 'Cultural Center',
+    priority: 'MEDIUM',
+    frequency: 'Weekly',
+    expectedMonthly: 30,
     active: false // New source
   },
 

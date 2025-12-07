@@ -42,6 +42,13 @@ Forward these newsletters to: **radar@in.kinn.at**
 - **Why**: Digital Innovation Hub events
 - **Expected**: 5-10 events/month
 
+### 7. Impact Hub Tirol
+- **Website**: https://tirol.impacthub.net
+- **Newsletter**: Subscribe on website
+- **Why**: Innovation hub with startup & social impact events
+- **Expected**: 15-20 events/month
+- **Note**: High-quality networking events
+
 ## Community & Tech Platforms (HIGH VALUE)
 
 ### Meetup Innsbruck
@@ -91,6 +98,12 @@ Forward these newsletters to: **radar@in.kinn.at**
 - **Newsletter**: Platform notifications
 - **Expected**: 10-15 events/month
 - **Note**: Local community meetups
+
+### 13. Die Bäckerei
+- **Website**: https://diebaeckerei.at
+- **Newsletter**: Subscribe for program updates
+- **Expected**: 25-30 events/month
+- **Note**: Cultural center with many free events
 
 ## Setup Instructions
 
