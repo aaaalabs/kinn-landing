@@ -80,6 +80,7 @@ export default async function handler(req, res) {
     const headers = [
       'ID',
       'Status',
+      'Category',
       'Title',
       'Date',
       'Time',
@@ -112,9 +113,24 @@ export default async function handler(req, res) {
         }
       }
 
+      // Add category emoji for visual distinction
+      const categoryEmoji = {
+        'AI': '🤖',
+        'Tech': '💻',
+        'Startup': '🚀',
+        'Innovation': '💡',
+        'Business': '💼',
+        'Education': '📚',
+        'Other': '📌'
+      };
+
+      const category = event.category || 'Other';
+      const categoryDisplay = `${categoryEmoji[category] || '📌'} ${category}`;
+
       return [
         event.id || '',
         status,
+        categoryDisplay,
         event.title || '',
         event.date || '',
         event.time || '18:00',
@@ -135,8 +151,8 @@ export default async function handler(req, res) {
     // Get sheets client
     const sheets = await getSheetsClient();
 
-    // Clear existing data and write new data
-    const range = 'Active Events!A:P';
+    // Clear existing data and write new data (added Category column, now A:Q)
+    const range = 'Active Events!A:Q';
 
     // Clear the sheet first
     await sheets.spreadsheets.values.clear({

@@ -166,17 +166,25 @@ async function extractEventsWithGroq({ from, subject, content }) {
   const prompt = `
 You are an expert at extracting event information from German and English newsletters.
 
-Extract events from this newsletter that meet ALL these CRITICAL criteria:
+Extract ALL events from this newsletter that meet these criteria:
 
 MANDATORY FILTERS - Only include events that are:
 1. **FREE** (kostenlos, gratis, no cost, 0€, Eintritt frei) - REJECT any event with price/fee/ticket/cost
 2. **Located in TYROL** (Innsbruck, Hall, Wattens, Kufstein, Wörgl, Schwaz, etc.) - REJECT Vienna/Salzburg/Munich/Online-only
-3. **AI/ML/Data related** - Must contain AI, KI, Machine Learning, Deep Learning, Data Science, LLM keywords
-4. **PUBLIC** (open registration) - REJECT internal/members-only/private events
+3. **PUBLIC** (open registration) - REJECT internal/members-only/private events
 
 If an event has ANY cost (even €5), EXCLUDE it.
 If an event is outside Tyrol, EXCLUDE it.
 If unsure about any criteria, EXCLUDE the event.
+
+CATEGORIZATION - For each qualifying event, determine its primary category:
+- "AI" - AI, KI, Machine Learning, Deep Learning, Data Science, LLM, ChatGPT, Neural Networks
+- "Tech" - Programming, Software, IT, Coding, Developer, Cloud, DevOps, Security
+- "Startup" - Gründung, Founder, Pitch, Investor, Business Model, Entrepreneurship
+- "Innovation" - Digital Transformation, Future, Trends, Disruption, New Technology
+- "Business" - Marketing, Sales, Management, Leadership, Strategy, Networking
+- "Education" - Workshop, Training, Course, Seminar, Learning (without specific tech focus)
+- "Other" - Doesn't fit above categories
 
 Newsletter from: ${from}
 Subject: ${subject}
@@ -184,7 +192,7 @@ Subject: ${subject}
 Content:
 ${content.substring(0, 30000)}
 
-For each QUALIFYING event (FREE + TYROL + AI + PUBLIC), extract:
+For each QUALIFYING event (FREE + TYROL + PUBLIC), extract:
 {
   "title": "Event name",
   "date": "ISO date (YYYY-MM-DD)",
@@ -193,9 +201,10 @@ For each QUALIFYING event (FREE + TYROL + AI + PUBLIC), extract:
   "location": "Venue name",
   "address": "Street address if available",
   "city": "City in Tyrol",
+  "category": "AI" | "Tech" | "Startup" | "Innovation" | "Business" | "Education" | "Other",
   "description": "Brief description (max 200 chars)",
   "registrationUrl": "Registration or info URL",
-  "tags": ["AI", "Workshop", etc],
+  "tags": ["specific", "relevant", "tags"],
   "language": "de" or "en" or "mixed"
 }
 
@@ -305,14 +314,11 @@ function validateEvent(event) {
     validation.reasons.push('Event not in Tyrol or is online-only');
   }
 
-  // Check AI/ML criteria
-  const aiKeywords = ['ai', 'ki', 'artificial intelligence', 'künstliche intelligenz', 'machine learning', 'ml', 'deep learning', 'data science', 'data analytics', 'llm', 'large language', 'neural', 'nlp', 'computer vision', 'gpt', 'transformer'];
-
-  const hasAI = aiKeywords.some(keyword => eventText.includes(keyword));
-
-  if (!hasAI) {
+  // Category validation - just ensure it has a valid category
+  const validCategories = ['AI', 'Tech', 'Startup', 'Innovation', 'Business', 'Education', 'Other'];
+  if (!event.category || !validCategories.includes(event.category)) {
     validation.isValid = false;
-    validation.reasons.push('Event not AI/ML related');
+    validation.reasons.push('Invalid or missing category');
   }
 
   // Check PUBLIC criteria
