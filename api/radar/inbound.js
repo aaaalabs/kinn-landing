@@ -31,11 +31,9 @@ export default async function handler(req, res) {
     const expectedSecret = process.env.RESEND_RADAR_WEBHOOK_SECRET || process.env.RESEND_WEBHOOK_SECRET;
 
     // Skip signature validation if no secret configured (development)
-    // TODO: Implement proper Svix signature validation
-    if (expectedSecret && signature && signature !== expectedSecret) {
-      console.log('[RADAR] Warning: Webhook signature mismatch (temporarily allowing for testing)');
-      // Temporarily comment out the rejection for testing
-      // return res.status(401).json({ error: 'Unauthorized' });
+    if (expectedSecret && signature !== expectedSecret) {
+      console.log('[RADAR] Invalid webhook signature');
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const { from, to, subject, html, text } = req.body;
