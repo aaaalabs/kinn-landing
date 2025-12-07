@@ -88,8 +88,8 @@ export default async function handler(req, res) {
 
     // Update metrics
     await kv.incr('radar:metrics:newsletters:total');
-    await kv.incr('radar:metrics:events:added', added);
-    await kv.incr('radar:metrics:events:rejected', rejected);
+    if (added > 0) await kv.incrby('radar:metrics:events:added', added);
+    if (rejected > 0) await kv.incrby('radar:metrics:events:rejected', rejected);
 
     const response = {
       success: true,
