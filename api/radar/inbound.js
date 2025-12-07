@@ -74,11 +74,31 @@ export default async function handler(req, res) {
       return res.status(200).json({ ignored: true });
     }
 
-    // Note: Resend webhook doesn't include email body by default
-    // For MVP, we'll use subject + create a test event
-    const emailContent = html || text || `Subject: ${subject}\nFrom: ${from}\nNote: Email body not available in webhook`;
+    // Fetch the full email content from Resend API
+    let emailContent = '';
+    try {
+      console.log(`[RADAR] Fetching email content for ID: ${email_id}`);
 
-    console.log(`[RADAR] Email content available: ${emailContent ? 'yes' : 'no'} (length: ${emailContent.length})`);
+      const resendResponse = await fetch(`https://api.resend.com/emails/receiving/${email_id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (resendResponse.ok) {
+        const emailData = await resendResponse.json();
+        emailContent = emailData.html || emailData.text || emailData.body || '';
+        console.log(`[RADAR] Fetched email content (length: ${emailContent.length})`);
+      } else {
+        console.error(`[RADAR] Failed to fetch email content: ${resendResponse.status} ${resendResponse.statusText}`);
+        emailContent = `Subject: ${subject}\nFrom: ${from}\nNote: Could not fetch email body from Resend API`;
+      }
+    } catch (fetchError) {
+      console.error('[RADAR] Error fetching email content:', fetchError);
+      emailContent = `Subject: ${subject}\nFrom: ${from}\nNote: Error fetching email body`;
+    }
 
     // Extract events using Groq
     const extractedEvents = await extractEventsWithGroq({
