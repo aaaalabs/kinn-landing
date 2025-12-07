@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KINN-RADAR Dynamic Extraction Tester</title>
+    <style>
+        body {
+            font-family: 'Work Sans', -apple-system, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #2C3E50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-badge {
+            background: #5ED9A6;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .instructions-box {
+            background: #fff9c4;
+            border-left: 4px solid #ffa000;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .workflow {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .workflow h2 {
+            color: #5ED9A6;
+            margin-top: 0;
+        }
+        .workflow ol {
+            line-height: 1.8;
+        }
+        .workflow code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .source-select {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .source-select select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        button {
+            background: #5ED9A6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        button:hover:not(:disabled) {
+            background: #4BC997;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        button.secondary {
+            background: #4A90E2;
+        }
+        button.secondary:hover {
+            background: #357ABD;
+        }
+        .patterns-display {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .patterns-display.active {
+            display: block;
+        }
+        .pattern-field {
+            margin: 15px 0;
+        }
+        .pattern-field label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .pattern-field .value {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            min-height: 40px;
+            border: 1px solid #e0e0e0;
+        }
+        .pattern-field .empty {
+            color: #999;
+            font-style: italic;
+        }
+        .results {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .results.active {
+            display: block;
+        }
+        .event-item {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 3px solid #5ED9A6;
+        }
+        .event-item h4 {
+            margin: 0 0 10px 0;
+            color: #2C3E50;
+        }
+        .event-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        .event-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .success { color: #2E7D32; }
+        .error { color: #C62828; }
+        .warning { color: #F57C00; }
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .auth-input {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .auth-input input {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            🎯 KINN-RADAR Dynamic Extraction Tester
+            <span class="status-badge">Uses Google Sheets Patterns</span>
+        </h1>
+
+        <div class="instructions-box">
+            <strong>📌 How this works:</strong> This tool reads extraction patterns from columns J, K, L in your Google Sheets Sources tab and uses them to extract events.
+        </div>
+
+        <div class="workflow">
+            <h2>📝 Workflow for Collaborative Pattern Development</h2>
+            <ol>
+                <li><strong>Open Google Sheets:</strong> Go to your RADAR Google Sheet → Sources tab</li>
+                <li><strong>Find your source:</strong> Look for the row with your source name (e.g., "WKO Tirol")</li>
+                <li><strong>Fill in patterns (columns J, K, L):</strong>
+                    <ul>
+                        <li><code>Column J - HTML Pattern:</code> CSS selectors or identifiers (e.g., <code>.event-item</code>, <code>div.termin</code>)</li>
+                        <li><code>Column K - Date Format:</code> How dates appear (e.g., <code>15. Jänner 2025</code>, <code>DD.MM.YYYY</code>)</li>
+                        <li><code>Column L - Extract Notes:</code> Special instructions (e.g., "Filter by Tirol only", "Check for 'kostenlos'")</li>
+                    </ul>
+                </li>
+                <li><strong>Save in Google Sheets:</strong> Your changes are saved automatically</li>
+                <li><strong>Test here:</strong> Select the source below and click "Test with Sheet Patterns"</li>
+                <li><strong>Iterate:</strong> Adjust patterns in Google Sheets and test again until extraction works perfectly</li>
+            </ol>
+        </div>
+
+        <div class="auth-input">
+            <label><strong>Admin Token:</strong></label>
+            <input type="password" id="adminToken" placeholder="Enter RADAR_ADMIN_TOKEN">
+        </div>
+
+        <div class="source-select">
+            <label><strong>Select Source to Test:</strong></label>
+            <select id="sourceSelect">
+                <option value="">-- Select a source --</option>
+                <option value="InnCubator">InnCubator</option>
+                <option value="Startup.Tirol">Startup.Tirol</option>
+                <option value="WKO Tirol">WKO Tirol</option>
+                <option value="AI Austria">AI Austria</option>
+                <option value="Standortagentur Tirol">Standortagentur Tirol</option>
+                <option value="Impact Hub Tirol">Impact Hub Tirol</option>
+                <option value="Uni Innsbruck">Uni Innsbruck</option>
+                <option value="MCI">MCI</option>
+                <option value="LSZ">LSZ</option>
+                <option value="Die Bäckerei">Die Bäckerei</option>
+                <option value="Innsbruck.info">Innsbruck.info</option>
+                <option value="Congress Messe Innsbruck">Congress Messe Innsbruck</option>
+                <option value="Meetup Innsbruck">Meetup Innsbruck</option>
+                <option value="Engineering Kiosk Alps">Engineering Kiosk Alps</option>
+                <option value="FH Kufstein">FH Kufstein</option>
+                <option value="Werkstätte Wattens">Werkstätte Wattens</option>
+                <option value="Coworking Tirol">Coworking Tirol</option>
+                <option value="Das Wundervoll">Das Wundervoll</option>
+                <option value="WeLocally Innsbruck">WeLocally Innsbruck</option>
+                <option value="DIH West">DIH West</option>
+            </select>
+
+            <div class="btn-group">
+                <button onclick="testDynamicExtraction()" id="testBtn">
+                    🔍 Test with Sheet Patterns
+                </button>
+                <button onclick="testDynamicExtraction(false)" class="secondary" id="saveBtn">
+                    💾 Extract & Save to Redis
+                </button>
+            </div>
+        </div>
+
+        <div id="patternsDisplay" class="patterns-display">
+            <h3>📋 Patterns from Google Sheets</h3>
+            <div class="pattern-field">
+                <label>HTML Pattern (Column J):</label>
+                <div class="value" id="htmlPattern"></div>
+            </div>
+            <div class="pattern-field">
+                <label>Date Format (Column K):</label>
+                <div class="value" id="dateFormat"></div>
+            </div>
+            <div class="pattern-field">
+                <label>Extract Notes (Column L):</label>
+                <div class="value" id="extractNotes"></div>
+            </div>
+        </div>
+
+        <div id="results" class="results">
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Store admin token in session
+        let adminToken = localStorage.getItem('radarAdminToken') || '';
+        if (adminToken) {
+            document.getElementById('adminToken').value = adminToken;
+        }
+
+        document.getElementById('adminToken').addEventListener('change', (e) => {
+            adminToken = e.target.value;
+            localStorage.setItem('radarAdminToken', adminToken);
+        });
+
+        async function testDynamicExtraction(testMode = true) {
+            const sourceName = document.getElementById('sourceSelect').value;
+            const token = document.getElementById('adminToken').value;
+
+            if (!sourceName) {
+                alert('Please select a source');
+                return;
+            }
+
+            if (!token) {
+                alert('Please enter admin token');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('results');
+            const patternsDiv = document.getElementById('patternsDisplay');
+            const content = document.getElementById('resultsContent');
+
+            resultsDiv.classList.add('active');
+            patternsDiv.classList.remove('active');
+            content.innerHTML = `<div class="loading">🔄 Extracting events from ${sourceName}...</div>`;
+
+            // Disable buttons during processing
+            document.getElementById('testBtn').disabled = true;
+            document.getElementById('saveBtn').disabled = true;
+
+            try {
+                const response = await fetch('/api/radar/extract-dynamic', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        sourceName: sourceName,
+                        testMode: testMode
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                }
+
+                // Display patterns used
+                if (data.patterns || data.patterns_used) {
+                    patternsDiv.classList.add('active');
+                    const patterns = data.patterns || data.patterns_used;
+
+                    document.getElementById('htmlPattern').innerHTML =
+                        patterns.htmlPattern && patterns.htmlPattern !== 'none' && patterns.htmlPattern !== 'no' ?
+                        patterns.htmlPattern : '<span class="empty">Not configured</span>';
+
+                    document.getElementById('dateFormat').innerHTML =
+                        patterns.dateFormat && patterns.dateFormat !== 'none' && patterns.dateFormat !== 'no' ?
+                        patterns.dateFormat : '<span class="empty">Not configured</span>';
+
+                    document.getElementById('extractNotes').innerHTML =
+                        patterns.extractNotes && patterns.extractNotes !== 'none' && patterns.extractNotes !== 'no' ?
+                        patterns.extractNotes : '<span class="empty">Not configured</span>';
+                }
+
+                if (data.success) {
+                    let html = `<h3 class="success">✅ ${sourceName}: Found ${data.events_found} events</h3>`;
+
+                    if (testMode) {
+                        html += '<p style="color: #666;">Test mode - events not saved to database</p>';
+                    } else {
+                        html += `<p style="color: #666;">Saved ${data.events_added} new events, ${data.duplicates} duplicates skipped</p>`;
+                    }
+
+                    if (data.events && data.events.length > 0) {
+                        html += '<h4>Extracted Events:</h4>';
+                        data.events.forEach((event, idx) => {
+                            html += `
+                                <div class="event-item">
+                                    <h4>${idx + 1}. ${event.title}</h4>
+                                    <div class="event-meta">
+                                        <span>📅 ${event.date}</span>
+                                        <span>⏰ ${event.time}</span>
+                                        <span>📍 ${event.location || event.city}</span>
+                                        <span>🏷️ ${event.category}</span>
+                                    </div>
+                                    ${event.description ? `<p style="margin: 10px 0 0 0; color: #666;">${event.description}</p>` : ''}
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html += '<p class="warning">⚠️ No events found. Try adjusting the extraction patterns in Google Sheets.</p>';
+                    }
+
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = `
+                        <h3 class="error">❌ ${sourceName}: Extraction failed</h3>
+                        <p>${data.error || 'No events found'}</p>
+                        ${data.hint ? `<p style="color: #666;">💡 ${data.hint}</p>` : ''}
+                    `;
+                }
+
+            } catch (error) {
+                content.innerHTML = `
+                    <h3 class="error">❌ Error</h3>
+                    <p>${error.message}</p>
+                    <p style="color: #666;">Check console for details</p>
+                `;
+                console.error('Extraction error:', error);
+            } finally {
+                // Re-enable buttons
+                document.getElementById('testBtn').disabled = false;
+                document.getElementById('saveBtn').disabled = false;
+            }
+        }
+
+        // Quick example patterns for common scenarios
+        const examplePatterns = {
+            'HTML Pattern Examples': [
+                '.event-item',
+                'div.termin',
+                '.tribe-events-list article',
+                'section.events > div',
+                '[data-event]'
+            ],
+            'Date Format Examples': [
+                '15. Jänner 2025',
+                'DD.MM.YYYY',
+                'January 15, 2025',
+                'Do 15.2.',
+                'Donnerstag, 15. Februar 2025'
+            ],
+            'Extract Notes Examples': [
+                'Only events with "kostenlos" or "gratis"',
+                'Filter by bundesland=T parameter',
+                'Look for .searchResultItem containers',
+                'Include online events accessible from Tirol',
+                'Skip events older than 3 months'
+            ]
+        };
+    </script>
+
+    <div style="margin-top: 40px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>💡 Pattern Examples for Google Sheets</h3>
+        <p style="color: #666;">Copy these examples to columns J, K, L in your Google Sheets:</p>
+
+        <h4>Column J - HTML Pattern:</h4>
+        <ul style="font-family: monospace; background: #f4f4f4; padding: 15px; border-radius: 4px;">
+            <li>.event-item</li>
+            <li>div.termin</li>
+            <li>.searchResultItem</li>
+            <li>article.event-card</li>
+        </ul>
+
+        <h4>Column K - Date Format:</h4>
+        <ul style="font-family: monospace; background: #f4f4f4; padding: 15px; border-radius: 4px;">
+            <li>15. Jänner 2025</li>
+            <li>15.01.2025</li>
+            <li>January 15, 2025</li>
+            <li>Do 15.2. 18:00</li>
+        </ul>
+
+        <h4>Column L - Extract Notes:</h4>
+        <ul style="background: #fff9c4; padding: 15px; border-radius: 4px;">
+            <li>Look for "kostenlos", "gratis", or no price mentioned</li>
+            <li>Add ?bundesland=T to URL for Tirol filter</li>
+            <li>Events are in a grid layout, check .event-grid class</li>
+            <li>Most events are FREE workshops and meetups</li>
+        </ul>
+    </div>
+</body>
+</html>

@@ -280,17 +280,20 @@ export default async function handler(req, res) {
       });
     }
 
-    // Prepare data for Google Sheets - SIMPLIFIED SLC VERSION
+    // Prepare data for Google Sheets - WITH EXTRACTION HELPER COLUMNS
     const headers = [
-      'Source',           // Name
-      'Status',          // Active/Inactive/Error
-      'Quality',         // HIGH/MED/LOW
-      'This Month',      // Events found this month
-      'Last 30 Days',    // Events in last 30 days
-      'Last Check',      // When we last checked
-      'Type',           // Web/Newsletter
-      'Schedule',       // Daily/Weekly/On Receipt
-      'URL'             // Reference link
+      'Source',           // A: Name
+      'Status',          // B: Active/Inactive/Error
+      'Quality',         // C: HIGH/MED/LOW
+      'This Month',      // D: Events found this month
+      'Last 30 Days',    // E: Events in last 30 days
+      'Last Check',      // F: When we last checked
+      'Type',           // G: Web/Newsletter
+      'Schedule',       // H: Daily/Weekly/On Receipt
+      'URL',            // I: Reference link
+      'HTML Pattern',    // J: Event container selector/pattern
+      'Date Format',     // K: How dates appear (e.g. "15. Jänner 2025")
+      'Extract Notes'    // L: Special instructions/findings
     ];
 
     const rows = sourcesWithMetrics.map(source => {
@@ -327,7 +330,10 @@ export default async function handler(req, res) {
         source.lastChecked === 'Never' ? 'Never' : new Date(source.lastChecked).toLocaleDateString(),
         source.type,
         source.frequency,
-        source.url
+        source.url,
+        '',  // J: HTML Pattern - TO BE FILLED BY USER
+        '',  // K: Date Format - TO BE FILLED BY USER
+        ''   // L: Extract Notes - TO BE FILLED BY USER
       ];
     });
 
@@ -335,7 +341,7 @@ export default async function handler(req, res) {
     const sheets = await getSheetsClient();
 
     // Clear and update Sources sheet
-    const range = 'Sources!A:I';  // 9 columns now
+    const range = 'Sources!A:L';  // 12 columns now with extraction helpers
 
     // Log what we're about to write
     console.log(`[RADAR Sources] Writing ${rows.length} rows to Sources tab`);
