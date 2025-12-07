@@ -285,10 +285,25 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${adminToken}`
                     },
-                    body: JSON.stringify({ testMode })
+                    body: JSON.stringify({ testMode }),
+                    signal: AbortSignal.timeout(55000) // 55 second timeout
                 });
 
-                const data = await response.json();
+                let data;
+                try {
+                    const text = await response.text();
+                    data = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('Failed to parse response:', parseError);
+                    // Check if it's a timeout error
+                    if (response.status === 504) {
+                        addLog('❌ Server timeout - extraction taking too long', 'error');
+                        addLog('💡 Tip: Try running fewer sources at once', 'info');
+                        alert('Extraction timed out. This usually means the server is processing too many sources. Try again in a moment.');
+                        return;
+                    }
+                    throw new Error('Invalid response from server');
+                }
 
                 clearInterval(progressInterval);
                 document.getElementById('progressFill').style.width = '100%';

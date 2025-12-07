@@ -50,89 +50,112 @@ export default async function handler(req, res) {
 
     console.log(`[RUN-ALL] Found ${activeSources.length} active sources`);
 
+    // Process sources in parallel batches to avoid timeout
+    const BATCH_SIZE = 5; // Process 5 sources at a time for faster execution
     const results = [];
+
+    // Process in batches
+    for (let i = 0; i < activeSources.length; i += BATCH_SIZE) {
+      const batch = activeSources.slice(i, i + BATCH_SIZE);
+      console.log(`[RUN-ALL] Processing batch ${Math.floor(i/BATCH_SIZE) + 1}: ${batch.map(s => s.name).join(', ')}`);
+
+      // Process batch in parallel
+      const batchPromises = batch.map(async (source) => {
+        try {
+          console.log(`[RUN-ALL] Extracting from ${source.name}...`);
+
+          // Call Firecrawl extraction endpoint
+          const extractResponse = await fetch(`${process.env.BASE_URL || 'https://kinn.at'}/api/radar/extract-firecrawl`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.RADAR_ADMIN_TOKEN}`
+            },
+            body: JSON.stringify({
+              sourceName: source.name,
+              testMode: testMode
+            }),
+            signal: AbortSignal.timeout(8000) // 8 second timeout per source
+          });
+
+          let extractData;
+          try {
+            extractData = await extractResponse.json();
+          } catch (parseError) {
+            console.error(`[RUN-ALL] Failed to parse response for ${source.name}:`, parseError);
+            extractData = { success: false, error: 'Invalid JSON response' };
+          }
+
+          const result = {
+            source: source.name,
+            url: source.url,
+            success: extractData.success,
+            eventsFound: extractData.events_found || 0,
+            eventsAdded: extractData.events_added || 0,
+            duplicates: extractData.duplicates || 0,
+            error: extractData.error,
+            timestamp: new Date().toISOString()
+          };
+
+          // Update source metrics in Redis (non-blocking)
+          const metricsKey = `radar:metrics:source:${source.name.toLowerCase().replace(/\s+/g, '-')}`;
+          kv.hset(metricsKey, {
+            lastRun: result.timestamp,
+            lastEventsFound: result.eventsFound,
+            lastEventsAdded: result.eventsAdded,
+            lastSuccess: result.success
+          }).catch(err => console.error(`[RUN-ALL] Redis update failed for ${source.name}:`, err));
+
+          return result;
+
+        } catch (error) {
+          console.error(`[RUN-ALL] Error processing ${source.name}:`, error);
+          return {
+            source: source.name,
+            url: source.url,
+            success: false,
+            eventsFound: 0,
+            eventsAdded: 0,
+            duplicates: 0,
+            error: error.message,
+            timestamp: new Date().toISOString()
+          };
+        }
+      });
+
+      // Wait for batch to complete
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
+
+      // Small delay between batches to avoid rate limiting
+      if (i + BATCH_SIZE < activeSources.length) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+
+    // Calculate totals
     let totalEventsFound = 0;
     let totalEventsAdded = 0;
     let successfulSources = 0;
     let failedSources = 0;
 
-    // Extract from each source using Firecrawl
-    for (const source of activeSources) {
-      console.log(`[RUN-ALL] Processing ${source.name}...`);
-
-      try {
-        // Call Firecrawl extraction endpoint
-        const extractResponse = await fetch(`${process.env.BASE_URL || 'https://kinn.at'}/api/radar/extract-firecrawl`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.RADAR_ADMIN_TOKEN}`
-          },
-          body: JSON.stringify({
-            sourceName: source.name,
-            testMode: testMode
-          })
-        });
-
-        const extractData = await extractResponse.json();
-
-        const result = {
-          source: source.name,
-          url: source.url,
-          success: extractData.success,
-          eventsFound: extractData.events_found || 0,
-          eventsAdded: extractData.events_added || 0,
-          duplicates: extractData.duplicates || 0,
-          error: extractData.error,
-          timestamp: new Date().toISOString()
-        };
-
-        results.push(result);
-
-        if (extractData.success) {
-          successfulSources++;
-          totalEventsFound += result.eventsFound;
-          totalEventsAdded += result.eventsAdded;
-        } else {
-          failedSources++;
-        }
-
-        // Update source metrics in Redis
-        const metricsKey = `radar:metrics:source:${source.name.toLowerCase().replace(/\s+/g, '-')}`;
-        await kv.hset(metricsKey, {
-          lastRun: result.timestamp,
-          lastEventsFound: result.eventsFound,
-          lastEventsAdded: result.eventsAdded,
-          lastSuccess: result.success
-        });
-
-      } catch (error) {
-        console.error(`[RUN-ALL] Error processing ${source.name}:`, error);
-
-        const result = {
-          source: source.name,
-          url: source.url,
-          success: false,
-          eventsFound: 0,
-          eventsAdded: 0,
-          duplicates: 0,
-          error: error.message,
-          timestamp: new Date().toISOString()
-        };
-
-        results.push(result);
+    results.forEach(result => {
+      if (result.success) {
+        successfulSources++;
+        totalEventsFound += result.eventsFound;
+        totalEventsAdded += result.eventsAdded;
+      } else {
         failedSources++;
       }
+    });
 
-      // Add delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
+    // Skip Google Sheets update if not configured or to save time
+    const skipSheets = !process.env.GOOGLE_SERVICE_ACCOUNT_KEY || !process.env.RADAR_GOOGLE_SHEET_ID;
 
-    // Update Google Sheets with results
-    console.log('[RUN-ALL] Updating Google Sheets...');
-
-    try {
-      const sheets = await getSheetsClient();
+    if (!skipSheets) {
+      console.log('[RUN-ALL] Updating Google Sheets...');
+      try {
+        const sheets = await getSheetsClient();
       const SHEET_ID = process.env.RADAR_GOOGLE_SHEET_ID;
 
       // Prepare data for Sources sheet update
@@ -222,11 +245,14 @@ export default async function handler(req, res) {
         }
       });
 
-      console.log('[RUN-ALL] Google Sheets updated successfully');
+        console.log('[RUN-ALL] Google Sheets updated successfully');
 
-    } catch (sheetError) {
-      console.error('[RUN-ALL] Failed to update Google Sheets:', sheetError);
-      // Continue even if sheet update fails
+      } catch (sheetError) {
+        console.error('[RUN-ALL] Failed to update Google Sheets:', sheetError);
+        // Continue even if sheet update fails
+      }
+    } else {
+      console.log('[RUN-ALL] Skipping Google Sheets update (not configured)');
     }
 
     // Update global metrics
