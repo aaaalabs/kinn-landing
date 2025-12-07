@@ -368,7 +368,7 @@ export const SOURCE_CONFIGS = {
   // ================== LOW PRIORITY ==================
 
   'Innsbruck.info': {
-    url: 'https://www.innsbruck.info/veranstaltungskalender.html',
+    url: 'https://www.innsbruck.info/brauchtum-und-events/veranstaltungskalender.html',
     active: true,
     extraction: {
       method: 'custom',

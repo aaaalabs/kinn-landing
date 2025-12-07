@@ -213,7 +213,7 @@ const ALL_SOURCES = [
   // LOW PRIORITY
   {
     name: 'Innsbruck.info',
-    url: 'https://www.innsbruck.info/veranstaltungskalender.html',
+    url: 'https://www.innsbruck.info/brauchtum-und-events/veranstaltungskalender.html',
     type: 'Website',
     category: 'Tourism/Culture',
     priority: 'LOW',
