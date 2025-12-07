@@ -6,6 +6,9 @@
     "api/**/*.js": {
       "includeFiles": "emails/**",
       "maxDuration": 15
+    },
+    "api/radar/**/*.js": {
+      "maxDuration": 60
     }
   },
   "env": {
@@ -15,6 +18,18 @@
     {
       "path": "/api/radar/sheets-sync",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/radar/check-sites?priority=primary",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/radar/update-sources",
+      "schedule": "15 8 * * *"
+    },
+    {
+      "path": "/api/radar/update-info",
+      "schedule": "0 9 * * 1"
     }
   ],
   "redirects": [

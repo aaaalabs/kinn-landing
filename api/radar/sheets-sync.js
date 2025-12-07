@@ -105,11 +105,11 @@ export default async function handler(req, res) {
       if (eventDate >= now) {
         const daysUntil = Math.floor((eventDate - now) / (1000 * 60 * 60 * 24));
         if (daysUntil <= 7) {
-          status = '🔴'; // This week
+          status = '🟢'; // This week (GREEN = GO = SOON!)
         } else if (daysUntil <= 14) {
-          status = '🟡'; // Next week
+          status = '🟡'; // Next week (YELLOW = CAUTION = PREPARE)
         } else {
-          status = '🟢'; // Future
+          status = '🔵'; // Future (BLUE = CALM = DISTANT)
         }
       }
 
