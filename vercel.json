@@ -5,9 +5,6 @@
   "functions": {
     "api/**/*.js": {
       "includeFiles": "emails/**",
-      "maxDuration": 15
-    },
-    "api/radar/*.js": {
       "maxDuration": 60
     }
   },
