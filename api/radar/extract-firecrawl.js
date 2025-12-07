@@ -109,6 +109,10 @@ RULES:
 5. Default time to 18:00 if not specified
 6. Default city to "Innsbruck" if in Tirol but not specified
 
+CATEGORIZATION RULES:
+- If title or description contains "AI", "KI", "Artificial Intelligence", "Künstliche Intelligenz", "Machine Learning", "Deep Learning", "GPT", "LLM" → category: "AI"
+- Otherwise use: "Startup", "Workshop", "Networking", "Tech", "Innovation", or "Other" based on event type
+
 CONTENT TO ANALYZE:
 ${content}
 
@@ -121,7 +125,7 @@ Return a JSON object with an "events" array:
       "time": "HH:MM",
       "location": "Venue name",
       "city": "City name",
-      "category": "Startup|Workshop|Networking|Tech|Innovation|Other",
+      "category": "AI|Startup|Workshop|Networking|Tech|Innovation|Other",
       "description": "Brief description (max 200 chars)",
       "registrationUrl": "Direct registration/ticket URL if available",
       "detailUrl": "URL to event detail page (IMPORTANT - always include!)"
