@@ -39,26 +39,38 @@ export default async function handler(req, res) {
 
     console.log('[RADAR] Webhook signature check bypassed for MVP');
 
-    // Log the entire request body to understand structure
-    console.log('[RADAR] Full webhook payload:', JSON.stringify(req.body));
+    // Log the entire request body for debugging
+    console.log('[RADAR] Full webhook payload:', JSON.stringify(req.body).substring(0, 500));
 
-    // Resend webhook might have different structure - check for nested data
-    const emailData = req.body.data || req.body;
-    const { from, to, subject, html, text } = emailData;
+    // Check if this is an email.received event from Resend
+    if (req.body.type !== 'email.received') {
+      console.log(`[RADAR] Not an email.received event (type: ${req.body.type}), ignoring`);
+      return res.status(200).json({ ignored: true });
+    }
+
+    // Extract email data from Resend webhook structure
+    const emailData = req.body.data;
+    if (!emailData) {
+      console.log('[RADAR] No data field in webhook payload');
+      return res.status(400).json({ error: 'Invalid webhook payload' });
+    }
+
+    const { from, to, subject, html, text, email_id } = emailData;
 
     // Log receipt with full details for debugging
-    console.log(`[RADAR] Email received - From: ${from}, To: ${to}, Subject: ${subject}`);
+    console.log(`[RADAR] Email received - From: ${from}, To: ${JSON.stringify(to)}, Subject: ${subject}`);
 
-    // Check if this is for RADAR - handle various formats
-    const isRadarEmail = to && (
-      to.includes('radar@') ||
-      to.includes('radar+') ||
-      to.toLowerCase() === 'radar@in.kinn.at' ||
-      to.toLowerCase().includes('radar')
+    // Check if this is for RADAR - 'to' is an array in Resend webhooks
+    const toAddresses = Array.isArray(to) ? to : [to];
+    const isRadarEmail = toAddresses.some(addr =>
+      addr && (
+        addr.includes('radar@') ||
+        addr.toLowerCase().includes('radar')
+      )
     );
 
     if (!isRadarEmail) {
-      console.log(`[RADAR] Not a RADAR email (to: ${to}), ignoring`);
+      console.log(`[RADAR] Not a RADAR email (to: ${JSON.stringify(to)}), ignoring`);
       return res.status(200).json({ ignored: true });
     }
 
