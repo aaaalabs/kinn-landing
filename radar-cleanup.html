@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KINN-RADAR - Event Cleanup</title>
+    <style>
+        body {
+            font-family: 'Work Sans', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2C3E50;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        .control-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn:hover:not(:disabled) {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .btn-danger {
+            background: #e74c3c;
+        }
+        .btn-danger:hover:not(:disabled) {
+            background: #c0392b;
+        }
+        .btn-success {
+            background: #27ae60;
+        }
+        .btn-success:hover:not(:disabled) {
+            background: #229954;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2C3E50;
+        }
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .results-section {
+            margin-top: 30px;
+            display: none;
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .results-table th {
+            background: #2C3E50;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .results-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 14px;
+        }
+        .results-table tr:hover {
+            background: #f8f9fa;
+        }
+        .reason-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .reason-old { background: #fff3cd; color: #856404; }
+        .reason-duplicate { background: #d4edda; color: #155724; }
+        .reason-no-data { background: #f8d7da; color: #721c24; }
+        .log-box {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .log-line {
+            margin: 3px 0;
+        }
+        .log-success { color: #2ecc71; }
+        .log-warning { color: #f39c12; }
+        .log-error { color: #e74c3c; }
+        .log-info { color: #3498db; }
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #28a745;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 KINN-RADAR Event Cleanup</h1>
+        <p class="subtitle">Remove old and duplicate events from Redis and Google Sheets</p>
+
+        <div class="control-panel">
+            <div class="alert alert-warning">
+                <strong>⚠️ Cleanup Actions:</strong>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>Removes events with dates in the past</li>
+                    <li>Removes duplicate events (same title + date)</li>
+                    <li>Keeps the version with most complete data</li>
+                    <li>Updates Google Sheets with cleaned data</li>
+                </ul>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" id="dryRunBtn" onclick="runCleanup(true)">
+                    🔍 Dry Run (Preview)
+                </button>
+                <button class="btn btn-danger" id="executeBtn" onclick="confirmAndExecute()">
+                    🗑️ Execute Cleanup
+                </button>
+                <button class="btn btn-success" id="refreshBtn" onclick="location.reload()" disabled>
+                    🔄 Refresh Page
+                </button>
+            </div>
+
+            <div class="stats-grid" id="statsGrid" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalEvents">0</div>
+                    <div class="stat-label">Total Events</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="keptEvents">0</div>
+                    <div class="stat-label">Events Kept</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="removedEvents">0</div>
+                    <div class="stat-label">To Remove</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="oldEvents">0</div>
+                    <div class="stat-label">Old Events</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="duplicates">0</div>
+                    <div class="stat-label">Duplicates</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <h2>📋 Events to Remove</h2>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Date</th>
+                        <th>Reason</th>
+                        <th>Event ID</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="log-box" id="logBox">
+            <div class="log-line log-info">Ready to run cleanup...</div>
+        </div>
+    </div>
+
+    <script>
+        let lastDryRunData = null;
+
+        function addLog(message, type = 'info') {
+            const logBox = document.getElementById('logBox');
+            const logLine = document.createElement('div');
+            logLine.className = `log-line log-${type}`;
+            logLine.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logBox.appendChild(logLine);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        async function runCleanup(dryRun = true) {
+            const adminToken = localStorage.getItem('radarAdminToken') || prompt('Enter RADAR Admin Token:');
+            if (!adminToken) return;
+            localStorage.setItem('radarAdminToken', adminToken);
+
+            const btnId = dryRun ? 'dryRunBtn' : 'executeBtn';
+            const btn = document.getElementById(btnId);
+            btn.disabled = true;
+            document.getElementById('refreshBtn').disabled = true;
+
+            addLog(`Starting ${dryRun ? 'dry run' : 'ACTUAL CLEANUP'}...`, dryRun ? 'info' : 'warning');
+
+            try {
+                const response = await fetch('/api/radar/cleanup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ dryRun })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    lastDryRunData = data;
+                    displayResults(data);
+
+                    if (dryRun) {
+                        addLog(`✅ Dry run complete: ${data.stats.removed} events would be removed`, 'success');
+                    } else {
+                        addLog(`✅ Cleanup complete: ${data.stats.removed} events removed`, 'success');
+                        document.getElementById('refreshBtn').disabled = false;
+                    }
+                } else {
+                    addLog(`❌ Cleanup failed: ${data.error}`, 'error');
+                }
+
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function confirmAndExecute() {
+            if (!lastDryRunData) {
+                alert('Please run a dry run first to see what will be removed');
+                return;
+            }
+
+            const confirmed = confirm(
+                `⚠️ This will permanently remove ${lastDryRunData.stats.removed} events:\n\n` +
+                `• ${lastDryRunData.stats.oldEvents} old events\n` +
+                `• ${lastDryRunData.stats.duplicates} duplicates\n\n` +
+                `Are you sure you want to proceed?`
+            );
+
+            if (confirmed) {
+                runCleanup(false);
+            }
+        }
+
+        function displayResults(data) {
+            // Update stats
+            document.getElementById('statsGrid').style.display = 'grid';
+            document.getElementById('totalEvents').textContent = data.stats.totalEvents;
+            document.getElementById('keptEvents').textContent = data.stats.kept;
+            document.getElementById('removedEvents').textContent = data.stats.removed;
+            document.getElementById('oldEvents').textContent = data.stats.oldEvents;
+            document.getElementById('duplicates').textContent = data.stats.duplicates;
+
+            // Display removals table (only in dry run)
+            if (data.dryRun && data.removals && data.removals.length > 0) {
+                const tbody = document.getElementById('resultsBody');
+                tbody.innerHTML = '';
+
+                data.removals.forEach(event => {
+                    const row = tbody.insertRow();
+
+                    // Format reason
+                    let reasonBadge = '';
+                    let reasonText = '';
+                    if (event.reason === 'old_event') {
+                        reasonBadge = 'reason-old';
+                        reasonText = 'Past Event';
+                    } else if (event.reason === 'duplicate_lower_quality') {
+                        reasonBadge = 'reason-duplicate';
+                        reasonText = 'Duplicate';
+                    } else if (event.reason === 'no_data') {
+                        reasonBadge = 'reason-no-data';
+                        reasonText = 'No Data';
+                    }
+
+                    row.innerHTML = `
+                        <td>${event.title || 'Unknown'}</td>
+                        <td>${event.date || 'N/A'}</td>
+                        <td><span class="reason-badge ${reasonBadge}">${reasonText}</span></td>
+                        <td style="font-family: monospace; font-size: 11px;">${event.id || ''}</td>
+                    `;
+                });
+
+                document.getElementById('resultsSection').style.display = 'block';
+            } else if (!data.dryRun) {
+                // Hide results table after actual execution
+                document.getElementById('resultsSection').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
