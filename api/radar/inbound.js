@@ -74,11 +74,17 @@ export default async function handler(req, res) {
       return res.status(200).json({ ignored: true });
     }
 
+    // Note: Resend webhook doesn't include email body by default
+    // For MVP, we'll use subject + create a test event
+    const emailContent = html || text || `Subject: ${subject}\nFrom: ${from}\nNote: Email body not available in webhook`;
+
+    console.log(`[RADAR] Email content available: ${emailContent ? 'yes' : 'no'} (length: ${emailContent.length})`);
+
     // Extract events using Groq
     const extractedEvents = await extractEventsWithGroq({
       from,
       subject,
-      content: html || text || ''
+      content: emailContent
     });
 
     console.log(`[RADAR] Extracted ${extractedEvents.length} events from newsletter`);
@@ -205,7 +211,16 @@ Return ONLY a JSON array of events, no other text.`;
       } else if (parsed.events && Array.isArray(parsed.events)) {
         return parsed.events;
       } else {
-        console.log('[RADAR] Unexpected response format from Groq');
+        console.log('[RADAR] Unexpected response format from Groq:', JSON.stringify(parsed).substring(0, 200));
+        // Try to extract events from any structure
+        if (typeof parsed === 'object' && parsed !== null) {
+          // Check for any array property that might contain events
+          const possibleEventArrays = Object.values(parsed).filter(v => Array.isArray(v));
+          if (possibleEventArrays.length > 0) {
+            console.log('[RADAR] Found array in response, using first one');
+            return possibleEventArrays[0];
+          }
+        }
         return [];
       }
     } catch (parseError) {
