@@ -43,7 +43,7 @@ export default async function handler(req, res) {
 
     // Allow cron jobs (no auth) or manual trigger with token
     if (!req.headers['user-agent']?.includes('vercel-cron')) {
-      if (!authHeader || authHeader !== `Bearer ${process.env.RADAR_ADMIN_TOKEN}`) {
+      if (!authHeader || authHeader !== `Bearer ${process.env.ADMIN_SYNC_TOKEN || process.env.RADAR_ADMIN_TOKEN}`) {
         console.log('[RADAR Sheets] Unauthorized access attempt');
         return res.status(401).json({ error: 'Unauthorized' });
       }
