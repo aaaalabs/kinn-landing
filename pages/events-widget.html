@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KINN Events Widget</title>
+
+  <!-- Typography: Work Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Work Sans', system-ui, -apple-system, sans-serif;
+      color: #3A3A3A;
+      padding: 20px;
+      line-height: 1.618;
+    }
+
+    #events-widget {
+      max-height: 420px;
+      overflow-y: auto;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    #events-widget h4 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #6B6B6B;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.5rem;
+    }
+
+    .event-card {
+      padding: 1rem 0;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .event-card:hover {
+      padding-left: 0.5rem;
+    }
+
+    .event-card:last-child {
+      border-bottom: none;
+    }
+
+    .event-time {
+      font-size: 0.8125rem;
+      color: #5ED9A6;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      display: block;
+    }
+
+    .event-title {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #1F2937;
+      margin-bottom: 0.25rem;
+      display: block;
+    }
+
+    .event-location {
+      font-size: 0.875rem;
+      color: #9CA3AF;
+      display: block;
+    }
+
+    .event-link {
+      display: inline-block;
+      margin-top: 0.5rem;
+      font-size: 0.8125rem;
+      color: #5ED9A6;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .event-link:hover {
+      color: #4EC995;
+    }
+
+    #load-more {
+      text-align: center;
+      padding: 1rem;
+      color: #9CA3AF;
+      font-size: 0.875rem;
+    }
+
+    .no-events {
+      text-align: center;
+      padding: 2rem;
+      color: #9CA3AF;
+    }
+
+    /* Scrollbar styling */
+    #events-widget::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #events-widget::-webkit-scrollbar-track {
+      background: #f0f0f0;
+      border-radius: 3px;
+    }
+
+    #events-widget::-webkit-scrollbar-thumb {
+      background: #E0EEE9;
+      border-radius: 3px;
+    }
+
+    #events-widget::-webkit-scrollbar-thumb:hover {
+      background: #5ED9A6;
+    }
+  </style>
+</head>
+<body>
+  <div id="events-widget">
+    <h4>Kommende Events</h4>
+    <div id="events-list"></div>
+    <div id="load-more" style="display: none;">Lade weitere Events...</div>
+  </div>
+
+  <script>
+    let page = 1;
+    let loading = false;
+    let hasMore = true;
+
+    function formatProximity(date, time) {
+      const eventDate = new Date(`${date}T${time || '18:00'}`);
+      const now = new Date();
+      const hours = Math.floor((eventDate - now) / (1000 * 60 * 60));
+
+      if (hours < 0) return 'Läuft gerade';
+      if (hours < 1) return 'Jetzt';
+      if (hours < 24) return `In ${hours} Stunde${hours === 1 ? '' : 'n'}`;
+      if (hours < 48) return 'Morgen';
+      const days = Math.floor(hours / 24);
+      if (days < 7) return `In ${days} Tag${days === 1 ? '' : 'en'}`;
+      return eventDate.toLocaleDateString('de-AT', { day: 'numeric', month: 'short' });
+    }
+
+    async function loadEvents() {
+      if (loading || !hasMore) return;
+      loading = true;
+
+      if (page > 1) {
+        document.getElementById('load-more').style.display = 'block';
+      }
+
+      try {
+        const res = await fetch(`/api/events/widget?page=${page}`);
+        const data = await res.json();
+
+        // Check if widget should be shown
+        if (page === 1 && !data.showWidget) {
+          document.getElementById('events-list').innerHTML =
+            '<div class="no-events">Keine kommenden Events verfügbar</div>';
+          document.getElementById('load-more').style.display = 'none';
+          return;
+        }
+
+        if (data.events.length === 0) {
+          hasMore = false;
+          document.getElementById('load-more').style.display = 'none';
+          return;
+        }
+
+        // Render events
+        data.events.forEach(event => {
+          const el = document.createElement('div');
+          el.className = 'event-card';
+          el.innerHTML = `
+            <time class="event-time">${formatProximity(event.date, event.time)}</time>
+            <strong class="event-title">${event.title}</strong>
+            <span class="event-location">${event.location || 'Online'}</span>
+            ${event.detailUrl ? `<a href="${event.detailUrl}" target="_blank" class="event-link">Details →</a>` : ''}
+          `;
+          document.getElementById('events-list').appendChild(el);
+        });
+
+        page++;
+        hasMore = data.hasMore;
+
+        if (!hasMore) {
+          document.getElementById('load-more').style.display = 'none';
+        }
+
+      } catch (error) {
+        console.error('Error loading events:', error);
+        if (page === 1) {
+          document.getElementById('events-list').innerHTML =
+            '<div class="no-events">Fehler beim Laden der Events</div>';
+        }
+      } finally {
+        loading = false;
+        if (page > 1) {
+          document.getElementById('load-more').style.display = 'none';
+        }
+      }
+    }
+
+    // Initial load
+    loadEvents();
+
+    // Infinite scroll
+    const widget = document.getElementById('events-widget');
+    widget.addEventListener('scroll', () => {
+      if (widget.scrollTop + widget.clientHeight >= widget.scrollHeight - 50) {
+        loadEvents();
+      }
+    });
+  </script>
+</body>
+</html>
