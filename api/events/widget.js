@@ -1,4 +1,5 @@
 import { Redis } from '@upstash/redis';
+import logger from '../../lib/logger.js';
 
 const kv = new Redis({
   url: process.env.KINNST_KV_REST_API_URL,
@@ -29,16 +30,16 @@ export default async function handler(req, res) {
     const now = new Date();
     const events = [];
 
-    // DEBUG: Log basic info
-    console.log(`[WIDGET DEBUG] Found ${eventIds.length} total event IDs in radar:events`);
-    console.log(`[WIDGET DEBUG] Current date/time: ${now.toISOString()}`);
+    // Log basic info
+    logger.debug(`Found ${eventIds.length} total event IDs in radar:events`);
+    logger.debug(`Current date/time: ${now.toISOString()}`);
 
     // Fetch events and filter approved + future
     for (const id of eventIds) {
       const event = await kv.hgetall(`radar:event:${id}`);
 
-      // DEBUG: Log each event's details with type information
-      console.log(`[WIDGET DEBUG] Event ${id}:`, {
+      // Log event details in development
+      logger.debug(`Event ${id}:`, {
         title: event?.title || 'NO TITLE',
         date: event?.date || 'NO DATE',
         reviewed: event?.reviewed,
@@ -56,20 +57,20 @@ export default async function handler(req, res) {
       const isFuture = eventDate && eventDate >= now;
 
       if (event && isReviewed && isNotRejected && isFuture) {
-        console.log(`[WIDGET DEBUG] ✓ Event ${id} passed filters (reviewed & future & not rejected)`);
+        logger.debug(`✓ Event ${id} passed filters (reviewed & future & not rejected)`);
         events.push(event);
       } else {
-        // DEBUG: Why was it filtered out?
+        // Log why event was filtered out in development
         if (!event) {
-          console.log(`[WIDGET DEBUG] ✗ Event ${id} filtered: No event data found`);
+          logger.debug(`✗ Event ${id} filtered: No event data found`);
         } else if (!isReviewed) {
-          console.log(`[WIDGET DEBUG] ✗ Event ${id} filtered: Not reviewed (reviewed=${event.reviewed}, type=${typeof event.reviewed})`);
+          logger.debug(`✗ Event ${id} filtered: Not reviewed (reviewed=${event.reviewed}, type=${typeof event.reviewed})`);
         } else if (!isNotRejected) {
-          console.log(`[WIDGET DEBUG] ✗ Event ${id} filtered: Rejected (rejected=${event.rejected})`);
+          logger.debug(`✗ Event ${id} filtered: Rejected (rejected=${event.rejected})`);
         } else if (!isFuture) {
           const dateStr = event.date || 'NO DATE';
           const nowStr = now.toISOString().split('T')[0];
-          console.log(`[WIDGET DEBUG] ✗ Event ${id} filtered: Past event (${dateStr} < ${nowStr})`);
+          logger.debug(`✗ Event ${id} filtered: Past event (${dateStr} < ${nowStr})`);
         }
       }
     }
@@ -81,12 +82,12 @@ export default async function handler(req, res) {
       return dateA - dateB;
     });
 
-    // DEBUG: Log final count
-    console.log(`[WIDGET DEBUG] Total approved future events: ${events.length}`);
+    // Log final count
+    logger.info(`Total approved future events: ${events.length}`);
 
     // Only show widget if 2+ events exist
     if (page === 1 && events.length < 2) {
-      console.log(`[WIDGET DEBUG] Not showing widget - only ${events.length} events (minimum: 2)`);
+      logger.info(`Not showing widget - only ${events.length} events (minimum: 2)`);
       return res.status(200).json({
         events: [],
         showWidget: false,
@@ -102,8 +103,8 @@ export default async function handler(req, res) {
     // Paginate results
     const paginatedEvents = events.slice(offset, offset + limit);
 
-    console.log(`[WIDGET] Returning ${paginatedEvents.length} events (page ${page}, total approved: ${events.length})`);
-    console.log(`[WIDGET DEBUG] First 3 events being returned:`, paginatedEvents.slice(0, 3).map(e => ({
+    logger.info(`Returning ${paginatedEvents.length} events (page ${page}, total approved: ${events.length})`);
+    logger.debug(`First 3 events being returned:`, paginatedEvents.slice(0, 3).map(e => ({
       title: e.title,
       date: e.date,
       approved: e.approved
@@ -118,7 +119,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[WIDGET] Error loading events:', error);
+    logger.error('Error loading events:', error);
     return res.status(500).json({
       error: 'Failed to load events',
       message: 'Events konnten nicht geladen werden'

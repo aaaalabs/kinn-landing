@@ -1,5 +1,6 @@
 import { Redis } from '@upstash/redis';
 import crypto from 'crypto';
+import logger from '../../lib/logger.js';
 
 const kv = new Redis({
   url: process.env.KINNST_KV_REST_API_URL,
@@ -14,7 +15,7 @@ function isAuthenticated(req) {
   const adminPassword = process.env.ADMIN_PASSWORD;
 
   if (!adminPassword) {
-    console.error('[ADMIN] ADMIN_PASSWORD not configured');
+    logger.error('ADMIN_PASSWORD not configured');
     return false;
   }
 
@@ -24,7 +25,7 @@ function isAuthenticated(req) {
       Buffer.from(adminPassword)
     );
   } catch (error) {
-    console.error('[ADMIN] Auth error:', error);
+    logger.error('Auth error:', error);
     return false;
   }
 }
@@ -51,7 +52,7 @@ export default async function handler(req, res) {
       const allEvents = [];
       const now = new Date();
 
-      console.log(`[RADAR-ADMIN] Checking ${eventIds.length} radar events`);
+      logger.debug(`Checking ${eventIds.length} radar events`);
 
       for (const id of eventIds) {
         const event = await kv.hgetall(`radar:event:${id}`);
@@ -68,7 +69,7 @@ export default async function handler(req, res) {
       // Sort by date (closest first)
       allEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      console.log(`[RADAR-ADMIN] Returning ${allEvents.length} events (approved and pending)`);
+      logger.info(`Returning ${allEvents.length} events (approved and pending)`);
 
       return res.status(200).json({
         events: allEvents,
@@ -79,7 +80,7 @@ export default async function handler(req, res) {
       });
 
     } catch (error) {
-      console.error('[RADAR-ADMIN] Error fetching events:', error);
+      logger.error('Error fetching events:', error);
       return res.status(500).json({ error: 'Failed to fetch events' });
     }
 
@@ -106,7 +107,7 @@ export default async function handler(req, res) {
           updatedCount++;
         }
 
-        console.log(`[RADAR-ADMIN] Approved ${updatedCount} events`);
+        logger.info(`Approved ${updatedCount} events`);
 
         return res.status(200).json({
           success: true,
@@ -126,7 +127,7 @@ export default async function handler(req, res) {
           updatedCount++;
         }
 
-        console.log(`[RADAR-ADMIN] Rejected ${updatedCount} events`);
+        logger.info(`Rejected ${updatedCount} events`);
 
         return res.status(200).json({
           success: true,
@@ -140,7 +141,7 @@ export default async function handler(req, res) {
       }
 
     } catch (error) {
-      console.error('[RADAR-ADMIN] Error updating events:', error);
+      logger.error('Error updating events:', error);
       return res.status(500).json({ error: 'Failed to update events' });
     }
   }
