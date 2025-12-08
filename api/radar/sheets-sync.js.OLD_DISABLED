@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { createClient } from '@vercel/kv';
+import logger from '../../lib/logger.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -22,7 +23,7 @@ async function getSheetsClient() {
     sheetsClient = google.sheets({ version: 'v4', auth });
     return sheetsClient;
   } catch (error) {
-    console.error('[RADAR Sheets] Failed to initialize Google Sheets client:', error);
+    logger.error('[RADAR Sheets] Failed to initialize Google Sheets client:', error);
     throw error;
   }
 }
@@ -44,14 +45,14 @@ export default async function handler(req, res) {
     // Allow cron jobs (no auth) or manual trigger with token
     if (!req.headers['user-agent']?.includes('vercel-cron')) {
       if (!authHeader || authHeader !== `Bearer ${process.env.ADMIN_SYNC_TOKEN || process.env.RADAR_ADMIN_TOKEN}`) {
-        console.log('[RADAR Sheets] Unauthorized access attempt');
+        logger.debug('[RADAR Sheets] Unauthorized access attempt');
         return res.status(401).json({ error: 'Unauthorized' });
       }
     }
   }
 
   try {
-    console.log('[RADAR Sheets] Starting sync to Google Sheets...');
+    logger.debug('[RADAR Sheets] Starting sync to Google Sheets...');
 
     const SHEET_ID = process.env.RADAR_GOOGLE_SHEET_ID;
 
@@ -74,7 +75,7 @@ export default async function handler(req, res) {
     // Sort events by date (newest first for better overview)
     events.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    console.log(`[RADAR Sheets] Processing ${events.length} events`);
+    logger.debug(`[RADAR Sheets] Processing ${events.length} events`);
 
     // Prepare data for Google Sheets
     const headers = [
@@ -172,7 +173,7 @@ export default async function handler(req, res) {
       }
     });
 
-    console.log(`[RADAR Sheets] Successfully synced ${events.length} events`);
+    logger.debug(`[RADAR Sheets] Successfully synced ${events.length} events`);
 
     // Update statistics
     await updateStatistics(sheets, SHEET_ID, events);
@@ -189,7 +190,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[RADAR Sheets] Sync error:', error);
+    logger.error('[RADAR Sheets] Sync error:', error);
     return res.status(500).json({
       error: 'Sync failed',
       message: error.message,
@@ -252,7 +253,7 @@ async function updateStatistics(sheets, sheetId, events) {
     });
 
   } catch (error) {
-    console.error('[RADAR Sheets] Failed to update statistics:', error);
+    logger.error('[RADAR Sheets] Failed to update statistics:', error);
     // Don't throw - statistics update failure shouldn't break the main sync
   }
 }

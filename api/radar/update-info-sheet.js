@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import logger from '../../lib/logger.js';
 
 // Initialize Google Sheets client
 async function getSheetsClient() {
@@ -9,7 +10,7 @@ async function getSheetsClient() {
     });
     return google.sheets({ version: 'v4', auth });
   } catch (error) {
-    console.error('[INFO-UPDATE] Failed to initialize Google Sheets client:', error);
+    logger.error('[INFO-UPDATE] Failed to initialize Google Sheets client:', error);
     throw error;
   }
 }
@@ -31,7 +32,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('[INFO-UPDATE] Updating Info sheet...');
+    logger.debug('[INFO-UPDATE] Updating Info sheet...');
 
     const sheets = await getSheetsClient();
     const SHEET_ID = process.env.RADAR_GOOGLE_SHEET_ID;
@@ -158,10 +159,10 @@ export default async function handler(req, res) {
         requests: requests
       }
     }).catch(err => {
-      console.log('[INFO-UPDATE] Formatting failed (non-critical):', err.message);
+      logger.debug('[INFO-UPDATE] Formatting failed (non-critical):', err.message);
     });
 
-    console.log('[INFO-UPDATE] Info sheet updated successfully');
+    logger.debug('[INFO-UPDATE] Info sheet updated successfully');
 
     return res.status(200).json({
       success: true,
@@ -170,7 +171,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[INFO-UPDATE] Fatal error:', error);
+    logger.error('[INFO-UPDATE] Fatal error:', error);
     return res.status(500).json({
       error: 'Info update failed',
       message: error.message

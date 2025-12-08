@@ -1,6 +1,7 @@
 import { createClient } from '@vercel/kv';
 import Groq from 'groq-sdk';
 import { SOURCE_CONFIGS, getSourceConfig } from './source-configs.js';
+import logger from '../../lib/logger.js';
 
 const kv = createClient({
   url: process.env.KINNST_KV_REST_API_URL,
@@ -39,7 +40,7 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log(`[EXTRACT] Processing ${sourceName} with method: ${config.extraction.method}`);
+    logger.debug(`[EXTRACT] Processing ${sourceName} with method: ${config.extraction.method}`);
 
     // Fetch the webpage
     const url = config.extraction.searchUrl || config.url;
@@ -60,11 +61,11 @@ export default async function handler(req, res) {
     }
 
     const html = await response.text();
-    console.log(`[EXTRACT] Fetched ${html.length} chars from ${sourceName}`);
+    logger.debug(`[EXTRACT] Fetched ${html.length} chars from ${sourceName}`);
 
     // Extract events using source-specific instructions
     const events = await extractWithInstructions(html, sourceName, config);
-    console.log(`[EXTRACT] Found ${events.length} events from ${sourceName}`);
+    logger.debug(`[EXTRACT] Found ${events.length} events from ${sourceName}`);
 
     // In test mode, don't store
     if (testMode) {
@@ -105,7 +106,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error(`[EXTRACT] Error:`, error);
+    logger.error(`[EXTRACT] Error:`, error);
     return res.status(500).json({
       error: 'Extraction failed',
       message: error.message
@@ -196,7 +197,7 @@ IMPORTANT: Follow the source-specific instructions above carefully!`;
     return validEvents;
 
   } catch (error) {
-    console.error(`[EXTRACT] AI error for ${sourceName}:`, error);
+    logger.error(`[EXTRACT] AI error for ${sourceName}:`, error);
     return [];
   }
 }

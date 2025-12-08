@@ -1,4 +1,5 @@
 import { createClient } from '@vercel/kv';
+import logger from '../../lib/logger.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -20,7 +21,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('[CLEANUP-CRON] Starting scheduled cleanup...');
+    logger.debug('[CLEANUP-CRON] Starting scheduled cleanup...');
 
     // Get current date for comparison
     const today = new Date();
@@ -100,13 +101,13 @@ export default async function handler(req, res) {
         }
 
       } catch (error) {
-        console.error(`[CLEANUP-CRON] Error processing event ${eventId}:`, error);
+        logger.error(`[CLEANUP-CRON] Error processing event ${eventId}:`, error);
       }
     }
 
     // Perform actual cleanup
     if (eventsToRemove.length > 0) {
-      console.log(`[CLEANUP-CRON] Removing ${eventsToRemove.length} events...`);
+      logger.debug(`[CLEANUP-CRON] Removing ${eventsToRemove.length} events...`);
 
       for (const event of eventsToRemove) {
         try {
@@ -120,7 +121,7 @@ export default async function handler(req, res) {
           // Delete the event hash
           await kv.del(`radar:event:${event.id}`);
         } catch (error) {
-          console.error(`[CLEANUP-CRON] Failed to remove event ${event.id}:`, error);
+          logger.error(`[CLEANUP-CRON] Failed to remove event ${event.id}:`, error);
         }
       }
 
@@ -136,7 +137,7 @@ export default async function handler(req, res) {
       duplicatesRemoved: stats.duplicates
     });
 
-    console.log(`[CLEANUP-CRON] Cleanup complete:
+    logger.debug(`[CLEANUP-CRON] Cleanup complete:
       - Total events: ${stats.totalEvents}
       - Removed: ${stats.removed}
       - Old events: ${stats.oldEvents}
@@ -157,7 +158,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[CLEANUP-CRON] Fatal error:', error);
+    logger.error('[CLEANUP-CRON] Fatal error:', error);
     return res.status(500).json({
       error: 'Scheduled cleanup failed',
       message: error.message

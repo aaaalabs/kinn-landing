@@ -1,5 +1,6 @@
 import { createClient } from '@vercel/kv';
 import Groq from 'groq-sdk';
+import logger from '../../lib/logger.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -136,25 +137,25 @@ export default async function handler(req, res) {
       sitesToCheck = SECONDARY_SITES;
     }
 
-    console.log(`[RADAR-SITES] Checking ${sitesToCheck.length} ${priority} sites...`);
+    logger.debug(`[RADAR-SITES] Checking ${sitesToCheck.length} ${priority} sites...`);
     const allEvents = [];
 
     for (const site of sitesToCheck) {
-      console.log(`[RADAR-SITES] Checking ${site.name}...`);
+      logger.debug(`[RADAR-SITES] Checking ${site.name}...`);
 
       // Fetch the HTML
       const response = await fetch(site.url);
       if (!response.ok) {
-        console.error(`[RADAR-SITES] Failed to fetch ${site.name}: ${response.status}`);
+        logger.error(`[RADAR-SITES] Failed to fetch ${site.name}: ${response.status}`);
         continue;
       }
 
       const html = await response.text();
-      console.log(`[RADAR-SITES] Fetched ${html.length} chars from ${site.name} (${Date.now() - startTime}ms)`);
+      logger.debug(`[RADAR-SITES] Fetched ${html.length} chars from ${site.name} (${Date.now() - startTime}ms)`);
 
       // Extract events using Groq
       const events = await extractEventsFromHTML(html, site.url, site.name);
-      console.log(`[RADAR-SITES] Found ${events.length} events from ${site.name} (${Date.now() - startTime}ms total)`);
+      logger.debug(`[RADAR-SITES] Found ${events.length} events from ${site.name} (${Date.now() - startTime}ms total)`);
 
       allEvents.push(...events);
     }
@@ -173,7 +174,7 @@ export default async function handler(req, res) {
       }
     }
 
-    console.log(`[RADAR-SITES] Complete: ${added} added, ${duplicates} duplicates`);
+    logger.debug(`[RADAR-SITES] Complete: ${added} added, ${duplicates} duplicates`);
 
     return res.status(200).json({
       success: true,
@@ -186,7 +187,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[RADAR-SITES] Error:', error);
+    logger.error('[RADAR-SITES] Error:', error);
     return res.status(500).json({
       error: 'Site checking failed',
       message: error.message
@@ -290,7 +291,7 @@ Return as JSON object:
     return result.events || [];
 
   } catch (error) {
-    console.error('[RADAR-SITES] Groq extraction error:', error);
+    logger.error('[RADAR-SITES] Groq extraction error:', error);
     return [];
   }
 }
@@ -317,12 +318,12 @@ async function checkDuplicate(event) {
 
         // Check if title and date match (exact match after normalization)
         if (existingTitle === incomingTitle && existingDate === incomingDate) {
-          console.log(`[DUPLICATE] Found duplicate: "${event.title}" on ${event.date}`);
+          logger.debug(`[DUPLICATE] Found duplicate: "${event.title}" on ${event.date}`);
           return true; // Duplicate found
         }
       }
     } catch (error) {
-      console.error(`[DUPLICATE-CHECK] Error checking event ${eventId}:`, error);
+      logger.error(`[DUPLICATE-CHECK] Error checking event ${eventId}:`, error);
     }
   }
 

@@ -1,5 +1,6 @@
 import { createClient } from '@vercel/kv';
 import Groq from 'groq-sdk';
+import logger from '../../lib/logger.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -33,25 +34,25 @@ export default async function handler(req, res) {
     // Skip signature validation for MVP (Resend uses Svix which needs special handling)
     // TODO: Implement proper Svix webhook verification
     if (false && expectedSecret && signature !== expectedSecret) {
-      console.log('[RADAR] Invalid webhook signature');
+      logger.debug('[RADAR] Invalid webhook signature');
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    console.log('[RADAR] Webhook signature check bypassed for MVP');
+    logger.debug('[RADAR] Webhook signature check bypassed for MVP');
 
     // Log the entire request body for debugging
-    console.log('[RADAR] Full webhook payload:', JSON.stringify(req.body).substring(0, 500));
+    logger.debug('[RADAR] Full webhook payload:', JSON.stringify(req.body).substring(0, 500));
 
     // Check if this is an email.received event from Resend
     if (req.body.type !== 'email.received') {
-      console.log(`[RADAR] Not an email.received event (type: ${req.body.type}), ignoring`);
+      logger.debug(`[RADAR] Not an email.received event (type: ${req.body.type}), ignoring`);
       return res.status(200).json({ ignored: true });
     }
 
     // Extract email data from Resend webhook structure
     const emailData = req.body.data;
     if (!emailData) {
-      console.log('[RADAR] No data field in webhook payload');
+      logger.debug('[RADAR] No data field in webhook payload');
       return res.status(400).json({ error: 'Invalid webhook payload' });
     }
 
@@ -76,7 +77,7 @@ export default async function handler(req, res) {
     const senderEmail = typeof from === 'string' ? from.toLowerCase() : from?.email?.toLowerCase();
 
     if (!ALLOWED_SENDERS.some(allowed => senderEmail?.includes(allowed.replace('@', '')))) {
-      console.log(`[RADAR] Rejected email from unauthorized sender: ${senderEmail}`);
+      logger.debug(`[RADAR] Rejected email from unauthorized sender: ${senderEmail}`);
       return res.status(200).json({
         message: 'Email rejected - unauthorized sender',
         sender: senderEmail
@@ -84,7 +85,7 @@ export default async function handler(req, res) {
     }
 
     // Log receipt with full details for debugging
-    console.log(`[RADAR] Email received - From: ${from}, To: ${JSON.stringify(to)}, Subject: ${subject}`);
+    logger.debug(`[RADAR] Email received - From: ${from}, To: ${JSON.stringify(to)}, Subject: ${subject}`);
 
     // Check if this is for RADAR - 'to' is an array in Resend webhooks
     const toAddresses = Array.isArray(to) ? to : [to];
@@ -96,14 +97,14 @@ export default async function handler(req, res) {
     );
 
     if (!isRadarEmail) {
-      console.log(`[RADAR] Not a RADAR email (to: ${JSON.stringify(to)}), ignoring`);
+      logger.debug(`[RADAR] Not a RADAR email (to: ${JSON.stringify(to)}), ignoring`);
       return res.status(200).json({ ignored: true });
     }
 
     // Fetch the full email content from Resend API
     let emailContent = '';
     try {
-      console.log(`[RADAR] Fetching email content for ID: ${email_id}`);
+      logger.debug(`[RADAR] Fetching email content for ID: ${email_id}`);
 
       const resendResponse = await fetch(`https://api.resend.com/emails/receiving/${email_id}`, {
         method: 'GET',
@@ -116,13 +117,13 @@ export default async function handler(req, res) {
       if (resendResponse.ok) {
         const emailData = await resendResponse.json();
         emailContent = emailData.html || emailData.text || emailData.body || '';
-        console.log(`[RADAR] Fetched email content (length: ${emailContent.length})`);
+        logger.debug(`[RADAR] Fetched email content (length: ${emailContent.length})`);
       } else {
-        console.error(`[RADAR] Failed to fetch email content: ${resendResponse.status} ${resendResponse.statusText}`);
+        logger.error(`[RADAR] Failed to fetch email content: ${resendResponse.status} ${resendResponse.statusText}`);
         emailContent = `Subject: ${subject}\nFrom: ${from}\nNote: Could not fetch email body from Resend API`;
       }
     } catch (fetchError) {
-      console.error('[RADAR] Error fetching email content:', fetchError);
+      logger.error('[RADAR] Error fetching email content:', fetchError);
       emailContent = `Subject: ${subject}\nFrom: ${from}\nNote: Error fetching email body`;
     }
 
@@ -133,7 +134,7 @@ export default async function handler(req, res) {
       content: emailContent
     });
 
-    console.log(`[RADAR] Extracted ${extractedEvents.length} events from newsletter`);
+    logger.debug(`[RADAR] Extracted ${extractedEvents.length} events from newsletter`);
 
     // Process each event
     let added = 0;
@@ -144,7 +145,7 @@ export default async function handler(req, res) {
       const validation = validateEvent(event);
 
       if (!validation.isValid) {
-        console.log(`[RADAR] Rejected event "${event.title}": ${validation.reasons.join(', ')}`);
+        logger.debug(`[RADAR] Rejected event "${event.title}": ${validation.reasons.join(', ')}`);
         rejected++;
         continue;
       }
@@ -153,14 +154,14 @@ export default async function handler(req, res) {
       const isDuplicate = await checkDuplicate(event);
 
       if (isDuplicate) {
-        console.log(`[RADAR] Duplicate event found: ${event.title}`);
+        logger.debug(`[RADAR] Duplicate event found: ${event.title}`);
         continue;
       }
 
       // Store event
       await storeEvent(event, from);
       added++;
-      console.log(`[RADAR] Added event: ${event.title} on ${event.date}`);
+      logger.debug(`[RADAR] Added event: ${event.title} on ${event.date}`);
     }
 
     // Update metrics
@@ -176,11 +177,11 @@ export default async function handler(req, res) {
       source: from
     };
 
-    console.log('[RADAR] Processing complete:', response);
+    logger.debug('[RADAR] Processing complete:', response);
     return res.status(200).json(response);
 
   } catch (error) {
-    console.error('[RADAR] Processing error:', error);
+    logger.error('[RADAR] Processing error:', error);
     return res.status(500).json({
       error: 'Internal server error',
       message: error.message
@@ -268,34 +269,34 @@ Return your response as a JSON object with an "events" property containing the a
         return parsed.events;
       } else if (parsed.title && parsed.date) {
         // Single event object returned
-        console.log('[RADAR] Groq returned single event object');
+        logger.debug('[RADAR] Groq returned single event object');
         return [parsed];
       } else {
-        console.log('[RADAR] Unexpected response format from Groq:', JSON.stringify(parsed).substring(0, 200));
+        logger.debug('[RADAR] Unexpected response format from Groq:', JSON.stringify(parsed).substring(0, 200));
         // Try to extract events from any structure
         if (typeof parsed === 'object' && parsed !== null) {
           // Check for any array property that might contain events
           const possibleEventArrays = Object.values(parsed).filter(v => Array.isArray(v));
           if (possibleEventArrays.length > 0) {
-            console.log('[RADAR] Found array in response, attempting to use it');
+            logger.debug('[RADAR] Found array in response, attempting to use it');
             return possibleEventArrays[0];
           }
           // If it looks like an event object, wrap it in an array
           if (parsed.title || parsed.date || parsed.location) {
-            console.log('[RADAR] Treating response as single event');
+            logger.debug('[RADAR] Treating response as single event');
             return [parsed];
           }
         }
         return [];
       }
     } catch (parseError) {
-      console.error('[RADAR] Failed to parse Groq response:', parseError);
-      console.log('[RADAR] Raw response:', content.substring(0, 500));
+      logger.error('[RADAR] Failed to parse Groq response:', parseError);
+      logger.debug('[RADAR] Raw response:', content.substring(0, 500));
       return [];
     }
 
   } catch (error) {
-    console.error('[RADAR] Groq extraction error:', error);
+    logger.error('[RADAR] Groq extraction error:', error);
     return [];
   }
 }
@@ -369,7 +370,7 @@ async function checkDuplicate(event) {
   const exists = await kv.exists(`radar:event:${eventKey}`);
 
   if (exists) {
-    console.log(`[RADAR] Duplicate check: Event "${event.title}" on ${event.date} at ${location} already exists`);
+    logger.debug(`[RADAR] Duplicate check: Event "${event.title}" on ${event.date} at ${location} already exists`);
   }
 
   return exists;

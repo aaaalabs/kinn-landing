@@ -1,6 +1,7 @@
 import { createClient } from '@vercel/kv';
 import { google } from 'googleapis';
 import { SOURCE_CONFIGS } from './source-configs.js';
+import logger from '../../lib/logger.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -17,7 +18,7 @@ async function getSheetsClient() {
     });
     return google.sheets({ version: 'v4', auth });
   } catch (error) {
-    console.error('[RUN-ALL] Failed to initialize Google Sheets client:', error);
+    logger.error('[RUN-ALL] Failed to initialize Google Sheets client:', error);
     throw error;
   }
 }
@@ -41,14 +42,14 @@ export default async function handler(req, res) {
   try {
     const { testMode = false } = req.method === 'GET' ? req.query : req.body;
 
-    console.log('[RUN-ALL] Starting comprehensive extraction run...');
+    logger.debug('[RUN-ALL] Starting comprehensive extraction run...');
 
     // Get all active sources from config
     const activeSources = Object.entries(SOURCE_CONFIGS)
       .filter(([name, config]) => config.active)
       .map(([name, config]) => ({ name, ...config }));
 
-    console.log(`[RUN-ALL] Found ${activeSources.length} active sources`);
+    logger.debug(`[RUN-ALL] Found ${activeSources.length} active sources`);
 
     // Process sources in parallel batches to avoid timeout
     const BATCH_SIZE = 3; // Process 3 sources at a time (reduced from 5 to avoid timeouts)
@@ -57,12 +58,12 @@ export default async function handler(req, res) {
     // Process in batches
     for (let i = 0; i < activeSources.length; i += BATCH_SIZE) {
       const batch = activeSources.slice(i, i + BATCH_SIZE);
-      console.log(`[RUN-ALL] Processing batch ${Math.floor(i/BATCH_SIZE) + 1}: ${batch.map(s => s.name).join(', ')}`);
+      logger.debug(`[RUN-ALL] Processing batch ${Math.floor(i/BATCH_SIZE) + 1}: ${batch.map(s => s.name).join(', ')}`);
 
       // Process batch in parallel
       const batchPromises = batch.map(async (source) => {
         try {
-          console.log(`[RUN-ALL] Extracting from ${source.name}...`);
+          logger.debug(`[RUN-ALL] Extracting from ${source.name}...`);
 
           // Call Firecrawl extraction endpoint
           const extractResponse = await fetch(`${process.env.BASE_URL || 'https://kinn.at'}/api/radar/extract-firecrawl`, {
@@ -82,7 +83,7 @@ export default async function handler(req, res) {
           try {
             extractData = await extractResponse.json();
           } catch (parseError) {
-            console.error(`[RUN-ALL] Failed to parse response for ${source.name}:`, parseError);
+            logger.error(`[RUN-ALL] Failed to parse response for ${source.name}:`, parseError);
             extractData = { success: false, error: 'Invalid JSON response' };
           }
 
@@ -104,12 +105,12 @@ export default async function handler(req, res) {
             lastEventsFound: result.eventsFound,
             lastEventsAdded: result.eventsAdded,
             lastSuccess: result.success
-          }).catch(err => console.error(`[RUN-ALL] Redis update failed for ${source.name}:`, err));
+          }).catch(err => logger.error(`[RUN-ALL] Redis update failed for ${source.name}:`, err));
 
           return result;
 
         } catch (error) {
-          console.error(`[RUN-ALL] Error processing ${source.name}:`, error);
+          logger.error(`[RUN-ALL] Error processing ${source.name}:`, error);
           return {
             source: source.name,
             url: source.url,
@@ -153,7 +154,7 @@ export default async function handler(req, res) {
     const skipSheets = !process.env.GOOGLE_SERVICE_ACCOUNT_KEY || !process.env.RADAR_GOOGLE_SHEET_ID;
 
     if (!skipSheets) {
-      console.log('[RUN-ALL] Updating Google Sheets...');
+      logger.debug('[RUN-ALL] Updating Google Sheets...');
       try {
         const sheets = await getSheetsClient();
       const SHEET_ID = process.env.RADAR_GOOGLE_SHEET_ID;
@@ -273,14 +274,14 @@ export default async function handler(req, res) {
         }
       });
 
-        console.log('[RUN-ALL] Google Sheets updated successfully');
+        logger.debug('[RUN-ALL] Google Sheets updated successfully');
 
       } catch (sheetError) {
-        console.error('[RUN-ALL] Failed to update Google Sheets:', sheetError);
+        logger.error('[RUN-ALL] Failed to update Google Sheets:', sheetError);
         // Continue even if sheet update fails
       }
     } else {
-      console.log('[RUN-ALL] Skipping Google Sheets update (not configured)');
+      logger.debug('[RUN-ALL] Skipping Google Sheets update (not configured)');
     }
 
     // Update global metrics
@@ -309,7 +310,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[RUN-ALL] Fatal error:', error);
+    logger.error('[RUN-ALL] Fatal error:', error);
     return res.status(500).json({
       error: 'Extraction run failed',
       message: error.message

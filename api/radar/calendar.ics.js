@@ -1,4 +1,5 @@
 import { createClient } from '@vercel/kv';
+import logger from '../../lib/logger.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
     // Sort events by date
     events.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    console.log(`[RADAR] Generating ICS with ${events.length} future events`);
+    logger.debug(`[RADAR] Generating ICS with ${events.length} future events`);
 
     // Generate ICS content
     const icsContent = generateICS(events);
@@ -44,7 +45,7 @@ export default async function handler(req, res) {
     return res.status(200).send(icsContent);
 
   } catch (error) {
-    console.error('[RADAR Calendar] Error generating ICS:', error);
+    logger.error('[RADAR Calendar] Error generating ICS:', error);
     return res.status(500).send('Error generating calendar feed');
   }
 }

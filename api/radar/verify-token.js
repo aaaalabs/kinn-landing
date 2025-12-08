@@ -1,3 +1,5 @@
+import logger from '../../lib/logger.js';
+
 export default function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -37,7 +39,7 @@ export default function handler(req, res) {
       });
     }
   } catch (error) {
-    console.error('[VERIFY-TOKEN] Error:', error);
+    logger.error('[VERIFY-TOKEN] Error:', error);
     return res.status(500).json({
       valid: false,
       error: 'Verification failed'

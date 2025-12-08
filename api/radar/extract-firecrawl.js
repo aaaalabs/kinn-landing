@@ -1,5 +1,6 @@
 import { createClient } from '@vercel/kv';
 import Groq from 'groq-sdk';
+import logger from '../../lib/logger.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -42,7 +43,7 @@ async function scrapeWithFirecrawl(url, waitTime = 3000) {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('[FIRECRAWL] API Error:', error);
+      logger.error('[FIRECRAWL] API Error:', error);
       throw new Error(`Firecrawl API error: ${response.status}`);
     }
 
@@ -54,7 +55,7 @@ async function scrapeWithFirecrawl(url, waitTime = 3000) {
       metadata: data.data?.metadata || {},
     };
   } catch (error) {
-    console.error('[FIRECRAWL] Scraping error:', error);
+    logger.error('[FIRECRAWL] Scraping error:', error);
     throw error;
   }
 }
@@ -81,7 +82,7 @@ async function getExtractionPatterns(sourceName) {
       requiresJS: sourceConfig.extraction.requiresJS || false,
     };
   } catch (error) {
-    console.error('[EXTRACT-FIRECRAWL] Could not load source configs:', error);
+    logger.error('[EXTRACT-FIRECRAWL] Could not load source configs:', error);
     return null;
   }
 }
@@ -167,7 +168,7 @@ IMPORTANT: Only include events that are explicitly FREE or have "kostenlos" as p
 
     return validEvents;
   } catch (error) {
-    console.error(`[EXTRACT-FIRECRAWL] AI error for ${sourceName}:`, error);
+    logger.error(`[EXTRACT-FIRECRAWL] AI error for ${sourceName}:`, error);
     return [];
   }
 }
@@ -204,7 +205,7 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log(`[EXTRACT-FIRECRAWL] Processing ${sourceName} with JavaScript rendering`);
+    logger.debug(`[EXTRACT-FIRECRAWL] Processing ${sourceName} with JavaScript rendering`);
 
     // Get extraction patterns
     const patterns = await getExtractionPatterns(sourceName);
@@ -217,11 +218,11 @@ export default async function handler(req, res) {
 
     // Check if source actually needs JavaScript
     if (!patterns.requiresJS) {
-      console.warn(`[EXTRACT-FIRECRAWL] ${sourceName} doesn't require JS, consider using regular extraction`);
+      logger.warn(`[EXTRACT-FIRECRAWL] ${sourceName} doesn't require JS, consider using regular extraction`);
     }
 
     // Scrape with Firecrawl (JavaScript rendering)
-    console.log(`[EXTRACT-FIRECRAWL] Scraping ${patterns.url} with Firecrawl...`);
+    logger.debug(`[EXTRACT-FIRECRAWL] Scraping ${patterns.url} with Firecrawl...`);
     const scrapeResult = await scrapeWithFirecrawl(patterns.url);
 
     if (!scrapeResult.success) {
@@ -234,14 +235,14 @@ export default async function handler(req, res) {
     }
 
     const contentLength = scrapeResult.html.length;
-    console.log(`[EXTRACT-FIRECRAWL] Scraped ${contentLength} chars of rendered HTML`);
+    logger.debug(`[EXTRACT-FIRECRAWL] Scraped ${contentLength} chars of rendered HTML`);
 
     // Use markdown for AI extraction (cleaner than HTML)
     const content = scrapeResult.markdown || scrapeResult.html;
 
     // Extract events using AI
     const events = await extractEventsWithAI(content, sourceName, patterns);
-    console.log(`[EXTRACT-FIRECRAWL] Found ${events.length} events from ${sourceName}`);
+    logger.debug(`[EXTRACT-FIRECRAWL] Found ${events.length} events from ${sourceName}`);
 
     // In test mode, return detailed info
     if (testMode) {
@@ -289,7 +290,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error(`[EXTRACT-FIRECRAWL] Error:`, error);
+    logger.error(`[EXTRACT-FIRECRAWL] Error:`, error);
     return res.status(500).json({
       error: 'Extraction failed',
       message: error.message
@@ -319,12 +320,12 @@ async function checkDuplicate(event) {
 
         // Check if title and date match (exact match after normalization)
         if (existingTitle === incomingTitle && existingDate === incomingDate) {
-          console.log(`[DUPLICATE] Found duplicate: "${event.title}" on ${event.date}`);
+          logger.debug(`[DUPLICATE] Found duplicate: "${event.title}" on ${event.date}`);
           return true; // Duplicate found
         }
       }
     } catch (error) {
-      console.error(`[DUPLICATE-CHECK] Error checking event ${eventId}:`, error);
+      logger.error(`[DUPLICATE-CHECK] Error checking event ${eventId}:`, error);
     }
   }
 

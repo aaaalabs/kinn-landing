@@ -1,5 +1,6 @@
 import { createClient } from '@vercel/kv';
 import Groq from 'groq-sdk';
+import logger from '../../lib/logger.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -49,7 +50,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('[RADAR-ADV] Advanced site checking...');
+    logger.debug('[RADAR-ADV] Advanced site checking...');
 
     const allEvents = [];
     const results = {
@@ -60,7 +61,7 @@ export default async function handler(req, res) {
 
     // Test each configured site
     for (const [domain, config] of Object.entries(SITE_CONFIGS)) {
-      console.log(`[RADAR-ADV] Testing ${domain} with method: ${config.method}`);
+      logger.debug(`[RADAR-ADV] Testing ${domain} with method: ${config.method}`);
 
       try {
         let events = [];
@@ -91,7 +92,7 @@ export default async function handler(req, res) {
         }
 
       } catch (error) {
-        console.error(`[RADAR-ADV] Error with ${domain}:`, error);
+        logger.error(`[RADAR-ADV] Error with ${domain}:`, error);
         results.failed.push({ site: domain, error: error.message });
       }
 
@@ -112,7 +113,7 @@ export default async function handler(req, res) {
       }
     }
 
-    console.log(`[RADAR-ADV] Complete: ${added} added, ${duplicates} duplicates`);
+    logger.debug(`[RADAR-ADV] Complete: ${added} added, ${duplicates} duplicates`);
 
     return res.status(200).json({
       success: true,
@@ -124,7 +125,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[RADAR-ADV] Error:', error);
+    logger.error('[RADAR-ADV] Error:', error);
     return res.status(500).json({
       error: 'Advanced check failed',
       message: error.message
@@ -138,7 +139,7 @@ async function extractFromWordPressAPI(domain, config) {
 
   try {
     const apiUrl = `https://${domain}${config.apiEndpoint}`;
-    console.log(`[RADAR-ADV] Trying WordPress API: ${apiUrl}`);
+    logger.debug(`[RADAR-ADV] Trying WordPress API: ${apiUrl}`);
 
     const response = await fetch(apiUrl);
     if (!response.ok) return [];
@@ -161,7 +162,7 @@ async function extractFromWordPressAPI(domain, config) {
 
     return [];
   } catch (error) {
-    console.error(`[RADAR-ADV] WordPress API error:`, error);
+    logger.error(`[RADAR-ADV] WordPress API error:`, error);
     return [];
   }
 }
@@ -170,7 +171,7 @@ async function extractFromWordPressAPI(domain, config) {
 async function extractWithSearchParams(domain, config) {
   try {
     const url = `https://${domain}/veranstaltungen${config.searchParams || ''}`;
-    console.log(`[RADAR-ADV] Fetching with params: ${url}`);
+    logger.debug(`[RADAR-ADV] Fetching with params: ${url}`);
 
     const response = await fetch(url);
     if (!response.ok) return [];
@@ -179,7 +180,7 @@ async function extractWithSearchParams(domain, config) {
     return await extractEventsFromHTML(html, url, domain);
 
   } catch (error) {
-    console.error(`[RADAR-ADV] Search params error:`, error);
+    logger.error(`[RADAR-ADV] Search params error:`, error);
     return [];
   }
 }
@@ -228,7 +229,7 @@ async function extractFromCalendarPlugin(domain, config) {
     return extractStandard(domain, config);
 
   } catch (error) {
-    console.error(`[RADAR-ADV] Calendar plugin error:`, error);
+    logger.error(`[RADAR-ADV] Calendar plugin error:`, error);
     return [];
   }
 }
@@ -244,7 +245,7 @@ async function extractStandard(domain, config) {
     return await extractEventsFromHTML(html, url, domain);
 
   } catch (error) {
-    console.error(`[RADAR-ADV] Standard extraction error:`, error);
+    logger.error(`[RADAR-ADV] Standard extraction error:`, error);
     return [];
   }
 }
@@ -286,7 +287,7 @@ Return JSON:
     return result.events || [];
 
   } catch (error) {
-    console.error('[RADAR-ADV] AI extraction error:', error);
+    logger.error('[RADAR-ADV] AI extraction error:', error);
     return [];
   }
 }

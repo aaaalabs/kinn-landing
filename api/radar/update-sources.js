@@ -1,5 +1,6 @@
 import { createClient } from '@vercel/kv';
 import { google } from 'googleapis';
+import logger from '../../lib/logger.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -17,7 +18,7 @@ async function getSheetsClient() {
 
     return google.sheets({ version: 'v4', auth });
   } catch (error) {
-    console.error('[RADAR Sources] Failed to initialize Google Sheets client:', error);
+    logger.error('[RADAR Sources] Failed to initialize Google Sheets client:', error);
     throw error;
   }
 }
@@ -238,7 +239,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('[RADAR Sources] Updating sources sheet...');
+    logger.debug('[RADAR Sources] Updating sources sheet...');
 
     const SHEET_ID = process.env.RADAR_GOOGLE_SHEET_ID;
     if (!SHEET_ID) {
@@ -326,8 +327,8 @@ export default async function handler(req, res) {
     const range = 'Sources!A:L';  // 12 columns now with extraction helpers
 
     // Log what we're about to write
-    console.log(`[RADAR Sources] Writing ${rows.length} rows to Sources tab`);
-    console.log(`[RADAR Sources] First row sample:`, rows[0]);
+    logger.debug(`[RADAR Sources] Writing ${rows.length} rows to Sources tab`);
+    logger.debug(`[RADAR Sources] First row sample:`, rows[0]);
 
     await sheets.spreadsheets.values.clear({
       spreadsheetId: SHEET_ID,
@@ -343,7 +344,7 @@ export default async function handler(req, res) {
       }
     });
 
-    console.log(`[RADAR Sources] Update response:`, updateResponse.data);
+    logger.debug(`[RADAR Sources] Update response:`, updateResponse.data);
 
     // Add ACTIONABLE summary statistics
     const summaryHeaders = ['Status', 'Count'];
@@ -372,7 +373,7 @@ export default async function handler(req, res) {
       }
     });
 
-    console.log(`[RADAR Sources] Successfully updated ${sourcesWithMetrics.length} sources`);
+    logger.debug(`[RADAR Sources] Successfully updated ${sourcesWithMetrics.length} sources`);
 
     return res.status(200).json({
       success: true,
@@ -382,7 +383,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[RADAR Sources] Update error:', error);
+    logger.error('[RADAR Sources] Update error:', error);
     return res.status(500).json({
       error: 'Sources update failed',
       message: error.message

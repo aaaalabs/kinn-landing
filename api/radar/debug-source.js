@@ -1,4 +1,5 @@
 import Groq from 'groq-sdk';
+import logger from '../../lib/logger.js';
 
 const groq = new Groq({
   apiKey: process.env.RADAR_GROQ_API_KEY,
@@ -21,7 +22,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'URL parameter required' });
     }
 
-    console.log(`[DEBUG] Fetching: ${url}`);
+    logger.debug(`[DEBUG] Fetching: ${url}`);
 
     // Fetch with proper headers
     const response = await fetch(url, {
@@ -43,7 +44,7 @@ export default async function handler(req, res) {
     }
 
     const html = await response.text();
-    console.log(`[DEBUG] HTML length: ${html.length}`);
+    logger.debug(`[DEBUG] HTML length: ${html.length}`);
 
     // Check for JavaScript rendering hints
     const isReactApp = html.includes('__REACT') || html.includes('_app') || html.includes('__NEXT');
@@ -203,7 +204,7 @@ Return as JSON: {"events": [...], "debug_info": "what you found"}`;
     });
 
   } catch (error) {
-    console.error('[DEBUG] Error:', error);
+    logger.error('[DEBUG] Error:', error);
     return res.status(500).json({
       error: error.message,
       stack: error.stack

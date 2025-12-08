@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import logger from '../../lib/logger.js';
 
 // Initialize Google Sheets client
 async function getSheetsClient() {
@@ -10,7 +11,7 @@ async function getSheetsClient() {
 
     return google.sheets({ version: 'v4', auth });
   } catch (error) {
-    console.error('[RADAR Info] Failed to initialize Google Sheets client:', error);
+    logger.error('[RADAR Info] Failed to initialize Google Sheets client:', error);
     throw error;
   }
 }
@@ -26,7 +27,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('[RADAR Info] Updating info sheet...');
+    logger.debug('[RADAR Info] Updating info sheet...');
 
     const SHEET_ID = process.env.RADAR_GOOGLE_SHEET_ID;
     if (!SHEET_ID) {
@@ -168,7 +169,7 @@ export default async function handler(req, res) {
       }
     });
 
-    console.log('[RADAR Info] Successfully updated info sheet');
+    logger.debug('[RADAR Info] Successfully updated info sheet');
 
     return res.status(200).json({
       success: true,
@@ -177,7 +178,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[RADAR Info] Update error:', error);
+    logger.error('[RADAR Info] Update error:', error);
     return res.status(500).json({
       error: 'Info update failed',
       message: error.message

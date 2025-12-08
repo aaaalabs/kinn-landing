@@ -1,5 +1,6 @@
 import { createClient } from '@vercel/kv';
 import Groq from 'groq-sdk';
+import logger from '../../lib/logger.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -32,7 +33,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing required fields: name, url' });
     }
 
-    console.log(`[RADAR Test] Testing single source: ${name} (${url})`);
+    logger.debug(`[RADAR Test] Testing single source: ${name} (${url})`);
 
     // Skip manual sources
     if (url === 'manual') {
@@ -59,7 +60,7 @@ export default async function handler(req, res) {
       clearTimeout(timeout);
 
       if (!response.ok) {
-        console.error(`[RADAR Test] Failed to fetch ${name}: ${response.status}`);
+        logger.error(`[RADAR Test] Failed to fetch ${name}: ${response.status}`);
         return res.status(200).json({
           success: false,
           error: `HTTP ${response.status}: ${response.statusText}`,
@@ -69,11 +70,11 @@ export default async function handler(req, res) {
       }
 
       html = await response.text();
-      console.log(`[RADAR Test] Fetched ${html.length} chars from ${name}`);
+      logger.debug(`[RADAR Test] Fetched ${html.length} chars from ${name}`);
 
     } catch (fetchError) {
       clearTimeout(timeout);
-      console.error(`[RADAR Test] Fetch error for ${name}:`, fetchError);
+      logger.error(`[RADAR Test] Fetch error for ${name}:`, fetchError);
       return res.status(200).json({
         success: false,
         error: fetchError.message,
@@ -84,7 +85,7 @@ export default async function handler(req, res) {
 
     // Extract events using AI
     const events = await extractEventsFromHTML(html, url, name);
-    console.log(`[RADAR Test] Found ${events.length} events from ${name}`);
+    logger.debug(`[RADAR Test] Found ${events.length} events from ${name}`);
 
     // Check for duplicates but don't store (this is just a test)
     let duplicates = 0;
@@ -106,7 +107,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[RADAR Test] Error:', error);
+    logger.error('[RADAR Test] Error:', error);
     return res.status(500).json({
       error: 'Test failed',
       message: error.message
@@ -223,7 +224,7 @@ Return as JSON object:
     return validEvents;
 
   } catch (error) {
-    console.error('[RADAR Test] Groq extraction error:', error);
+    logger.error('[RADAR Test] Groq extraction error:', error);
     return [];
   }
 }

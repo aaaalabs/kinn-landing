@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import logger from '../../lib/logger.js';
 
 // Initialize Google Sheets client
 async function getSheetsClient() {
@@ -9,7 +10,7 @@ async function getSheetsClient() {
     });
     return google.sheets({ version: 'v4', auth });
   } catch (error) {
-    console.error('[LIST-SHEETS] Failed to initialize Google Sheets client:', error);
+    logger.error('[LIST-SHEETS] Failed to initialize Google Sheets client:', error);
     throw error;
   }
 }
@@ -53,7 +54,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[LIST-SHEETS] Error:', error);
+    logger.error('[LIST-SHEETS] Error:', error);
     return res.status(500).json({
       error: 'Failed to list sheets',
       message: error.message

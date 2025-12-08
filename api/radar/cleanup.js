@@ -1,5 +1,6 @@
 import { createClient } from '@vercel/kv';
 import { google } from 'googleapis';
+import logger from '../../lib/logger.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -16,7 +17,7 @@ async function getSheetsClient() {
     });
     return google.sheets({ version: 'v4', auth });
   } catch (error) {
-    console.error('[CLEANUP] Failed to initialize Google Sheets client:', error);
+    logger.error('[CLEANUP] Failed to initialize Google Sheets client:', error);
     return null;
   }
 }
@@ -40,7 +41,7 @@ export default async function handler(req, res) {
   try {
     const { dryRun = false } = req.method === 'GET' ? req.query : req.body;
 
-    console.log(`[CLEANUP] Starting cleanup routine (dryRun: ${dryRun})`);
+    logger.debug(`[CLEANUP] Starting cleanup routine (dryRun: ${dryRun})`);
 
     // Get current date for comparison
     const today = new Date();
@@ -59,7 +60,7 @@ export default async function handler(req, res) {
     const allEventIds = await kv.smembers('radar:events');
     stats.totalEvents = allEventIds.length;
 
-    console.log(`[CLEANUP] Found ${allEventIds.length} total events`);
+    logger.debug(`[CLEANUP] Found ${allEventIds.length} total events`);
 
     // Map to track events by title-date (for duplicate detection)
     const eventMap = new Map();
@@ -72,7 +73,7 @@ export default async function handler(req, res) {
         const eventData = await kv.hgetall(`radar:event:${eventId}`);
 
         if (!eventData || !eventData.date) {
-          console.log(`[CLEANUP] Event ${eventId} has no data or date, marking for removal`);
+          logger.debug(`[CLEANUP] Event ${eventId} has no data or date, marking for removal`);
           eventsToRemove.push({ id: eventId, reason: 'no_data' });
           continue;
         }
@@ -80,7 +81,7 @@ export default async function handler(req, res) {
         // Check if event is old (past events)
         const eventDate = new Date(eventData.date);
         if (eventDate < today) {
-          console.log(`[CLEANUP] Event "${eventData.title}" on ${eventData.date} is past, marking for removal`);
+          logger.debug(`[CLEANUP] Event "${eventData.title}" on ${eventData.date} is past, marking for removal`);
           eventsToRemove.push({
             id: eventId,
             title: eventData.title,
@@ -97,7 +98,7 @@ export default async function handler(req, res) {
         // Check for duplicates
         if (eventMap.has(uniqueKey)) {
           const existing = eventMap.get(uniqueKey);
-          console.log(`[CLEANUP] Duplicate found: "${eventData.title}" on ${eventData.date}`);
+          logger.debug(`[CLEANUP] Duplicate found: "${eventData.title}" on ${eventData.date}`);
 
           // Keep the one with more data or newer creation date
           const existingCreatedAt = new Date(existing.createdAt || 0);
@@ -135,23 +136,23 @@ export default async function handler(req, res) {
         }
 
       } catch (error) {
-        console.error(`[CLEANUP] Error processing event ${eventId}:`, error);
+        logger.error(`[CLEANUP] Error processing event ${eventId}:`, error);
       }
     }
 
     stats.kept = eventsToKeep.length;
     stats.removed = eventsToRemove.length;
 
-    console.log(`[CLEANUP] Analysis complete:`);
-    console.log(`- Total events: ${stats.totalEvents}`);
-    console.log(`- Old events: ${stats.oldEvents.length}`);
-    console.log(`- Duplicates: ${stats.duplicates.length}`);
-    console.log(`- To keep: ${stats.kept}`);
-    console.log(`- To remove: ${stats.removed}`);
+    logger.debug(`[CLEANUP] Analysis complete:`);
+    logger.debug(`- Total events: ${stats.totalEvents}`);
+    logger.debug(`- Old events: ${stats.oldEvents.length}`);
+    logger.debug(`- Duplicates: ${stats.duplicates.length}`);
+    logger.debug(`- To keep: ${stats.kept}`);
+    logger.debug(`- To remove: ${stats.removed}`);
 
     // If not dry run, perform actual cleanup
     if (!dryRun && eventsToRemove.length > 0) {
-      console.log('[CLEANUP] Performing actual cleanup...');
+      logger.debug('[CLEANUP] Performing actual cleanup...');
 
       for (const event of eventsToRemove) {
         try {
@@ -165,9 +166,9 @@ export default async function handler(req, res) {
           // Delete the event hash
           await kv.del(`radar:event:${event.id}`);
 
-          console.log(`[CLEANUP] Removed event: ${event.id} (${event.reason})`);
+          logger.debug(`[CLEANUP] Removed event: ${event.id} (${event.reason})`);
         } catch (error) {
-          console.error(`[CLEANUP] Failed to remove event ${event.id}:`, error);
+          logger.error(`[CLEANUP] Failed to remove event ${event.id}:`, error);
         }
       }
 
@@ -175,7 +176,7 @@ export default async function handler(req, res) {
       const sheets = await getSheetsClient();
       if (sheets && process.env.RADAR_GOOGLE_SHEET_ID) {
         try {
-          console.log('[CLEANUP] Updating Google Sheets...');
+          logger.debug('[CLEANUP] Updating Google Sheets...');
 
           // Clear existing data
           await sheets.spreadsheets.values.clear({
@@ -220,9 +221,9 @@ export default async function handler(req, res) {
             }
           });
 
-          console.log(`[CLEANUP] Google Sheets updated with ${rows.length} events`);
+          logger.debug(`[CLEANUP] Google Sheets updated with ${rows.length} events`);
         } catch (sheetError) {
-          console.error('[CLEANUP] Failed to update Google Sheets:', sheetError);
+          logger.error('[CLEANUP] Failed to update Google Sheets:', sheetError);
         }
       }
 
@@ -254,7 +255,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[CLEANUP] Fatal error:', error);
+    logger.error('[CLEANUP] Fatal error:', error);
     return res.status(500).json({
       error: 'Cleanup failed',
       message: error.message

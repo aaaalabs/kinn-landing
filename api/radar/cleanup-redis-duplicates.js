@@ -1,4 +1,5 @@
 import { createClient } from '@vercel/kv';
+import logger from '../../lib/logger.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -49,11 +50,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('[CLEANUP-REDIS] Starting duplicate removal from Redis...');
+    logger.debug('[CLEANUP-REDIS] Starting duplicate removal from Redis...');
 
     // Get all event IDs from Redis
     const allEventIds = await kv.smembers('radar:events');
-    console.log(`[CLEANUP-REDIS] Found ${allEventIds.length} total event IDs`);
+    logger.debug(`[CLEANUP-REDIS] Found ${allEventIds.length} total event IDs`);
 
     // Map for duplicate detection (title + date)
     const uniqueEventsMap = new Map();
@@ -71,7 +72,7 @@ export default async function handler(req, res) {
         const eventData = await kv.hgetall(`radar:event:${eventId}`);
 
         if (!eventData || !eventData.date || !eventData.title) {
-          console.log(`[CLEANUP-REDIS] Invalid event ${eventId} - missing required fields`);
+          logger.debug(`[CLEANUP-REDIS] Invalid event ${eventId} - missing required fields`);
           duplicatesToRemove.push(eventId);
           continue;
         }
@@ -90,20 +91,20 @@ export default async function handler(req, res) {
           const existingScore = calculateEventScore(existingEntry.data);
           const currentScore = calculateEventScore(eventData);
 
-          console.log(`[CLEANUP-REDIS] Duplicate: "${eventData.title}" on ${eventData.date}`);
-          console.log(`  Existing (${existingEntry.id}): score ${existingScore}`);
-          console.log(`  Current (${eventId}): score ${currentScore}`);
+          logger.debug(`[CLEANUP-REDIS] Duplicate: "${eventData.title}" on ${eventData.date}`);
+          logger.debug(`  Existing (${existingEntry.id}): score ${existingScore}`);
+          logger.debug(`  Current (${eventId}): score ${currentScore}`);
 
           // Keep the one with more data
           if (currentScore > existingScore) {
             // Remove the existing one, keep the current one
             duplicatesToRemove.push(existingEntry.id);
             uniqueEventsMap.set(uniqueKey, { id: eventId, data: eventData });
-            console.log(`  → Keeping ${eventId} (better data)`);
+            logger.debug(`  → Keeping ${eventId} (better data)`);
           } else {
             // Remove the current one, keep the existing one
             duplicatesToRemove.push(eventId);
-            console.log(`  → Keeping ${existingEntry.id} (existing better)`);
+            logger.debug(`  → Keeping ${existingEntry.id} (existing better)`);
           }
         } else {
           // First occurrence
@@ -111,12 +112,12 @@ export default async function handler(req, res) {
         }
 
       } catch (error) {
-        console.error(`[CLEANUP-REDIS] Error processing event ${eventId}:`, error);
+        logger.error(`[CLEANUP-REDIS] Error processing event ${eventId}:`, error);
       }
     }
 
     // Second pass: remove duplicates from Redis
-    console.log(`[CLEANUP-REDIS] Removing ${duplicatesToRemove.length} duplicate events...`);
+    logger.debug(`[CLEANUP-REDIS] Removing ${duplicatesToRemove.length} duplicate events...`);
 
     for (const eventId of duplicatesToRemove) {
       try {
@@ -127,20 +128,20 @@ export default async function handler(req, res) {
         await kv.del(`radar:event:${eventId}`);
 
         stats.removed++;
-        console.log(`[CLEANUP-REDIS] Removed duplicate: ${eventId}`);
+        logger.debug(`[CLEANUP-REDIS] Removed duplicate: ${eventId}`);
       } catch (error) {
-        console.error(`[CLEANUP-REDIS] Failed to remove ${eventId}:`, error);
+        logger.error(`[CLEANUP-REDIS] Failed to remove ${eventId}:`, error);
       }
     }
 
     stats.kept = uniqueEventsMap.size;
 
     // Log final statistics
-    console.log('[CLEANUP-REDIS] Cleanup complete!');
-    console.log(`  Total events: ${stats.total}`);
-    console.log(`  Duplicates found: ${stats.duplicatesFound}`);
-    console.log(`  Events removed: ${stats.removed}`);
-    console.log(`  Unique events kept: ${stats.kept}`);
+    logger.debug('[CLEANUP-REDIS] Cleanup complete!');
+    logger.debug(`  Total events: ${stats.total}`);
+    logger.debug(`  Duplicates found: ${stats.duplicatesFound}`);
+    logger.debug(`  Events removed: ${stats.removed}`);
+    logger.debug(`  Unique events kept: ${stats.kept}`);
 
     return res.status(200).json({
       success: true,
@@ -150,7 +151,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[CLEANUP-REDIS] Fatal error:', error);
+    logger.error('[CLEANUP-REDIS] Fatal error:', error);
     return res.status(500).json({
       error: 'Cleanup failed',
       message: error.message

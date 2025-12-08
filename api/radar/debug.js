@@ -1,5 +1,6 @@
 import { createClient } from '@vercel/kv';
 import Groq from 'groq-sdk';
+import logger from '../../lib/logger.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -76,7 +77,7 @@ Return a JSON object:
     const result = JSON.parse(response.choices[0]?.message?.content || '{"all_events":[],"summary":"No events found"}');
 
     // Log for debugging
-    console.log('[RADAR DEBUG] Found events:', JSON.stringify(result, null, 2));
+    logger.debug('[RADAR DEBUG] Found events:', JSON.stringify(result, null, 2));
 
     return res.status(200).json({
       success: true,
@@ -86,7 +87,7 @@ Return a JSON object:
     });
 
   } catch (error) {
-    console.error('[RADAR DEBUG] Error:', error);
+    logger.error('[RADAR DEBUG] Error:', error);
     return res.status(500).json({
       error: 'Debug analysis failed',
       message: error.message

@@ -1,5 +1,6 @@
 import { createClient } from '@vercel/kv';
 import { google } from 'googleapis';
+import logger from '../../lib/logger.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -16,7 +17,7 @@ async function getSheetsClient() {
     });
     return google.sheets({ version: 'v4', auth });
   } catch (error) {
-    console.error('[SYNC-SHEETS] Failed to initialize Google Sheets client:', error);
+    logger.error('[SYNC-SHEETS] Failed to initialize Google Sheets client:', error);
     return null;
   }
 }
@@ -64,7 +65,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('[SYNC-SHEETS] Starting event sync to Google Sheets...');
+    logger.debug('[SYNC-SHEETS] Starting event sync to Google Sheets...');
 
     // Get current date for filtering
     const today = new Date();
@@ -72,7 +73,7 @@ export default async function handler(req, res) {
 
     // Get all event IDs from Redis
     const allEventIds = await kv.smembers('radar:events');
-    console.log(`[SYNC-SHEETS] Found ${allEventIds.length} total events`);
+    logger.debug(`[SYNC-SHEETS] Found ${allEventIds.length} total events`);
 
     // Collect all events with their data
     const events = [];
@@ -107,16 +108,16 @@ export default async function handler(req, res) {
           const existingScore = calculateEventScore(existingEvent);
           const currentScore = calculateEventScore(eventData);
 
-          console.log(`[SYNC-SHEETS] Duplicate found: "${eventData.title}" on ${eventData.date}`);
-          console.log(`  Existing score: ${existingScore}, Current score: ${currentScore}`);
+          logger.debug(`[SYNC-SHEETS] Duplicate found: "${eventData.title}" on ${eventData.date}`);
+          logger.debug(`  Existing score: ${existingScore}, Current score: ${currentScore}`);
 
           // Keep the one with more data
           if (currentScore > existingScore) {
             uniqueEventsMap.set(uniqueKey, eventData);
             duplicateStats.removed++;
-            console.log(`  → Keeping new version (more data)`);
+            logger.debug(`  → Keeping new version (more data)`);
           } else {
-            console.log(`  → Keeping existing version (more data)`);
+            logger.debug(`  → Keeping existing version (more data)`);
           }
         } else {
           // First occurrence
@@ -124,7 +125,7 @@ export default async function handler(req, res) {
         }
 
       } catch (error) {
-        console.error(`[SYNC-SHEETS] Error fetching event ${eventId}:`, error);
+        logger.error(`[SYNC-SHEETS] Error fetching event ${eventId}:`, error);
       }
     }
 
@@ -139,13 +140,13 @@ export default async function handler(req, res) {
       }
     });
 
-    console.log(`[SYNC-SHEETS] Duplicates found: ${duplicateStats.found}, removed: ${duplicateStats.removed}`);
+    logger.debug(`[SYNC-SHEETS] Duplicates found: ${duplicateStats.found}, removed: ${duplicateStats.removed}`);
 
     // Sort events by date
     futureEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
     events.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    console.log(`[SYNC-SHEETS] Processing ${futureEvents.length} future events`);
+    logger.debug(`[SYNC-SHEETS] Processing ${futureEvents.length} future events`);
 
     // Initialize Google Sheets
     const sheets = await getSheetsClient();
@@ -216,9 +217,9 @@ export default async function handler(req, res) {
         }
       });
 
-      console.log(`[SYNC-SHEETS] Updated Active Events sheet with ${futureRows.length} future events`);
+      logger.debug(`[SYNC-SHEETS] Updated Active Events sheet with ${futureRows.length} future events`);
     } catch (sheetError) {
-      console.error('[SYNC-SHEETS] Failed to update Active Events sheet:', sheetError);
+      logger.error('[SYNC-SHEETS] Failed to update Active Events sheet:', sheetError);
       return res.status(500).json({
         error: 'Failed to update Active Events sheet',
         message: sheetError.message
@@ -264,9 +265,9 @@ export default async function handler(req, res) {
         }
       });
 
-      console.log(`[SYNC-SHEETS] Updated Archive sheet with ${allRows.length} total events`);
+      logger.debug(`[SYNC-SHEETS] Updated Archive sheet with ${allRows.length} total events`);
     } catch (archiveError) {
-      console.error('[SYNC-SHEETS] Failed to update Archive sheet:', archiveError);
+      logger.error('[SYNC-SHEETS] Failed to update Archive sheet:', archiveError);
       // Non-critical error, continue
     }
 
@@ -295,7 +296,7 @@ export default async function handler(req, res) {
         }
       });
     } catch (summaryError) {
-      console.error('[SYNC-SHEETS] Failed to update Summary:', summaryError);
+      logger.error('[SYNC-SHEETS] Failed to update Summary:', summaryError);
     }
 
     // Return success
@@ -316,7 +317,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[SYNC-SHEETS] Fatal error:', error);
+    logger.error('[SYNC-SHEETS] Fatal error:', error);
     return res.status(500).json({
       error: 'Event sync failed',
       message: error.message

@@ -1,4 +1,5 @@
 import { createClient } from '@vercel/kv';
+import logger from '../../lib/logger.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -63,7 +64,7 @@ export default async function handler(req, res) {
     return res.status(200).json(health);
 
   } catch (error) {
-    console.error('[RADAR Health Check] Error:', error);
+    logger.error('[RADAR Health Check] Error:', error);
     health.status = 'error';
     health.error = error.message;
     health.checks.redis = 'disconnected';
