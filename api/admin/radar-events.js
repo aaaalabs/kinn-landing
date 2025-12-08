@@ -100,6 +100,8 @@ export default async function handler(req, res) {
             approved: 'true',
             approvedAt: new Date().toISOString()
           });
+          // Clear rejected field if it was previously rejected
+          await kv.hdel(`radar:event:${id}`, 'rejected', 'rejectedAt');
           updatedCount++;
         }
 
