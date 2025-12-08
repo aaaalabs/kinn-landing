@@ -45,10 +45,10 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'GET') {
-    // List pending (unapproved) radar events
+    // List all radar events (both approved and pending)
     try {
       const eventIds = await kv.smembers('radar:events');
-      const pending = [];
+      const allEvents = [];
       const now = new Date();
 
       console.log(`[RADAR-ADMIN] Checking ${eventIds.length} radar events`);
@@ -56,23 +56,25 @@ export default async function handler(req, res) {
       for (const id of eventIds) {
         const event = await kv.hgetall(`radar:event:${id}`);
 
-        // Filter: not approved, not rejected, and future events only
-        if (event && event.approved !== 'true' && event.rejected !== 'true') {
+        // Filter: not rejected and future events only
+        if (event && event.rejected !== 'true') {
           const eventDate = new Date(event.date);
           if (eventDate >= now) {
-            pending.push(event);
+            allEvents.push(event);
           }
         }
       }
 
       // Sort by date (closest first)
-      pending.sort((a, b) => new Date(a.date) - new Date(b.date));
+      allEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      console.log(`[RADAR-ADMIN] Returning ${pending.length} pending events`);
+      console.log(`[RADAR-ADMIN] Returning ${allEvents.length} events (approved and pending)`);
 
       return res.status(200).json({
-        events: pending,
-        total: pending.length
+        events: allEvents,
+        total: allEvents.length,
+        approved: allEvents.filter(e => e.approved === 'true').length,
+        pending: allEvents.filter(e => !e.approved || e.approved === 'false').length
       });
 
     } catch (error) {

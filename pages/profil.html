@@ -404,14 +404,15 @@
     /* Tab Navigation */
     .tab-navigation {
       display: flex;
-      gap: 1rem;
       margin-bottom: 2rem;
       border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+      position: relative;
     }
 
     .tab-button {
       font-family: 'Work Sans', sans-serif;
-      padding: 0.75rem 1.5rem;
+      flex: 1;
+      padding: 1rem 1.5rem;
       background: none;
       border: none;
       cursor: pointer;
@@ -419,19 +420,45 @@
       font-weight: 500;
       color: #6B6B6B;
       position: relative;
-      transition: color 0.2s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       border-bottom: 3px solid transparent;
       margin-bottom: -2px;
+      text-align: center;
+      white-space: nowrap;
     }
 
     .tab-button:hover {
       color: #3A3A3A;
+      background: rgba(94, 217, 166, 0.05);
     }
 
     .tab-button.active {
       color: #2C3E50;
       font-weight: 600;
       border-bottom-color: #5ED9A6;
+      background: rgba(94, 217, 166, 0.08);
+    }
+
+    .tab-button.active:hover {
+      background: rgba(94, 217, 166, 0.12);
+    }
+
+    /* Subtle dividers between tabs */
+    .tab-button:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 25%;
+      bottom: 25%;
+      width: 1px;
+      background: rgba(0, 0, 0, 0.06);
+      transition: opacity 0.2s ease;
+    }
+
+    .tab-button:hover::after,
+    .tab-button.active::after,
+    .tab-button.active + .tab-button::after {
+      opacity: 0;
     }
 
     /* Settings icon styles */
@@ -447,13 +474,14 @@
     /* Mobile: Show icon, hide text for settings */
     @media (max-width: 640px) {
       .tab-button {
-        padding: 0.75rem 1rem;
+        padding: 0.875rem 0.5rem;
         font-size: 0.875rem;
+        flex: 1;
       }
 
-      /* Push settings button to the right on mobile */
-      .tab-button:last-child {
-        margin-left: auto;
+      /* Remove dividers on mobile for cleaner look */
+      .tab-button::after {
+        display: none;
       }
 
       .settings-icon {
@@ -1579,11 +1607,12 @@
       window.location.hash = `#${tab}`;
       renderProfile();
 
-      // Load events and voting widget when switching to dashboard
+      // Load events and widgets when switching to dashboard
       if (tab === 'dashboard') {
         setTimeout(() => {
           loadEvents();
           loadVotingWidget();
+          loadRadarEventsWidget();
         }, 100);
       }
     }
@@ -1729,6 +1758,22 @@
           <div id="eventsContainer" class="loading">
             <div class="spinner"></div>
             <p>Lade Events...</p>
+          </div>
+        </div>
+
+        <!-- Radar Events Widget - Only shows when 2+ approved events exist -->
+        <div id="radar-events-widget" class="card" style="display: none;">
+          <h2 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.75rem;">
+            🚀 AI & Tech Events in Tirol
+            <span style="font-size: 0.75rem; color: #5ED9A6; font-weight: 400; margin-left: 0.5rem;">Radar</span>
+          </h2>
+          <p style="margin-bottom: 1rem; color: #6B6B6B; font-size: 0.875rem;">
+            Entdecke weitere AI & Tech Events in der Region
+          </p>
+          <div id="radar-events-container" style="max-height: 420px; overflow-y: auto;">
+            <div style="text-align: center; padding: 20px; color: #999;">
+              <p style="font-size: 0.875rem;">Lade Events...</p>
+            </div>
           </div>
         </div>
 
@@ -2775,6 +2820,190 @@
         return `${formattedDate} um ${timeStr} Uhr`;
       } catch (error) {
         return `${dateStr} um ${timeStr} Uhr`;
+      }
+    }
+
+    // Load Radar Events Widget (AI & Tech events from external sources)
+    let radarPage = 1;
+    let radarLoading = false;
+    let radarHasMore = true;
+
+    async function loadRadarEventsWidget() {
+      const widgetEl = document.getElementById('radar-events-widget');
+      const container = document.getElementById('radar-events-container');
+
+      if (!widgetEl || !container) return; // Not on dashboard tab
+
+      try {
+        const response = await fetch(`/api/events/widget?page=1`);
+        if (!response.ok) {
+          throw new Error('Failed to load radar events');
+        }
+
+        const data = await response.json();
+
+        // Check if widget should be shown (2+ approved events exist)
+        if (!data.showWidget || data.events.length === 0) {
+          widgetEl.style.display = 'none';
+          return;
+        }
+
+        // Show the widget
+        widgetEl.style.display = 'block';
+
+        // Reset state
+        radarPage = 1;
+        radarHasMore = data.hasMore || false;
+        container.innerHTML = '';
+
+        // Display initial events
+        displayRadarEvents(data.events, container, false);
+
+        // Set up infinite scroll
+        container.addEventListener('scroll', handleRadarScroll, { passive: true });
+      } catch (error) {
+        console.error('[RADAR] Error loading widget:', error);
+        widgetEl.style.display = 'none';
+      }
+    }
+
+    function handleRadarScroll(e) {
+      const container = e.target;
+      const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+
+      // Load more when within 50px of bottom
+      if (scrollBottom < 50 && !radarLoading && radarHasMore) {
+        loadMoreRadarEvents();
+      }
+    }
+
+    async function loadMoreRadarEvents() {
+      if (radarLoading || !radarHasMore) return;
+
+      radarLoading = true;
+      radarPage++;
+
+      const container = document.getElementById('radar-events-container');
+      if (!container) return;
+
+      // Show loading indicator
+      const loadingEl = document.createElement('div');
+      loadingEl.className = 'radar-loading';
+      loadingEl.style.cssText = 'text-align: center; padding: 1rem; color: #6B6B6B; font-size: 0.875rem;';
+      loadingEl.textContent = 'Lade weitere Events...';
+      container.appendChild(loadingEl);
+
+      try {
+        const response = await fetch(`/api/events/widget?page=${radarPage}`);
+        if (!response.ok) throw new Error('Failed to load more events');
+
+        const data = await response.json();
+
+        // Remove loading indicator
+        loadingEl.remove();
+
+        if (data.events && data.events.length > 0) {
+          displayRadarEvents(data.events, container, true);
+          radarHasMore = data.hasMore || false;
+        } else {
+          radarHasMore = false;
+        }
+      } catch (error) {
+        console.error('[RADAR] Error loading more events:', error);
+        loadingEl.textContent = 'Fehler beim Laden';
+        radarHasMore = false;
+      } finally {
+        radarLoading = false;
+      }
+    }
+
+    function displayRadarEvents(events, container, append = false) {
+      const fragment = document.createDocumentFragment();
+
+      events.forEach(event => {
+        const eventEl = document.createElement('div');
+        eventEl.className = 'radar-event-card';
+        eventEl.style.cssText = `
+          background: rgba(255, 255, 255, 0.9);
+          border: 1px solid rgba(94, 217, 166, 0.2);
+          border-radius: 0.75rem;
+          padding: 1rem;
+          margin-bottom: 0.75rem;
+          transition: all 0.2s ease;
+          cursor: pointer;
+        `;
+
+        // Format temporal proximity
+        const proximity = formatTemporalProximity(event.date, event.time);
+
+        // Determine category color
+        const categoryColor = event.category?.toLowerCase().includes('ai') ? '#5ED9A6' :
+                              event.category?.toLowerCase().includes('startup') ? '#4A90E2' :
+                              event.category?.toLowerCase().includes('network') ? '#E0EEE9' : '#6B6B6B';
+
+        eventEl.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+            <time style="color: #2C3E50; font-weight: 600; font-size: 0.875rem;">${proximity}</time>
+            ${event.category ? `<span style="background: ${categoryColor}20; color: ${categoryColor}; padding: 0.125rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${event.category}</span>` : ''}
+          </div>
+          <h3 style="font-size: 1rem; font-weight: 500; color: #3A3A3A; margin: 0.25rem 0;">${event.title || 'Untitled Event'}</h3>
+          <p style="font-size: 0.875rem; color: #6B6B6B; margin: 0.25rem 0;">
+            ${event.location || 'Location TBD'} ${event.time ? `· ${event.time} Uhr` : ''}
+          </p>
+          ${event.detailUrl ? `<a href="${event.detailUrl}" target="_blank" rel="noopener" style="color: #5ED9A6; text-decoration: none; font-size: 0.875rem; font-weight: 500;">Details →</a>` : ''}
+        `;
+
+        // Add hover effect
+        eventEl.addEventListener('mouseenter', () => {
+          eventEl.style.transform = 'translateY(-2px)';
+          eventEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+        });
+
+        eventEl.addEventListener('mouseleave', () => {
+          eventEl.style.transform = 'translateY(0)';
+          eventEl.style.boxShadow = 'none';
+        });
+
+        // Click to open detail URL
+        if (event.detailUrl) {
+          eventEl.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'A') {
+              window.open(event.detailUrl, '_blank');
+            }
+          });
+        }
+
+        fragment.appendChild(eventEl);
+      });
+
+      if (append) {
+        container.appendChild(fragment);
+      } else {
+        container.appendChild(fragment);
+      }
+    }
+
+    function formatTemporalProximity(dateStr, timeStr) {
+      try {
+        const eventDate = new Date(`${dateStr}T${timeStr || '18:00'}`);
+        const now = new Date();
+        const diffMs = eventDate - now;
+        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+        const days = Math.floor(hours / 24);
+
+        if (hours < 0) return 'Vergangen';
+        if (hours < 1) return 'Jetzt';
+        if (hours < 24) return `In ${hours} ${hours === 1 ? 'Stunde' : 'Stunden'}`;
+        if (days === 1) return 'Morgen';
+        if (days < 7) return `In ${days} Tagen`;
+        if (days < 14) return 'Nächste Woche';
+        if (days < 30) return `In ${Math.floor(days / 7)} Wochen`;
+
+        // For dates further out, show month and day
+        const options = { day: 'numeric', month: 'short' };
+        return eventDate.toLocaleDateString('de-AT', options);
+      } catch (error) {
+        return dateStr;
       }
     }
 

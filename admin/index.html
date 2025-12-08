@@ -177,6 +177,63 @@
       display: block;
     }
 
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    input:checked + .toggle-slider {
+      background-color: #5ED9A6;
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(26px);
+    }
+
+    .toggle-slider.loading {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    .toggle-slider:not(.loading):hover {
+      opacity: 0.9;
+    }
+
     /* Event List */
     .event-card {
       background: #f9f9f9;
@@ -429,7 +486,14 @@
     <!-- Login Screen -->
     <div id="login-screen">
       <h2 style="margin-bottom: 1.5rem; font-weight: 400;">Admin Login</h2>
-      <input type="password" id="password-input" placeholder="Passwort eingeben..." />
+      <input type="password" id="password-input" placeholder="Passwort eingeben..."
+             onkeypress="if(event.key === 'Enter') login()" />
+      <div style="margin: 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+        <input type="checkbox" id="remember-me" checked />
+        <label for="remember-me" style="cursor: pointer; user-select: none;">
+          Angemeldet bleiben (7 Tage)
+        </label>
+      </div>
       <button class="btn" onclick="login()">Einloggen</button>
       <div id="login-error" class="message error hidden" style="margin-top: 1rem;">
         Falsches Passwort
@@ -656,6 +720,13 @@
                  style="flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px;"
                  oninput="filterRadarTable()">
 
+          <select id="radar-status-filter" onchange="filterRadarTable()"
+                  style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; background: white;">
+            <option value="all">Alle Status</option>
+            <option value="approved">✓ Freigegeben</option>
+            <option value="pending">⏳ Ausstehend</option>
+          </select>
+
           <select id="radar-source-filter" onchange="filterRadarTable()"
                   style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; background: white;">
             <option value="all">Alle Sources</option>
@@ -697,6 +768,66 @@
     let adminPassword = null;
     let eventsConfig = null;
     let scanCounts = {};
+
+    // === Auth Storage Helpers ===
+    const AUTH_STORAGE_KEY = 'kinn_admin_auth';
+    const AUTH_EXPIRY_DAYS = 7;
+
+    function saveAuthWithExpiry(password, remember = true) {
+      if (!remember) {
+        // Use session storage for current session only
+        sessionStorage.setItem('adminPassword', password);
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+        return;
+      }
+
+      // Use localStorage with expiry
+      const expiryTime = new Date().getTime() + (AUTH_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+      const authData = {
+        password: password,
+        expiry: expiryTime
+      };
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
+      // Also set in sessionStorage for consistency
+      sessionStorage.setItem('adminPassword', password);
+    }
+
+    function getStoredAuth() {
+      // First check sessionStorage (current session)
+      const sessionAuth = sessionStorage.getItem('adminPassword');
+      if (sessionAuth) {
+        return sessionAuth;
+      }
+
+      // Check localStorage with expiry
+      const storedData = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (!storedData) {
+        return null;
+      }
+
+      try {
+        const authData = JSON.parse(storedData);
+        const now = new Date().getTime();
+
+        // Check if expired
+        if (now > authData.expiry) {
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+          return null;
+        }
+
+        // Valid stored auth - also add to sessionStorage for current session
+        sessionStorage.setItem('adminPassword', authData.password);
+        return authData.password;
+      } catch (e) {
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+        return null;
+      }
+    }
+
+    function clearStoredAuth() {
+      sessionStorage.removeItem('adminPassword');
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+    }
     let editingEventIndex = null;
 
     // API base URL
@@ -706,6 +837,7 @@
 
     function login() {
       const password = document.getElementById('password-input').value;
+      const rememberMe = document.getElementById('remember-me').checked;
 
       if (!password) {
         showLoginError();
@@ -714,7 +846,7 @@
 
       // Store password and verify with first API call
       adminPassword = password;
-      sessionStorage.setItem('adminPassword', password);
+      saveAuthWithExpiry(password, rememberMe);
 
       // Try to load data
       loadEvents().then(success => {
@@ -725,7 +857,7 @@
         } else {
           showLoginError();
           adminPassword = null;
-          sessionStorage.removeItem('adminPassword');
+          clearStoredAuth();
         }
       });
     }
@@ -739,7 +871,7 @@
 
     function logout() {
       adminPassword = null;
-      sessionStorage.removeItem('adminPassword');
+      clearStoredAuth();
       document.getElementById('login-screen').classList.remove('hidden');
       document.getElementById('admin-dashboard').classList.add('hidden');
       document.getElementById('password-input').value = '';
@@ -747,11 +879,23 @@
 
     // Check if already logged in
     window.addEventListener('DOMContentLoaded', () => {
-      const savedPassword = sessionStorage.getItem('adminPassword');
+      const savedPassword = getStoredAuth();
       if (savedPassword) {
         adminPassword = savedPassword;
         document.getElementById('password-input').value = savedPassword;
-        login();
+        // Auto-login with stored credentials
+        loadEvents().then(success => {
+          if (success) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('admin-dashboard').classList.remove('hidden');
+            document.getElementById('login-error').classList.add('hidden');
+          } else {
+            // If stored auth is invalid, clear it
+            clearStoredAuth();
+            adminPassword = null;
+            document.getElementById('password-input').value = '';
+          }
+        });
       }
     });
 
@@ -2049,6 +2193,7 @@
     let radarSortColumn = 'date';
     let radarSortDirection = 'asc';
     let radarFilters = {
+      status: 'all',
       source: 'all',
       category: 'all',
       search: ''
@@ -2062,7 +2207,7 @@
 
         if (!res.ok) {
           if (res.status === 401) {
-            sessionStorage.removeItem('admin_password');
+            clearStoredAuth();
             window.location.href = '/admin';
             return;
           }
@@ -2083,6 +2228,12 @@
     function applyRadarFilters() {
       // Apply filters
       filteredRadarEvents = allRadarEvents.filter(event => {
+        // Status filter
+        if (radarFilters.status !== 'all') {
+          const isApproved = event.approved === 'true' || event.approved === true;
+          if (radarFilters.status === 'approved' && !isApproved) return false;
+          if (radarFilters.status === 'pending' && isApproved) return false;
+        }
         if (radarFilters.source !== 'all' && event.source !== radarFilters.source) return false;
         if (radarFilters.category !== 'all' && (!event.category || !event.category.toLowerCase().includes(radarFilters.category.toLowerCase()))) return false;
         if (radarFilters.search && !event.title.toLowerCase().includes(radarFilters.search.toLowerCase())) return false;
@@ -2175,8 +2326,12 @@
           <tbody>
             ${filteredRadarEvents.map(event => {
               const isAI = event.category && event.category.toLowerCase().includes('ai');
+              const isApproved = event.approved === 'true' || event.approved === true;
+              const rowStyle = isApproved
+                ? 'background: #f0fdf4; border-left: 4px solid #5ED9A6;'
+                : 'border-left: 4px solid transparent;';
               return `
-                <tr style="border-bottom: 1px solid #e0e0e0;">
+                <tr style="border-bottom: 1px solid #e0e0e0; ${rowStyle}">
                   <td style="padding: 0.5rem;">
                     <input type="checkbox" data-id="${event.id}" class="radar-row-checkbox">
                   </td>
@@ -2186,6 +2341,7 @@
                   </td>
                   <td style="padding: 0.5rem;">
                     <span style="${isAI ? 'color: #2C5530; font-weight: 500;' : ''}">${event.title}</span>
+                    ${isApproved ? '<span style="margin-left: 8px; color: #059669; font-size: 0.75rem;">✓</span>' : ''}
                   </td>
                   <td style="padding: 0.5rem;">
                     <span style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem;">
@@ -2199,8 +2355,10 @@
                     ${event.location || 'Online'}
                   </td>
                   <td style="padding: 0.5rem; text-align: center;">
-                    <button class="btn btn-small" style="background: #5ED9A6; padding: 4px 8px; font-size: 0.75rem;" onclick="approveRadarEvent('${event.id}')">✓</button>
-                    <button class="btn btn-small" style="background: #ffebee; color: #c62828; padding: 4px 8px; font-size: 0.75rem;" onclick="rejectRadarEvent('${event.id}')">✗</button>
+                    <label class="toggle-switch">
+                      <input type="checkbox" ${isApproved ? 'checked' : ''} onchange="toggleRadarApproval('${event.id}', this)">
+                      <span class="toggle-slider" id="toggle-${event.id}"></span>
+                    </label>
                   </td>
                 </tr>
               `;
@@ -2221,6 +2379,7 @@
     }
 
     function filterRadarTable() {
+      radarFilters.status = document.getElementById('radar-status-filter').value;
       radarFilters.source = document.getElementById('radar-source-filter').value;
       radarFilters.category = document.getElementById('radar-category-filter').value;
       radarFilters.search = document.getElementById('radar-search').value;
@@ -2234,45 +2393,74 @@
       });
     }
 
-    async function approveRadarEvent(id) {
+    async function toggleRadarApproval(id, toggleElement) {
+      const sliderElement = document.getElementById(`toggle-${id}`);
+      const isApproved = toggleElement.checked;
+
+      // Add loading state with safety check
+      if (sliderElement) {
+        sliderElement.classList.add('loading');
+      }
+
       try {
+        const action = isApproved ? 'approve' : 'reject';
         const res = await fetch('/api/admin/radar-events', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${adminPassword}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ action: 'approve', eventIds: [id] })
+          body: JSON.stringify({ action, eventIds: [id] })
         });
 
         if (res.ok) {
-          showMessage('Event freigegeben');
-          loadRadarEvents();
+          showMessage(isApproved ? 'Event freigegeben ✓' : 'Event zurückgezogen');
+          // Update the local data only - don't re-render the table
+          const event = allRadarEvents.find(e => e.id === id);
+          if (event) {
+            event.approved = isApproved ? 'true' : 'false';
+            if (!isApproved) {
+              event.rejected = 'true';
+            } else {
+              delete event.rejected;
+            }
+          }
+          // Don't call renderRadarTable() - this prevents animation glitches
+          // The toggle already shows the correct state visually
+        } else {
+          // Revert the toggle on error
+          toggleElement.checked = !isApproved;
+          showMessage('Fehler beim Aktualisieren des Events', 'error');
         }
       } catch (error) {
-        console.error('Error approving radar event:', error);
-        showMessage('Fehler beim Freigeben des Events', 'error');
+        console.error('Error toggling radar event approval:', error);
+        // Revert the toggle on error
+        toggleElement.checked = !isApproved;
+        showMessage('Fehler beim Aktualisieren des Events', 'error');
+      } finally {
+        // Remove loading state with a small delay for smooth transition
+        if (sliderElement) {
+          setTimeout(() => {
+            sliderElement.classList.remove('loading');
+          }, 300);
+        }
+      }
+    }
+
+    // Keep these for backward compatibility with bulk actions
+    async function approveRadarEvent(id) {
+      const toggleElement = document.querySelector(`input[onchange*="${id}"]`);
+      if (toggleElement) {
+        toggleElement.checked = true;
+        await toggleRadarApproval(id, toggleElement);
       }
     }
 
     async function rejectRadarEvent(id) {
-      try {
-        const res = await fetch('/api/admin/radar-events', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${adminPassword}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ action: 'reject', eventIds: [id] })
-        });
-
-        if (res.ok) {
-          showMessage('Event abgelehnt');
-          loadRadarEvents();
-        }
-      } catch (error) {
-        console.error('Error rejecting radar event:', error);
-        showMessage('Fehler beim Ablehnen des Events', 'error');
+      const toggleElement = document.querySelector(`input[onchange*="${id}"]`);
+      if (toggleElement) {
+        toggleElement.checked = false;
+        await toggleRadarApproval(id, toggleElement);
       }
     }
 
