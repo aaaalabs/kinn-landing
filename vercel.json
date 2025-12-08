@@ -13,10 +13,6 @@
   },
   "crons": [
     {
-      "path": "/api/radar/sheets-sync",
-      "schedule": "*/5 * * * *"
-    },
-    {
       "path": "/api/radar/check-sites?priority=primary",
       "schedule": "0 8 * * *"
     },

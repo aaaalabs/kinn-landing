@@ -300,12 +300,35 @@ export default async function handler(req, res) {
 async function checkDuplicate(event) {
   // Check duplicates based on title and date only (not location)
   // This prevents same event with different location formats being added multiple times
-  const eventKey = `${event.title}-${event.date}`.toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '');
 
-  const exists = await kv.exists(`radar:event:${eventKey}`);
-  return exists;
+  // Get all existing event IDs
+  const allEventIds = await kv.smembers('radar:events');
+
+  // Normalize the incoming event's title and date for comparison
+  const incomingTitle = (event.title || '').toLowerCase().trim();
+  const incomingDate = event.date;
+
+  // Check each existing event for matching title+date
+  for (const eventId of allEventIds) {
+    try {
+      const existingEvent = await kv.hgetall(`radar:event:${eventId}`);
+
+      if (existingEvent && existingEvent.title && existingEvent.date) {
+        const existingTitle = (existingEvent.title || '').toLowerCase().trim();
+        const existingDate = existingEvent.date;
+
+        // Check if title and date match (exact match after normalization)
+        if (existingTitle === incomingTitle && existingDate === incomingDate) {
+          console.log(`[DUPLICATE] Found duplicate: "${event.title}" on ${event.date}`);
+          return true; // Duplicate found
+        }
+      }
+    } catch (error) {
+      console.error(`[DUPLICATE-CHECK] Error checking event ${eventId}:`, error);
+    }
+  }
+
+  return false; // No duplicate found
 }
 
 async function storeEvent(event, source) {

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <script src="/auth-guard.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KINN-RADAR Sync & Cleanup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .status-card {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .status-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #4a5568;
+            margin-bottom: 5px;
+        }
+
+        .status-label {
+            font-size: 12px;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sync-button {
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .sync-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .sync-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result.error {
+            background: #fff5f5;
+            border-color: #feb2b2;
+        }
+
+        .result h3 {
+            color: #22543d;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .result.error h3 {
+            color: #742a2a;
+        }
+
+        .result-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .stat-label {
+            color: #4a5568;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .sheet-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .sheet-link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: border-color 0.2s;
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .feature-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 KINN-RADAR Sync & Cleanup</h1>
+        <p class="subtitle">Synchronisiert Events mit Google Sheets und entfernt automatisch Duplikate</p>
+
+        <div class="status-grid">
+            <div class="status-card">
+                <div class="status-value" id="totalEvents">-</div>
+                <div class="status-label">Total Events</div>
+            </div>
+            <div class="status-card">
+                <div class="status-value" id="futureEvents">-</div>
+                <div class="status-label">Future Events</div>
+            </div>
+            <div class="status-card">
+                <div class="status-value" id="duplicates">-</div>
+                <div class="status-label">Duplikate</div>
+            </div>
+            <div class="status-card">
+                <div class="status-value" id="sources">-</div>
+                <div class="status-label">Quellen</div>
+            </div>
+        </div>
+
+        <input
+            type="password"
+            id="adminToken"
+            class="auth-input"
+            placeholder="Admin Token eingeben..."
+            autocomplete="current-password"
+        />
+
+        <button id="syncButton" class="sync-button">
+            🔄 Sync mit Google Sheets starten
+            <span class="feature-badge">Mit Auto-Cleanup</span>
+        </button>
+
+        <div id="result" class="result">
+            <h3 id="resultTitle">Sync erfolgreich!</h3>
+            <p id="resultMessage"></p>
+            <div class="result-stats" id="resultStats"></div>
+            <a href="#" id="sheetLink" class="sheet-link" target="_blank">📊 Google Sheet öffnen</a>
+        </div>
+    </div>
+
+    <script>
+        // Load current stats on page load
+        async function loadCurrentStats() {
+            try {
+                // For now, show placeholder values
+                document.getElementById('totalEvents').textContent = '...';
+                document.getElementById('futureEvents').textContent = '...';
+                document.getElementById('duplicates').textContent = '...';
+                document.getElementById('sources').textContent = '15';
+            } catch (error) {
+                console.error('Could not load stats:', error);
+            }
+        }
+
+        async function syncEvents() {
+            const button = document.getElementById('syncButton');
+            const result = document.getElementById('result');
+            const adminToken = document.getElementById('adminToken').value;
+
+            if (!adminToken) {
+                alert('Bitte Admin Token eingeben');
+                return;
+            }
+
+            // Disable button and show loading
+            button.disabled = true;
+            button.innerHTML = '🔄 Synchronisiere... <span class="loading"></span>';
+            result.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/radar/sync-events-to-sheets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Sync fehlgeschlagen');
+                }
+
+                // Show success result
+                result.className = 'result';
+                result.style.display = 'block';
+                document.getElementById('resultTitle').textContent = '✅ Sync erfolgreich!';
+                document.getElementById('resultMessage').textContent = data.message || 'Events wurden mit Google Sheets synchronisiert';
+
+                // Update stats
+                if (data.stats) {
+                    const statsHtml = `
+                        <div class="stat-item">
+                            <span class="stat-label">Original Events:</span>
+                            <span class="stat-value">${data.stats.originalEvents || 0}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Duplikate gefunden:</span>
+                            <span class="stat-value">${data.stats.duplicatesFound || 0}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Duplikate entfernt:</span>
+                            <span class="stat-value">${data.stats.duplicatesRemoved || 0}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Unique Events:</span>
+                            <span class="stat-value">${data.stats.uniqueEvents || 0}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Future Events:</span>
+                            <span class="stat-value">${data.stats.futureEvents || 0}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Past Events:</span>
+                            <span class="stat-value">${data.stats.pastEvents || 0}</span>
+                        </div>
+                    `;
+                    document.getElementById('resultStats').innerHTML = statsHtml;
+
+                    // Update main stats
+                    document.getElementById('totalEvents').textContent = data.stats.uniqueEvents || '0';
+                    document.getElementById('futureEvents').textContent = data.stats.futureEvents || '0';
+                    document.getElementById('duplicates').textContent = data.stats.duplicatesRemoved || '0';
+                }
+
+                // Set Google Sheet link
+                if (data.sheetUrl) {
+                    document.getElementById('sheetLink').href = data.sheetUrl;
+                    document.getElementById('sheetLink').style.display = 'inline-block';
+                } else {
+                    document.getElementById('sheetLink').style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('Sync error:', error);
+                result.className = 'result error';
+                result.style.display = 'block';
+                document.getElementById('resultTitle').textContent = '❌ Sync fehlgeschlagen';
+                document.getElementById('resultMessage').textContent = error.message;
+                document.getElementById('resultStats').innerHTML = '';
+                document.getElementById('sheetLink').style.display = 'none';
+            } finally {
+                // Re-enable button
+                button.disabled = false;
+                button.innerHTML = '🔄 Sync mit Google Sheets starten <span class="feature-badge">Mit Auto-Cleanup</span>';
+            }
+        }
+
+        // Event listeners
+        document.getElementById('syncButton').addEventListener('click', syncEvents);
+
+        // Allow Enter key in password field
+        document.getElementById('adminToken').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                syncEvents();
+            }
+        });
+
+        // Load stats on page load
+        loadCurrentStats();
+    </script>
+</body>
+</html>

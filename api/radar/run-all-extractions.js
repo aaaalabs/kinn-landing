@@ -51,7 +51,7 @@ export default async function handler(req, res) {
     console.log(`[RUN-ALL] Found ${activeSources.length} active sources`);
 
     // Process sources in parallel batches to avoid timeout
-    const BATCH_SIZE = 5; // Process 5 sources at a time for faster execution
+    const BATCH_SIZE = 3; // Process 3 sources at a time (reduced from 5 to avoid timeouts)
     const results = [];
 
     // Process in batches
@@ -75,7 +75,7 @@ export default async function handler(req, res) {
               sourceName: source.name,
               testMode: testMode
             }),
-            signal: AbortSignal.timeout(8000) // 8 second timeout per source
+            signal: AbortSignal.timeout(15000) // 15 second timeout per source (increased from 8)
           });
 
           let extractData;
@@ -177,27 +177,55 @@ export default async function handler(req, res) {
       const rows = results.map(result => {
         const sourceConfig = SOURCE_CONFIGS[result.source];
 
-        // Determine status
+        // Determine status with actual numbers
         let status = '⏸️ Inactive';
         if (result.success) {
-          if (result.eventsFound > 0) {
-            status = '✅ Working';
+          if (result.eventsAdded > 0) {
+            // Show actual number of events that were successfully extracted
+            status = `✅ ${result.eventsAdded} events`;
+          } else if (result.eventsFound > 0) {
+            // Found events but all were duplicates
+            status = `⚠️ ${result.eventsFound} duplicates`;
           } else {
-            status = '⚠️ No Events';
+            // No events found at all
+            status = '⚠️ No events';
           }
         } else if (result.error) {
-          status = '❌ Error';
+          // Include error type
+          if (result.error.includes('timeout')) {
+            status = '⏱️ Timeout';
+          } else if (result.error.includes('auth')) {
+            status = '🔐 Auth needed';
+          } else {
+            status = '❌ Error';
+          }
         }
 
-        // Quality based on events found
-        let quality = '⭐';
-        if (result.eventsFound >= 20) quality = '⭐⭐⭐';
-        else if (result.eventsFound >= 10) quality = '⭐⭐';
+        // Calculate quality based on extraction success rate
+        let quality = '-';
+        if (result.eventsFound > 0) {
+          const successRate = result.eventsAdded / result.eventsFound;
+
+          // Quality based on both success rate and total events
+          if (result.eventsAdded >= 10 && successRate >= 0.5) {
+            quality = '⭐⭐⭐'; // Many events, good success rate
+          } else if (result.eventsAdded >= 5 && successRate >= 0.3) {
+            quality = '⭐⭐'; // Some events, decent success rate
+          } else if (result.eventsAdded >= 1) {
+            quality = '⭐'; // At least extracted something
+          } else {
+            quality = '❌'; // Found events but couldn't extract any
+          }
+        } else if (result.success && result.eventsFound === 0) {
+          quality = '🔍'; // Working but no events currently
+        } else if (!result.success) {
+          quality = '⚠️'; // Failed extraction
+        }
 
         return [
           result.source,                    // A: Source name
-          status,                           // B: Status
-          quality,                          // C: Quality
+          status,                           // B: Status (with actual numbers!)
+          quality,                          // C: Quality (based on success rate)
           result.eventsFound,               // D: Events found
           result.eventsAdded,               // E: Events added
           new Date(result.timestamp).toLocaleDateString(), // F: Last check

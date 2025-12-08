@@ -296,18 +296,42 @@ Return as JSON object:
 }
 
 async function checkDuplicate(event) {
-  const location = event.location || event.city || 'unknown';
-  const eventKey = `${event.title}-${event.date}-${location}`.toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '');
+  // Check duplicates based on title and date only (not location)
+  // This prevents same event with different location formats being added multiple times
 
-  const exists = await kv.exists(`radar:event:${eventKey}`);
-  return exists;
+  // Get all existing event IDs
+  const allEventIds = await kv.smembers('radar:events');
+
+  // Normalize the incoming event's title and date for comparison
+  const incomingTitle = (event.title || '').toLowerCase().trim();
+  const incomingDate = event.date;
+
+  // Check each existing event for matching title+date
+  for (const eventId of allEventIds) {
+    try {
+      const existingEvent = await kv.hgetall(`radar:event:${eventId}`);
+
+      if (existingEvent && existingEvent.title && existingEvent.date) {
+        const existingTitle = (existingEvent.title || '').toLowerCase().trim();
+        const existingDate = existingEvent.date;
+
+        // Check if title and date match (exact match after normalization)
+        if (existingTitle === incomingTitle && existingDate === incomingDate) {
+          console.log(`[DUPLICATE] Found duplicate: "${event.title}" on ${event.date}`);
+          return true; // Duplicate found
+        }
+      }
+    } catch (error) {
+      console.error(`[DUPLICATE-CHECK] Error checking event ${eventId}:`, error);
+    }
+  }
+
+  return false; // No duplicate found
 }
 
 async function storeEvent(event, source) {
-  const location = event.location || event.city || 'unknown';
-  const eventId = `${event.title}-${event.date}-${location}`.toLowerCase()
+  // Use title-date for ID (not location) to ensure consistent duplicate detection
+  const eventId = `${event.title}-${event.date}`.toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '');
 
@@ -315,6 +339,7 @@ async function storeEvent(event, source) {
     id: eventId,
     ...event,
     source: source,
+    location: event.location || event.city || 'unknown', // Store location in data
     createdAt: new Date().toISOString(),
     reviewed: false
   };

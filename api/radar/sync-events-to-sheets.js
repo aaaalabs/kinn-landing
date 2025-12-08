@@ -21,6 +21,32 @@ async function getSheetsClient() {
   }
 }
 
+// Calculate data completeness score for duplicate detection
+function calculateEventScore(event) {
+  let score = 0;
+
+  // Core fields (higher weight)
+  if (event.title) score += 3;
+  if (event.date) score += 3;
+  if (event.time && event.time !== '18:00') score += 2; // Default time doesn't count
+  if (event.location) score += 2;
+  if (event.detailUrl || event.url) score += 2;
+
+  // Additional fields (lower weight)
+  if (event.city && event.city !== 'Innsbruck') score += 1; // Default city doesn't count
+  if (event.category) score += 1;
+  if (event.source) score += 1;
+  if (event.registrationUrl) score += 1;
+  if (event.description) {
+    score += 1;
+    // Bonus for longer descriptions
+    if (event.description.length > 100) score += 1;
+    if (event.description.length > 200) score += 1;
+  }
+
+  return score;
+}
+
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -51,6 +77,13 @@ export default async function handler(req, res) {
     // Collect all events with their data
     const events = [];
     const futureEvents = [];
+    const duplicateStats = {
+      found: 0,
+      removed: 0
+    };
+
+    // Map for duplicate detection (title + date)
+    const uniqueEventsMap = new Map();
 
     for (const eventId of allEventIds) {
       try {
@@ -60,19 +93,53 @@ export default async function handler(req, res) {
           continue;
         }
 
-        // Check if event is in the future
-        const eventDate = new Date(eventData.date);
-        if (eventDate >= today) {
-          futureEvents.push(eventData);
-        }
+        // Create unique key for duplicate detection
+        const uniqueKey = `${(eventData.title || '').toLowerCase().trim()}_${eventData.date}`;
 
-        // Add all events to the full list
-        events.push(eventData);
+        // Check for duplicates
+        if (uniqueEventsMap.has(uniqueKey)) {
+          duplicateStats.found++;
+
+          // Get existing event
+          const existingEvent = uniqueEventsMap.get(uniqueKey);
+
+          // Calculate data completeness score
+          const existingScore = calculateEventScore(existingEvent);
+          const currentScore = calculateEventScore(eventData);
+
+          console.log(`[SYNC-SHEETS] Duplicate found: "${eventData.title}" on ${eventData.date}`);
+          console.log(`  Existing score: ${existingScore}, Current score: ${currentScore}`);
+
+          // Keep the one with more data
+          if (currentScore > existingScore) {
+            uniqueEventsMap.set(uniqueKey, eventData);
+            duplicateStats.removed++;
+            console.log(`  → Keeping new version (more data)`);
+          } else {
+            console.log(`  → Keeping existing version (more data)`);
+          }
+        } else {
+          // First occurrence
+          uniqueEventsMap.set(uniqueKey, eventData);
+        }
 
       } catch (error) {
         console.error(`[SYNC-SHEETS] Error fetching event ${eventId}:`, error);
       }
     }
+
+    // Convert map back to arrays
+    uniqueEventsMap.forEach(eventData => {
+      events.push(eventData);
+
+      // Check if event is in the future
+      const eventDate = new Date(eventData.date);
+      if (eventDate >= today) {
+        futureEvents.push(eventData);
+      }
+    });
+
+    console.log(`[SYNC-SHEETS] Duplicates found: ${duplicateStats.found}, removed: ${duplicateStats.removed}`);
 
     // Sort events by date
     futureEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -133,27 +200,27 @@ export default async function handler(req, res) {
 
     // Update Events sheet with future events
     try {
-      // Clear existing data
+      // Clear existing data (using "Active Events" as the sheet name)
       await sheets.spreadsheets.values.clear({
         spreadsheetId: SHEET_ID,
-        range: 'Events!A:M'
+        range: 'Active Events!A:M'
       });
 
       // Write new data
       await sheets.spreadsheets.values.update({
         spreadsheetId: SHEET_ID,
-        range: 'Events!A1',
+        range: 'Active Events!A1',
         valueInputOption: 'RAW',
         resource: {
           values: [headers, ...futureRows]
         }
       });
 
-      console.log(`[SYNC-SHEETS] Updated Events sheet with ${futureRows.length} future events`);
+      console.log(`[SYNC-SHEETS] Updated Active Events sheet with ${futureRows.length} future events`);
     } catch (sheetError) {
-      console.error('[SYNC-SHEETS] Failed to update Events sheet:', sheetError);
+      console.error('[SYNC-SHEETS] Failed to update Active Events sheet:', sheetError);
       return res.status(500).json({
-        error: 'Failed to update Events sheet',
+        error: 'Failed to update Active Events sheet',
         message: sheetError.message
       });
     }
@@ -234,9 +301,12 @@ export default async function handler(req, res) {
     // Return success
     return res.status(200).json({
       success: true,
-      message: 'Events synced to Google Sheets',
+      message: 'Events synced to Google Sheets (duplicates removed)',
       stats: {
-        totalEvents: events.length,
+        originalEvents: allEventIds.length,
+        duplicatesFound: duplicateStats.found,
+        duplicatesRemoved: duplicateStats.removed,
+        uniqueEvents: events.length,
         futureEvents: futureEvents.length,
         pastEvents: events.length - futureEvents.length,
         uniqueSources: [...new Set(events.map(e => e.source))].length
