@@ -483,13 +483,13 @@
     </svg>
     <p class="subtitle">Admin Dashboard</p>
 
-    <!-- Login Screen -->
-    <div id="login-screen">
+    <!-- Login Screen (initially hidden) -->
+    <div id="login-screen" class="hidden">
       <h2 style="margin-bottom: 1.5rem; font-weight: 400;">Admin Login</h2>
       <input type="password" id="password-input" placeholder="Passwort eingeben..."
              onkeypress="if(event.key === 'Enter') login()" />
-      <div style="margin: 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
-        <input type="checkbox" id="remember-me" checked />
+      <div style="margin: 1rem 0; display: flex; align-items: flex-start; gap: 0.5rem;">
+        <input type="checkbox" id="remember-me" checked style="margin-top: 2px;" />
         <label for="remember-me" style="cursor: pointer; user-select: none;">
           Angemeldet bleiben (7 Tage)
         </label>
@@ -524,9 +524,11 @@
 
       <!-- Events Tab -->
       <div id="events-tab" class="tab-content active">
-        <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 2rem;">
-          <button class="btn" onclick="showEventForm()">+ Neues Event</button>
-        </div>
+        <div class="loading" id="events-loading">Lade Events...</div>
+        <div id="events-content" style="display: none;">
+          <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 2rem;">
+            <button class="btn" onclick="showEventForm()">+ Neues Event</button>
+          </div>
 
         <!-- Event Form (hidden by default) -->
         <div id="event-form" class="hidden" style="background: #f9f9f9; padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
@@ -619,6 +621,7 @@
 
         <!-- Event List -->
         <div id="events-list" class="loading">Lade Events...</div>
+        </div> <!-- End of events-content -->
       </div>
 
       <!-- Subscribers Tab -->
@@ -883,19 +886,26 @@
       if (savedPassword) {
         adminPassword = savedPassword;
         document.getElementById('password-input').value = savedPassword;
+        // Show dashboard immediately to prevent login screen flash
+        document.getElementById('admin-dashboard').classList.remove('hidden');
         // Auto-login with stored credentials
         loadEvents().then(success => {
           if (success) {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('admin-dashboard').classList.remove('hidden');
+            // Successfully authenticated, keep dashboard visible
             document.getElementById('login-error').classList.add('hidden');
           } else {
-            // If stored auth is invalid, clear it
+            // If stored auth is invalid, show login screen
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('admin-dashboard').classList.add('hidden');
             clearStoredAuth();
             adminPassword = null;
             document.getElementById('password-input').value = '';
+            showLoginError();
           }
         });
+      } else {
+        // No saved auth, show login screen
+        document.getElementById('login-screen').classList.remove('hidden');
       }
     });
 
@@ -985,9 +995,19 @@
         }
 
         renderEvents();
+        // Hide loading and show content
+        const loadingEl = document.getElementById('events-loading');
+        const contentEl = document.getElementById('events-content');
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'block';
         return true;
       } catch (error) {
         console.error('Failed to load events:', error);
+        // Hide loading and show error in events-list
+        const loadingEl = document.getElementById('events-loading');
+        const contentEl = document.getElementById('events-content');
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'block';
         document.getElementById('events-list').innerHTML =
           `<div class="message error">Fehler beim Laden: ${error.message}</div>`;
         return false;
