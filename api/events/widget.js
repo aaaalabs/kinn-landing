@@ -49,7 +49,8 @@ export default async function handler(req, res) {
       });
 
       // Filter: reviewed (approved) and future events only, excluding rejected ones
-      const isReviewed = event && event.reviewed === true;
+      // Note: Redis hgetall returns strings, so we check for both "true" string and true boolean
+      const isReviewed = event && (event.reviewed === true || event.reviewed === 'true');
       const isNotRejected = !event?.rejected || event.rejected !== 'true';
       const eventDate = event ? new Date(event.date) : null;
       const isFuture = eventDate && eventDate >= now;

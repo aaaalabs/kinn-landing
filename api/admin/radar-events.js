@@ -73,8 +73,9 @@ export default async function handler(req, res) {
       return res.status(200).json({
         events: allEvents,
         total: allEvents.length,
-        approved: allEvents.filter(e => e.reviewed === true && e.rejected !== 'true').length,
-        pending: allEvents.filter(e => e.reviewed === false || !e.reviewed).length
+        // Handle both boolean and string values from Redis
+        approved: allEvents.filter(e => (e.reviewed === true || e.reviewed === 'true') && e.rejected !== 'true').length,
+        pending: allEvents.filter(e => e.reviewed === false || e.reviewed === 'false' || !e.reviewed).length
       });
 
     } catch (error) {

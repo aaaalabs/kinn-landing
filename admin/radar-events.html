@@ -287,7 +287,12 @@
         allEvents = data.events || [];
 
         // Filter for only pending events (not reviewed yet)
-        const pendingEvents = allEvents.filter(event => event.reviewed === false || !event.reviewed);
+        // Handle both boolean and string values from Redis
+        const pendingEvents = allEvents.filter(event =>
+          event.reviewed === false ||
+          event.reviewed === 'false' ||
+          (!event.reviewed && event.reviewed !== 'true')
+        );
 
         const listEl = document.getElementById('events-list');
         const statsEl = document.getElementById('stats');
@@ -370,8 +375,12 @@
     }
 
     async function approveAll(category) {
-      // Filter only pending events (not reviewed yet)
-      const pendingEvents = allEvents.filter(event => event.reviewed === false || !event.reviewed);
+      // Filter only pending events (not reviewed yet) - handle both boolean and string values
+      const pendingEvents = allEvents.filter(event =>
+        event.reviewed === false ||
+        event.reviewed === 'false' ||
+        (!event.reviewed && event.reviewed !== 'true')
+      );
 
       const ids = pendingEvents
         .filter(event => {
