@@ -2829,26 +2829,43 @@
     let radarHasMore = true;
 
     async function loadRadarEventsWidget() {
+      console.log('[FRONTEND DEBUG] loadRadarEventsWidget called');
       const widgetEl = document.getElementById('radar-events-widget');
       const container = document.getElementById('radar-events-container');
 
-      if (!widgetEl || !container) return; // Not on dashboard tab
+      if (!widgetEl || !container) {
+        console.log('[FRONTEND DEBUG] Widget elements not found, skipping');
+        return; // Not on dashboard tab
+      }
 
       try {
+        console.log('[FRONTEND DEBUG] Fetching /api/events/widget?page=1');
         const response = await fetch(`/api/events/widget?page=1`);
+        console.log('[FRONTEND DEBUG] Response status:', response.status);
+
         if (!response.ok) {
           throw new Error('Failed to load radar events');
         }
 
         const data = await response.json();
+        console.log('[FRONTEND DEBUG] Widget API response:', {
+          showWidget: data.showWidget,
+          eventsCount: data.events?.length || 0,
+          hasMore: data.hasMore,
+          total: data.total,
+          debug: data.debug,
+          firstEvent: data.events?.[0] || null
+        });
 
         // Check if widget should be shown (2+ approved events exist)
         if (!data.showWidget || data.events.length === 0) {
+          console.log('[FRONTEND DEBUG] Hiding widget - showWidget:', data.showWidget, 'events:', data.events?.length || 0);
           widgetEl.style.display = 'none';
           return;
         }
 
         // Show the widget
+        console.log('[FRONTEND DEBUG] Showing widget with', data.events.length, 'events');
         widgetEl.style.display = 'block';
 
         // Reset state

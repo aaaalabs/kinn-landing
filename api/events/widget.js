@@ -29,13 +29,36 @@ export default async function handler(req, res) {
     const now = new Date();
     const events = [];
 
+    // DEBUG: Log basic info
+    console.log(`[WIDGET DEBUG] Found ${eventIds.length} total event IDs in radar:events`);
+    console.log(`[WIDGET DEBUG] Current date/time: ${now.toISOString()}`);
+
     // Fetch events and filter approved + future
     for (const id of eventIds) {
       const event = await kv.hgetall(`radar:event:${id}`);
 
+      // DEBUG: Log each event's details
+      console.log(`[WIDGET DEBUG] Event ${id}:`, {
+        title: event?.title || 'NO TITLE',
+        date: event?.date || 'NO DATE',
+        approved: event?.approved || 'NO APPROVED FLAG',
+        rejected: event?.rejected || 'NO REJECTED FLAG',
+        hasEvent: !!event
+      });
+
       // Filter: approved and future events only
       if (event && event.approved === 'true' && new Date(event.date) >= now) {
+        console.log(`[WIDGET DEBUG] ✓ Event ${id} passed filters (approved & future)`);
         events.push(event);
+      } else {
+        // DEBUG: Why was it filtered out?
+        if (!event) {
+          console.log(`[WIDGET DEBUG] ✗ Event ${id} filtered: No event data found`);
+        } else if (event.approved !== 'true') {
+          console.log(`[WIDGET DEBUG] ✗ Event ${id} filtered: Not approved (approved=${event.approved})`);
+        } else if (new Date(event.date) < now) {
+          console.log(`[WIDGET DEBUG] ✗ Event ${id} filtered: Past event (${event.date} < ${now.toISOString().split('T')[0]})`);
+        }
       }
     }
 
@@ -46,12 +69,21 @@ export default async function handler(req, res) {
       return dateA - dateB;
     });
 
+    // DEBUG: Log final count
+    console.log(`[WIDGET DEBUG] Total approved future events: ${events.length}`);
+
     // Only show widget if 2+ events exist
     if (page === 1 && events.length < 2) {
+      console.log(`[WIDGET DEBUG] Not showing widget - only ${events.length} events (minimum: 2)`);
       return res.status(200).json({
         events: [],
         showWidget: false,
-        message: 'Not enough events to display widget'
+        message: 'Not enough events to display widget',
+        debug: {
+          totalEventIds: eventIds.length,
+          approvedFutureEvents: events.length,
+          minimumRequired: 2
+        }
       });
     }
 
@@ -59,6 +91,11 @@ export default async function handler(req, res) {
     const paginatedEvents = events.slice(offset, offset + limit);
 
     console.log(`[WIDGET] Returning ${paginatedEvents.length} events (page ${page}, total approved: ${events.length})`);
+    console.log(`[WIDGET DEBUG] First 3 events being returned:`, paginatedEvents.slice(0, 3).map(e => ({
+      title: e.title,
+      date: e.date,
+      approved: e.approved
+    })));
 
     return res.status(200).json({
       events: paginatedEvents,
