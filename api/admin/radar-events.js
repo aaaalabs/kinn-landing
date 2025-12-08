@@ -73,8 +73,8 @@ export default async function handler(req, res) {
       return res.status(200).json({
         events: allEvents,
         total: allEvents.length,
-        approved: allEvents.filter(e => e.approved === 'true').length,
-        pending: allEvents.filter(e => !e.approved || e.approved === 'false').length
+        approved: allEvents.filter(e => e.reviewed === true && e.rejected !== 'true').length,
+        pending: allEvents.filter(e => e.reviewed === false || !e.reviewed).length
       });
 
     } catch (error) {
@@ -94,11 +94,11 @@ export default async function handler(req, res) {
       let updatedCount = 0;
 
       if (action === 'approve') {
-        // Approve events
+        // Approve events - set reviewed to true
         for (const id of eventIds) {
           await kv.hset(`radar:event:${id}`, {
-            approved: 'true',
-            approvedAt: new Date().toISOString()
+            reviewed: true,  // This is the field radar uses!
+            reviewedAt: new Date().toISOString()
           });
           // Clear rejected field if it was previously rejected
           await kv.hdel(`radar:event:${id}`, 'rejected', 'rejectedAt');
@@ -118,8 +118,8 @@ export default async function handler(req, res) {
         // Reject events
         for (const id of eventIds) {
           await kv.hset(`radar:event:${id}`, {
-            approved: 'false',
-            rejected: 'true',
+            reviewed: true,  // Mark as reviewed
+            rejected: 'true',  // But also rejected
             rejectedAt: new Date().toISOString()
           });
           updatedCount++;

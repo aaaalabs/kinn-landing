@@ -41,23 +41,32 @@ export default async function handler(req, res) {
       console.log(`[WIDGET DEBUG] Event ${id}:`, {
         title: event?.title || 'NO TITLE',
         date: event?.date || 'NO DATE',
-        approved: event?.approved || 'NO APPROVED FLAG',
-        rejected: event?.rejected || 'NO REJECTED FLAG',
+        reviewed: event?.reviewed || 'UNDEFINED',
+        rejected: event?.rejected || 'UNDEFINED',
         hasEvent: !!event
       });
 
-      // Filter: approved and future events only
-      if (event && event.approved === 'true' && new Date(event.date) >= now) {
-        console.log(`[WIDGET DEBUG] ✓ Event ${id} passed filters (approved & future)`);
+      // Filter: reviewed (approved) and future events only, excluding rejected ones
+      const isReviewed = event && event.reviewed === true;
+      const isNotRejected = !event?.rejected || event.rejected !== 'true';
+      const eventDate = event ? new Date(event.date) : null;
+      const isFuture = eventDate && eventDate >= now;
+
+      if (event && isReviewed && isNotRejected && isFuture) {
+        console.log(`[WIDGET DEBUG] ✓ Event ${id} passed filters (reviewed & future & not rejected)`);
         events.push(event);
       } else {
         // DEBUG: Why was it filtered out?
         if (!event) {
           console.log(`[WIDGET DEBUG] ✗ Event ${id} filtered: No event data found`);
-        } else if (event.approved !== 'true') {
-          console.log(`[WIDGET DEBUG] ✗ Event ${id} filtered: Not approved (approved=${event.approved})`);
-        } else if (new Date(event.date) < now) {
-          console.log(`[WIDGET DEBUG] ✗ Event ${id} filtered: Past event (${event.date} < ${now.toISOString().split('T')[0]})`);
+        } else if (!isReviewed) {
+          console.log(`[WIDGET DEBUG] ✗ Event ${id} filtered: Not reviewed (reviewed=${event.reviewed}, type=${typeof event.reviewed})`);
+        } else if (!isNotRejected) {
+          console.log(`[WIDGET DEBUG] ✗ Event ${id} filtered: Rejected (rejected=${event.rejected})`);
+        } else if (!isFuture) {
+          const dateStr = event.date || 'NO DATE';
+          const nowStr = now.toISOString().split('T')[0];
+          console.log(`[WIDGET DEBUG] ✗ Event ${id} filtered: Past event (${dateStr} < ${nowStr})`);
         }
       }
     }

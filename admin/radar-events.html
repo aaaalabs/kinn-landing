@@ -286,17 +286,20 @@
         const data = await res.json();
         allEvents = data.events || [];
 
+        // Filter for only pending events (not reviewed yet)
+        const pendingEvents = allEvents.filter(event => event.reviewed === false || !event.reviewed);
+
         const listEl = document.getElementById('events-list');
         const statsEl = document.getElementById('stats');
 
-        statsEl.textContent = `${allEvents.length} Event${allEvents.length === 1 ? '' : 's'}`;
+        statsEl.textContent = `${pendingEvents.length} Event${pendingEvents.length === 1 ? '' : 's'} zur Freigabe`;
 
-        if (allEvents.length === 0) {
-          listEl.innerHTML = '<div class="no-events">Keine Events zur Freigabe vorhanden</div>';
+        if (pendingEvents.length === 0) {
+          listEl.innerHTML = '<div class="no-events">Keine Events zur Freigabe vorhanden - alle Events wurden bereits bearbeitet!</div>';
           return;
         }
 
-        listEl.innerHTML = allEvents.map(event => {
+        listEl.innerHTML = pendingEvents.map(event => {
           const isAI = event.category && event.category.toLowerCase().includes('ai');
           return `
             <div class="event-card ${isAI ? 'ai-event' : ''}">
@@ -367,7 +370,10 @@
     }
 
     async function approveAll(category) {
-      const ids = allEvents
+      // Filter only pending events (not reviewed yet)
+      const pendingEvents = allEvents.filter(event => event.reviewed === false || !event.reviewed);
+
+      const ids = pendingEvents
         .filter(event => {
           if (category === 'ai') {
             return event.category && event.category.toLowerCase().includes('ai');
