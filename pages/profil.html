@@ -1592,11 +1592,12 @@
       }
       renderProfile();
 
-      // Load events and voting widget when switching to dashboard
+      // Load events, voting widget and radar widget when switching to dashboard
       if (activeTab === 'dashboard') {
         setTimeout(() => {
           loadEvents();
           loadVotingWidget();
+          loadRadarEventsWidget();
         }, 100);
       }
     }
@@ -1679,11 +1680,12 @@
         }, 0);
       }
 
-      // Load events and voting widget on initial dashboard render
+      // Load events, voting widget and radar widget on initial dashboard render
       if (activeTab === 'dashboard') {
         setTimeout(() => {
           loadEvents();
           loadVotingWidget();
+          loadRadarEventsWidget();
         }, 100);
       }
     }
