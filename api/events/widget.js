@@ -37,12 +37,14 @@ export default async function handler(req, res) {
     for (const id of eventIds) {
       const event = await kv.hgetall(`radar:event:${id}`);
 
-      // DEBUG: Log each event's details
+      // DEBUG: Log each event's details with type information
       console.log(`[WIDGET DEBUG] Event ${id}:`, {
         title: event?.title || 'NO TITLE',
         date: event?.date || 'NO DATE',
-        reviewed: event?.reviewed || 'UNDEFINED',
-        rejected: event?.rejected || 'UNDEFINED',
+        reviewed: event?.reviewed,
+        reviewedType: typeof event?.reviewed,
+        rejected: event?.rejected,
+        rejectedType: typeof event?.rejected,
         hasEvent: !!event
       });
 
