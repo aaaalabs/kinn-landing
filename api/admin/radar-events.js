@@ -136,8 +136,29 @@ export default async function handler(req, res) {
           count: updatedCount
         });
 
+      } else if (action === 'unreview') {
+        // Set events back to pending (unreview)
+        for (const id of eventIds) {
+          await kv.hset(`radar:event:${id}`, {
+            reviewed: false,  // Set back to pending
+            reviewedAt: null
+          });
+          // Clear rejected field if it was previously rejected
+          await kv.hdel(`radar:event:${id}`, 'rejected', 'rejectedAt');
+          updatedCount++;
+        }
+
+        logger.info(`Set ${updatedCount} events back to pending`);
+
+        return res.status(200).json({
+          success: true,
+          action: 'unreview',
+          message: `${updatedCount} Events auf pending gesetzt`,
+          count: updatedCount
+        });
+
       } else {
-        return res.status(400).json({ error: 'Invalid action. Use "approve" or "reject"' });
+        return res.status(400).json({ error: 'Invalid action. Use "approve", "reject", or "unreview"' });
       }
 
     } catch (error) {

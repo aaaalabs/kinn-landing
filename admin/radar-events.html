@@ -69,11 +69,23 @@
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      transition: all 0.2s ease;
+      /* NO transitions - atomic behavior */
     }
 
     .event-card:hover {
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .event-card.approved {
+      border-left-color: #5ED9A6;
+    }
+
+    .event-card.rejected {
+      border-left-color: #ff5252;
+    }
+
+    .event-card.pending {
+      border-left-color: #ffa726;
     }
 
     .event-card.ai-event {
@@ -136,7 +148,7 @@
       cursor: pointer;
       font-family: inherit;
       font-weight: 500;
-      transition: all 0.2s ease;
+      /* NO transitions - atomic behavior */
     }
 
     .btn-approve {
@@ -146,7 +158,7 @@
 
     .btn-approve:hover {
       background: #4EC995;
-      transform: translateY(-1px);
+      /* NO transform - instant feedback */
     }
 
     .btn-reject {
@@ -190,19 +202,8 @@
       color: #000;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      animation: slideIn 0.3s ease;
+      /* NO animation - appears instantly */
       z-index: 1000;
-    }
-
-    @keyframes slideIn {
-      from {
-        transform: translateY(100%);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
     }
 
     .back-link {
@@ -238,18 +239,21 @@
   <div class="container">
     <a href="/admin" class="back-link">← Zurück zum Dashboard</a>
 
-    <h1>Radar Events - Pending Approval</h1>
-    <p class="subtitle">Events die vom Radar System gefunden wurden und auf Freigabe warten</p>
+    <h1>Radar Events Management</h1>
+    <p class="subtitle">Vollständige Kontrolle über alle Radar Events - Status kann jederzeit geändert werden</p>
 
     <div class="bulk-actions">
-      <button class="btn btn-approve" onclick="approveAll('ai')">
-        Alle AI Events freigeben
+      <button class="btn btn-secondary" onclick="setFilter('all')" id="filter-all">
+        Alle
       </button>
-      <button class="btn btn-approve" onclick="approveSelected()">
-        Ausgewählte freigeben
+      <button class="btn btn-secondary" onclick="setFilter('pending')" id="filter-pending">
+        Pending
       </button>
-      <button class="btn btn-secondary" onclick="selectAll()">
-        Alle auswählen
+      <button class="btn btn-secondary" onclick="setFilter('approved')" id="filter-approved">
+        Approved
+      </button>
+      <button class="btn btn-secondary" onclick="setFilter('rejected')" id="filter-rejected">
+        Rejected
       </button>
       <span class="stats" id="stats">0 Events</span>
     </div>
@@ -267,6 +271,7 @@
     }
 
     let allEvents = [];
+    let currentFilter = 'all';
 
     async function loadEvents() {
       try {
@@ -285,47 +290,7 @@
 
         const data = await res.json();
         allEvents = data.events || [];
-
-        // Filter for only pending events (not reviewed yet)
-        // Handle both boolean and string values from Redis
-        const pendingEvents = allEvents.filter(event =>
-          event.reviewed === false ||
-          event.reviewed === 'false' ||
-          (!event.reviewed && event.reviewed !== 'true')
-        );
-
-        const listEl = document.getElementById('events-list');
-        const statsEl = document.getElementById('stats');
-
-        statsEl.textContent = `${pendingEvents.length} Event${pendingEvents.length === 1 ? '' : 's'} zur Freigabe`;
-
-        if (pendingEvents.length === 0) {
-          listEl.innerHTML = '<div class="no-events">Keine Events zur Freigabe vorhanden - alle Events wurden bereits bearbeitet!</div>';
-          return;
-        }
-
-        listEl.innerHTML = pendingEvents.map(event => {
-          const isAI = event.category && event.category.toLowerCase().includes('ai');
-          return `
-            <div class="event-card ${isAI ? 'ai-event' : ''}">
-              <label class="event-info">
-                <input type="checkbox" data-id="${event.id}">
-                <span>
-                  <strong class="event-title">${event.title}</strong><br>
-                  <span class="event-meta">
-                    ${event.date} · ${event.time || '18:00'} · ${event.location || 'Online'}
-                  </span><br>
-                  <span class="event-source">Source: ${event.source}</span>
-                  ${event.category ? `<span class="event-category">${event.category}</span>` : ''}
-                </span>
-              </label>
-              <div class="event-actions">
-                <button class="btn btn-approve" onclick="approveEvent('${event.id}')">✓ Freigeben</button>
-                <button class="btn btn-reject" onclick="rejectEvent('${event.id}')">✗ Ablehnen</button>
-              </div>
-            </div>
-          `;
-        }).join('');
+        renderEvents();
 
       } catch (error) {
         console.error('Error loading events:', error);
@@ -334,122 +299,153 @@
       }
     }
 
-    async function approveEvent(id) {
-      try {
-        const res = await fetch('/api/admin/radar-events', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${adminPassword}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ action: 'approve', eventIds: [id] })
-        });
+    function renderEvents() {
+      const listEl = document.getElementById('events-list');
+      const statsEl = document.getElementById('stats');
 
-        if (res.ok) {
-          showMessage('Event freigegeben');
-          loadEvents();
-        }
-      } catch (error) {
-        console.error('Error approving event:', error);
-      }
-    }
+      // Filter events based on current filter
+      let filteredEvents = allEvents;
+      if (currentFilter !== 'all') {
+        filteredEvents = allEvents.filter(event => {
+          const isReviewed = event.reviewed === true || event.reviewed === 'true';
+          const isRejected = event.rejected === true || event.rejected === 'true';
 
-    async function rejectEvent(id) {
-      try {
-        const res = await fetch('/api/admin/radar-events', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${adminPassword}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ action: 'reject', eventIds: [id] })
-        });
-
-        if (res.ok) {
-          showMessage('Event abgelehnt');
-          loadEvents();
-        }
-      } catch (error) {
-        console.error('Error rejecting event:', error);
-      }
-    }
-
-    async function approveAll(category) {
-      // Filter only pending events (not reviewed yet) - handle both boolean and string values
-      const pendingEvents = allEvents.filter(event =>
-        event.reviewed === false ||
-        event.reviewed === 'false' ||
-        (!event.reviewed && event.reviewed !== 'true')
-      );
-
-      const ids = pendingEvents
-        .filter(event => {
-          if (category === 'ai') {
-            return event.category && event.category.toLowerCase().includes('ai');
-          }
+          if (currentFilter === 'pending') return !isReviewed;
+          if (currentFilter === 'approved') return isReviewed && !isRejected;
+          if (currentFilter === 'rejected') return isRejected;
           return true;
-        })
-        .map(event => event.id);
+        });
+      }
 
-      if (ids.length === 0) {
-        showMessage('Keine passenden Events gefunden');
+      // Update stats
+      const pending = allEvents.filter(e => !(e.reviewed === true || e.reviewed === 'true')).length;
+      const approved = allEvents.filter(e => (e.reviewed === true || e.reviewed === 'true') && e.rejected !== 'true').length;
+      const rejected = allEvents.filter(e => e.rejected === true || e.rejected === 'true').length;
+
+      statsEl.textContent = `${filteredEvents.length}/${allEvents.length} Events (${pending} pending, ${approved} approved, ${rejected} rejected)`;
+
+      if (filteredEvents.length === 0) {
+        listEl.innerHTML = '<div class="no-events">Keine Events in dieser Kategorie</div>';
         return;
       }
 
+      listEl.innerHTML = filteredEvents.map(event => {
+        const isReviewed = event.reviewed === true || event.reviewed === 'true';
+        const isRejected = event.rejected === true || event.rejected === 'true';
+        const status = isRejected ? 'rejected' : (isReviewed ? 'approved' : 'pending');
+        const isAI = event.category && event.category.toLowerCase().includes('ai');
+
+        return `
+          <div class="event-card ${status}">
+            <div class="event-info">
+              <strong class="event-title">${event.title}</strong><br>
+              <span class="event-meta">
+                ${event.date} · ${event.time || '18:00'} · ${event.location || 'Online'}
+              </span><br>
+              <span class="event-source">Source: ${event.source}</span>
+              ${event.category ? `<span class="event-category">${event.category}</span>` : ''}
+            </div>
+            <div class="event-actions">
+              <button class="btn ${status === 'pending' ? 'btn-approve' : 'btn-secondary'}"
+                      onclick="setEventStatus('${event.id}', 'pending')"
+                      ${status === 'pending' ? 'disabled' : ''}>
+                ⏳ Pending
+              </button>
+              <button class="btn ${status === 'approved' ? 'btn-approve' : 'btn-secondary'}"
+                      onclick="setEventStatus('${event.id}', 'approved')"
+                      ${status === 'approved' ? 'disabled' : ''}>
+                ✓ Approved
+              </button>
+              <button class="btn ${status === 'rejected' ? 'btn-reject' : 'btn-secondary'}"
+                      onclick="setEventStatus('${event.id}', 'rejected')"
+                      ${status === 'rejected' ? 'disabled' : ''}>
+                ✗ Rejected
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+
+      // Update button states instantly (atomic)
+      document.querySelectorAll('.bulk-actions .btn').forEach(btn => {
+        btn.classList.remove('btn-approve');
+        btn.classList.add('btn-secondary');
+      });
+      document.getElementById(`filter-${filter}`).classList.remove('btn-secondary');
+      document.getElementById(`filter-${filter}`).classList.add('btn-approve');
+
+      renderEvents();
+    }
+
+    async function setEventStatus(id, status) {
       try {
+        // Determine the action based on status
+        let action;
+        if (status === 'pending') {
+          // To set as pending, we need to "unreview" the event
+          action = 'unreview';
+        } else if (status === 'approved') {
+          action = 'approve';
+        } else if (status === 'rejected') {
+          action = 'reject';
+        }
+
+        // Update local state immediately for atomic feedback
+        const event = allEvents.find(e => e.id === id);
+        if (event) {
+          if (status === 'pending') {
+            event.reviewed = false;
+            event.rejected = false;
+          } else if (status === 'approved') {
+            event.reviewed = true;
+            event.rejected = false;
+          } else if (status === 'rejected') {
+            event.reviewed = true;
+            event.rejected = true;
+          }
+        }
+
+        // Re-render immediately (atomic update)
+        renderEvents();
+
         const res = await fetch('/api/admin/radar-events', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${adminPassword}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ action: 'approve', eventIds: ids })
+          body: JSON.stringify({ action, eventIds: [id] })
         });
 
         if (res.ok) {
-          showMessage(`${ids.length} Events freigegeben`);
-          loadEvents();
+          showMessage(`Event → ${status}`);
+        } else {
+          // If the unreview action isn't supported, show error but keep UI state
+          if (status === 'pending' && res.status === 400) {
+            showMessage('Pending status update - backend support pending');
+            // UI already updated optimistically, so leave it
+          } else {
+            // Revert the optimistic update on error
+            await loadEvents();
+            showMessage('Fehler beim Aktualisieren');
+          }
         }
       } catch (error) {
-        console.error('Error approving events:', error);
+        console.error('Error updating event status:', error);
+        // Reload to revert optimistic update
+        await loadEvents();
+        showMessage('Fehler beim Aktualisieren');
       }
-    }
-
-    async function approveSelected() {
-      const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
-      const ids = Array.from(checkboxes).map(cb => cb.dataset.id);
-
-      if (ids.length === 0) {
-        showMessage('Keine Events ausgewählt');
-        return;
-      }
-
-      try {
-        const res = await fetch('/api/admin/radar-events', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${adminPassword}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ action: 'approve', eventIds: ids })
-        });
-
-        if (res.ok) {
-          showMessage(`${ids.length} Events freigegeben`);
-          loadEvents();
-        }
-      } catch (error) {
-        console.error('Error approving events:', error);
-      }
-    }
-
-    function selectAll() {
-      const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-      checkboxes.forEach(cb => cb.checked = !allChecked);
     }
 
     function showMessage(text) {
+      // Remove any existing messages for atomic behavior
+      document.querySelectorAll('.message').forEach(msg => msg.remove());
+
       const msg = document.createElement('div');
       msg.className = 'message';
       msg.textContent = text;
@@ -457,11 +453,12 @@
 
       setTimeout(() => {
         msg.remove();
-      }, 3000);
+      }, 1500); // Shorter duration for quicker feedback
     }
 
     // Initial load
     loadEvents();
+    setFilter('all'); // Set initial filter state
   </script>
 </body>
 </html>
