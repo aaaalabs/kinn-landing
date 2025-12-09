@@ -1,6 +1,7 @@
 import { Redis } from '@upstash/redis';
 import crypto from 'crypto';
 import logger from '../../lib/logger.js';
+import { getEventStatus, setEventStatus } from '../../lib/radar-status.js';
 
 const kv = new Redis({
   url: process.env.KINNST_KV_REST_API_URL,
@@ -57,11 +58,16 @@ export default async function handler(req, res) {
       for (const id of eventIds) {
         const event = await kv.hgetall(`radar:event:${id}`);
 
-        // Filter: not rejected and future events only
-        if (event && event.rejected !== 'true') {
-          const eventDate = new Date(event.date);
-          if (eventDate >= now) {
-            allEvents.push(event);
+        // Filter: not rejected and future events only (supports both schemas)
+        if (event) {
+          const status = getEventStatus(event);
+          if (status !== 'rejected') {
+            const eventDate = new Date(event.date);
+            if (eventDate >= now) {
+              // Add computed status to event for UI
+              event.computedStatus = status;
+              allEvents.push(event);
+            }
           }
         }
       }
@@ -74,9 +80,9 @@ export default async function handler(req, res) {
       return res.status(200).json({
         events: allEvents,
         total: allEvents.length,
-        // Handle both boolean and string values from Redis
-        approved: allEvents.filter(e => (e.reviewed === true || e.reviewed === 'true') && e.rejected !== 'true').length,
-        pending: allEvents.filter(e => e.reviewed === false || e.reviewed === 'false' || !e.reviewed).length
+        // Count events by their computed status (works with both schemas)
+        approved: allEvents.filter(e => e.computedStatus === 'approved').length,
+        pending: allEvents.filter(e => e.computedStatus === 'pending').length
       });
 
     } catch (error) {
@@ -96,14 +102,12 @@ export default async function handler(req, res) {
       let updatedCount = 0;
 
       if (action === 'approve') {
-        // Approve events - set reviewed to true
+        // Approve events - set status to approved
         for (const id of eventIds) {
-          await kv.hset(`radar:event:${id}`, {
-            reviewed: true,  // This is the field radar uses!
-            reviewedAt: new Date().toISOString()
-          });
-          // Clear rejected field if it was previously rejected
-          await kv.hdel(`radar:event:${id}`, 'rejected', 'rejectedAt');
+          const statusUpdate = setEventStatus('approved');
+          await kv.hset(`radar:event:${id}`, statusUpdate);
+          // Clean up old schema fields if they exist
+          await kv.hdel(`radar:event:${id}`, 'reviewed', 'rejected', 'reviewedAt');
           updatedCount++;
         }
 
@@ -117,13 +121,12 @@ export default async function handler(req, res) {
         });
 
       } else if (action === 'reject') {
-        // Reject events
+        // Reject events - set status to rejected
         for (const id of eventIds) {
-          await kv.hset(`radar:event:${id}`, {
-            reviewed: true,  // Mark as reviewed
-            rejected: 'true',  // But also rejected
-            rejectedAt: new Date().toISOString()
-          });
+          const statusUpdate = setEventStatus('rejected');
+          await kv.hset(`radar:event:${id}`, statusUpdate);
+          // Clean up old schema fields if they exist
+          await kv.hdel(`radar:event:${id}`, 'reviewed', 'rejected', 'reviewedAt');
           updatedCount++;
         }
 
@@ -137,14 +140,12 @@ export default async function handler(req, res) {
         });
 
       } else if (action === 'unreview') {
-        // Set events back to pending (unreview)
+        // Set events back to pending
         for (const id of eventIds) {
-          await kv.hset(`radar:event:${id}`, {
-            reviewed: false,  // Set back to pending
-            reviewedAt: null
-          });
-          // Clear rejected field if it was previously rejected
-          await kv.hdel(`radar:event:${id}`, 'rejected', 'rejectedAt');
+          const statusUpdate = setEventStatus('pending');
+          await kv.hset(`radar:event:${id}`, statusUpdate);
+          // Clean up old schema fields if they exist
+          await kv.hdel(`radar:event:${id}`, 'reviewed', 'rejected', 'reviewedAt', 'rejectedAt');
           updatedCount++;
         }
 

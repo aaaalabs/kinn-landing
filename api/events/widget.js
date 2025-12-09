@@ -1,5 +1,6 @@
 import { Redis } from '@upstash/redis';
 import logger from '../../lib/logger.js';
+import { isEventApproved, getEventStatus } from '../../lib/radar-status.js';
 
 const kv = new Redis({
   url: process.env.KINNST_KV_REST_API_URL,
@@ -49,24 +50,21 @@ export default async function handler(req, res) {
         hasEvent: !!event
       });
 
-      // Filter: reviewed (approved) and future events only, excluding rejected ones
-      // Note: Redis hgetall returns strings, so we check for both "true" string and true boolean
-      const isReviewed = event && (event.reviewed === true || event.reviewed === 'true');
-      const isNotRejected = !event?.rejected || event.rejected !== 'true';
+      // Filter: approved and future events only (works with both old and new schema)
+      const isApproved = isEventApproved(event);
       const eventDate = event ? new Date(event.date) : null;
       const isFuture = eventDate && eventDate >= now;
+      const status = getEventStatus(event);
 
-      if (event && isReviewed && isNotRejected && isFuture) {
-        logger.debug(`✓ Event ${id} passed filters (reviewed & future & not rejected)`);
+      if (event && isApproved && isFuture) {
+        logger.debug(`✓ Event ${id} passed filters (status=${status}, future)`);
         events.push(event);
       } else {
         // Log why event was filtered out in development
         if (!event) {
           logger.debug(`✗ Event ${id} filtered: No event data found`);
-        } else if (!isReviewed) {
-          logger.debug(`✗ Event ${id} filtered: Not reviewed (reviewed=${event.reviewed}, type=${typeof event.reviewed})`);
-        } else if (!isNotRejected) {
-          logger.debug(`✗ Event ${id} filtered: Rejected (rejected=${event.rejected})`);
+        } else if (!isApproved) {
+          logger.debug(`✗ Event ${id} filtered: Not approved (status=${status})`);
         } else if (!isFuture) {
           const dateStr = event.date || 'NO DATE';
           const nowStr = now.toISOString().split('T')[0];

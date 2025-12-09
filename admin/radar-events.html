@@ -307,20 +307,25 @@
       let filteredEvents = allEvents;
       if (currentFilter !== 'all') {
         filteredEvents = allEvents.filter(event => {
-          const isReviewed = event.reviewed === true || event.reviewed === 'true';
-          const isRejected = event.rejected === true || event.rejected === 'true';
-
-          if (currentFilter === 'pending') return !isReviewed;
-          if (currentFilter === 'approved') return isReviewed && !isRejected;
-          if (currentFilter === 'rejected') return isRejected;
-          return true;
+          // Use computedStatus from server or status field (backward compatible)
+          const status = event.computedStatus || event.status || 'pending';
+          return status === currentFilter;
         });
       }
 
-      // Update stats
-      const pending = allEvents.filter(e => !(e.reviewed === true || e.reviewed === 'true')).length;
-      const approved = allEvents.filter(e => (e.reviewed === true || e.reviewed === 'true') && e.rejected !== 'true').length;
-      const rejected = allEvents.filter(e => e.rejected === true || e.rejected === 'true').length;
+      // Update stats (using new status field)
+      const pending = allEvents.filter(e => {
+        const status = e.computedStatus || e.status || 'pending';
+        return status === 'pending';
+      }).length;
+      const approved = allEvents.filter(e => {
+        const status = e.computedStatus || e.status || 'pending';
+        return status === 'approved';
+      }).length;
+      const rejected = allEvents.filter(e => {
+        const status = e.computedStatus || e.status || 'pending';
+        return status === 'rejected';
+      }).length;
 
       statsEl.textContent = `${filteredEvents.length}/${allEvents.length} Events (${pending} pending, ${approved} approved, ${rejected} rejected)`;
 
@@ -330,9 +335,8 @@
       }
 
       listEl.innerHTML = filteredEvents.map(event => {
-        const isReviewed = event.reviewed === true || event.reviewed === 'true';
-        const isRejected = event.rejected === true || event.rejected === 'true';
-        const status = isRejected ? 'rejected' : (isReviewed ? 'approved' : 'pending');
+        // Use computedStatus from server (backward compatible) or status field
+        const status = event.computedStatus || event.status || 'pending';
         const isAI = event.category && event.category.toLowerCase().includes('ai');
 
         return `
@@ -394,9 +398,14 @@
           action = 'reject';
         }
 
-        // Update local state immediately for atomic feedback
+        // Update local state immediately for atomic feedback (use new schema)
         const event = allEvents.find(e => e.id === id);
         if (event) {
+          // Update both new and old fields for compatibility
+          event.status = status;
+          event.computedStatus = status;
+
+          // Also update old fields for backward compatibility
           if (status === 'pending') {
             event.reviewed = false;
             event.rejected = false;

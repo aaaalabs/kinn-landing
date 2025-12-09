@@ -1,6 +1,7 @@
 import { createClient } from '@vercel/kv';
 import Groq from 'groq-sdk';
 import logger from '../../lib/logger.js';
+import { createPendingEvent } from '../../lib/radar-status.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -338,14 +339,13 @@ async function storeEvent(event, source) {
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '');
 
-  const eventData = {
+  // Use new schema with status field
+  const eventData = createPendingEvent({
     id: eventId,
     ...event,
     source: source,
-    location: event.location || event.city || 'unknown', // Store location in data
-    createdAt: new Date().toISOString(),
-    reviewed: false
-  };
+    location: event.location || event.city || 'unknown' // Store location in data
+  });
 
   await kv.hset(`radar:event:${eventId}`, eventData);
   await kv.sadd('radar:events', eventId);
