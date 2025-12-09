@@ -1,6 +1,7 @@
 import { createClient } from '@vercel/kv';
 import Groq from 'groq-sdk';
 import logger from '../../lib/logger.js';
+import { createPendingEvent } from '../../lib/radar-status.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -387,7 +388,7 @@ async function storeEvent(event, source) {
     ...event,
     source: source.split('@')[1]?.split('.')[0] || 'newsletter',
     createdAt: new Date().toISOString(),
-    reviewed: false
+    status: 'pending'
   };
 
   // Store event in Redis

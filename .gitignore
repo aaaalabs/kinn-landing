@@ -8,3 +8,4 @@ node_modules/
 
 # Discord credentials (contains sensitive bot token)
 discord/KINNbot.txt
+.env*.local

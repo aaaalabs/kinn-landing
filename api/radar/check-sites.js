@@ -1,6 +1,7 @@
 import { createClient } from '@vercel/kv';
 import Groq from 'groq-sdk';
 import logger from '../../lib/logger.js';
+import { createPendingEvent } from '../../lib/radar-status.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -342,7 +343,7 @@ async function storeEvent(event, source) {
     source: source,
     location: event.location || event.city || 'unknown', // Store location in data
     createdAt: new Date().toISOString(),
-    reviewed: false
+    status: 'pending'
   };
 
   await kv.hset(`radar:event:${eventId}`, eventData);

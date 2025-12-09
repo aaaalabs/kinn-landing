@@ -1,5 +1,6 @@
 import { createClient } from '@vercel/kv';
 import logger from '../../lib/logger.js';
+import { isEventApproved } from '../../lib/radar-status.js';
 
 // Use KINNST_ prefixed environment variables
 const kv = createClient({
@@ -20,9 +21,11 @@ export default async function handler(req, res) {
       const event = await kv.hgetall(`radar:event:${eventId}`);
 
       if (event && event.date) {
-        // Only include future AI events for the ICS feed
+        // Only include approved, future AI events for the ICS feed
         const eventDate = new Date(event.date);
-        if (eventDate >= now && event.category === 'AI') {
+        const isApproved = isEventApproved(event);
+
+        if (isApproved && eventDate >= now && event.category === 'AI') {
           events.push(event);
         }
       }
