@@ -18,7 +18,7 @@ if (SECRET === 'secret' || SECRET === 'password' || SECRET.match(/^[a-z]+$/i)) {
 /**
  * Generates a confirmation token for email opt-in
  * @param {string} email - User email address
- * @returns {string} JWT token valid for 48 hours
+ * @returns {string} JWT token valid for 7 days
  */
 export function generateConfirmToken(email) {
   return jwt.sign(
@@ -28,7 +28,7 @@ export function generateConfirmToken(email) {
       timestamp: Date.now()
     },
     SECRET,
-    { expiresIn: '48h' }
+    { expiresIn: '7d' }  // Extended from 48h to 7d for better UX
   );
 }
 

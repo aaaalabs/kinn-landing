@@ -54,7 +54,7 @@ function generateOptInEmail(confirmUrl) {
         </p>
 
         <p style="font-size: 14px; line-height: 1.6; color: #666; margin-bottom: 16px;">
-          Dieser Bestätigungslink ist 48 Stunden gültig.
+          Dieser Bestätigungslink ist 7 Tage gültig.
         </p>
 
         <div style="margin: 24px 0; padding: 16px; background: rgba(94, 217, 166, 0.08); border-left: 3px solid #5ED9A6; border-radius: 4px;">
@@ -107,7 +107,7 @@ ${confirmUrl}
 Warum dieser Schritt?
 Damit stellen wir sicher, dass nur du Zugriff auf deine Anmeldung hast und niemand unbefugt deine E-Mail-Adresse verwendet.
 
-Dieser Bestätigungslink ist 48 Stunden gültig.
+Dieser Bestätigungslink ist 7 Tage gültig.
 
 Nach der Anmeldung: Du erhältst Zugang zum Dashboard mit Event-Infos. Discord-Zugang gibt's bei den Events direkt für aktive Teilnehmer.
 
@@ -160,7 +160,7 @@ function generateMagicLinkEmail(loginUrl) {
         </table>
 
         <p style="font-size: 14px; line-height: 1.6; color: #666; margin-bottom: 16px;">
-          Dieser Link ist 24 Stunden gültig.
+          Dieser Link ist 7 Tage gültig.
         </p>
 
         <div style="margin: 24px 0; padding: 16px; background: rgba(94, 217, 166, 0.08); border-left: 3px solid #5ED9A6; border-radius: 4px;">
@@ -207,7 +207,7 @@ du bist bereits bei KINN angemeldet! Hier ist dein Login-Link:
 
 ${loginUrl}
 
-Dieser Link ist 24 Stunden gültig.
+Dieser Link ist 7 Tage gültig.
 
 Tipp: Im Dashboard findest du alle Event-Infos. Discord-Zugang gibt's bei den Events direkt für aktive Teilnehmer.
 
