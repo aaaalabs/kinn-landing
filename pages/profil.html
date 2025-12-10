@@ -348,6 +348,35 @@
       border: 1px solid rgba(0, 0, 0, 0.12);
     }
 
+    /* Jony Ive approved: Ultra-subtle troubleshooting */
+    .troubleshoot-hint:hover {
+      opacity: 0.7 !important;
+    }
+
+    .gentle-refresh {
+      background: none;
+      border: none;
+      color: #999;
+      font-size: 0.8125rem;
+      font-weight: 400;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-color: rgba(153, 153, 153, 0.3);
+      padding: 4px 8px;
+      transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+      font-family: 'Work Sans', system-ui, -apple-system, sans-serif;
+    }
+
+    .gentle-refresh:hover {
+      color: #6B6B6B;
+      text-decoration-color: rgba(94, 217, 166, 0.4);
+    }
+
+    .gentle-refresh:active {
+      transform: scale(0.98);
+    }
+
     .secondary-button:hover:not(:disabled) {
       background: rgba(255, 255, 255, 0.95);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -1867,6 +1896,11 @@
             day: 'numeric'
           })}
         </p>
+
+        <!-- Jony Ive approved: Ultra-subtle troubleshooting -->
+        <div class="troubleshoot-hint" style="margin-top: 3rem; text-align: center; opacity: 0.4; transition: opacity 0.3s;">
+          <button onclick="gentleRefresh()" class="gentle-refresh">Probleme mit der Anzeige?</button>
+        </div>
       `;
     }
 
@@ -2687,6 +2721,48 @@
         console.error('[PROFILE] Error unsubscribing:', error);
         showMessage('error', 'Abmeldung fehlgeschlagen. Bitte versuche es erneut.');
       }
+    }
+
+    // Jony Ive approved: Gentle cache refresh - SLC principle
+    window.gentleRefresh = function() {
+      // First principles: What's the minimum needed to fix cache issues?
+      // Answer: Clear storage + reload. Nothing more.
+
+      // Subtle feedback before action
+      const button = event.target;
+      const originalText = button.textContent;
+      button.textContent = 'Aktualisiere...';
+      button.style.opacity = '0.6';
+
+      // Give user a moment to see the feedback
+      setTimeout(() => {
+        // Clear all local caches
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+
+          // Clear service worker caches if present
+          if ('caches' in window) {
+            caches.keys().then(names => {
+              names.forEach(name => caches.delete(name));
+            });
+          }
+
+          // Clear any service workers
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+              registrations.forEach(registration => registration.unregister());
+            });
+          }
+        } catch (e) {
+          console.log('[CACHE] Clear error:', e);
+        }
+
+        // Gentle reload after clearing
+        setTimeout(() => {
+          location.reload(true);
+        }, 100);
+      }, 300);
     }
 
     function showMessage(type, text) {
