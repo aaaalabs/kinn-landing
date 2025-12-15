@@ -1,4 +1,4 @@
-// KINN #6 Voting Widget - SLC Implementation
+// KINN #7 Voting Widget - SLC Implementation
 // Simple, Lovable, Complete
 
 export function initVotingWidget(container, token) {
@@ -206,7 +206,7 @@ export function initVotingWidget(container, token) {
     container.innerHTML = `
       <div class="voting-widget">
         <header class="voting-header">
-          <h3>Themen für KINN #6</h3>
+          <h3>Themen für KINN #7</h3>
           <span class="vote-total">${totalVotes} ${totalVotes === 1 ? 'Vote' : 'Votes'}</span>
         </header>
 

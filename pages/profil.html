@@ -1150,6 +1150,11 @@
       border-left: 4px solid #5ED9A6;
     }
 
+    .event-register-btn:hover {
+      opacity: 0.85 !important;
+      transform: translateY(-1px);
+    }
+
     /* Jony Ive Mobile: Edge-to-edge Events für max content space */
     @media (max-width: 768px) {
       .event-list {
@@ -1808,10 +1813,10 @@
           </div>
         </div>
 
-        <!-- KINN #6 Voting Widget -->
+        <!-- KINN #7 Voting Widget -->
         <div class="card">
           <h2 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.75rem;">
-            Themen für KINN #6
+            Themen für KINN #7
             <span id="vote-count" style="font-size: 0.75rem; color: #999; font-weight: 400; margin-left: 0.5rem;"></span>
           </h2>
           <p style="margin-bottom: 1rem; color: #6B6B6B; font-size: 0.875rem;">
@@ -2280,7 +2285,7 @@
       localStorage.setItem('kinn_profile_active_tab', tabName);
     };
 
-    // Render KINN #6 Voting Tab
+    // Render KINN #7 Voting Tab
 
     // Load voting widget
     let votingWidgetCleanup = null;
@@ -2869,7 +2874,17 @@
                   <div class="event-title">${event.title || 'KINN KI Treff'}</div>
                   <div class="event-date">${formatEventDate(event.date, event.startTime)}</div>
                   ${locationInfo ? `<div class="event-location" style="font-size: 0.875rem; color: #6B6B6B; margin-top: 0.25rem;">${locationInfo}</div>` : ''}
+                  ${event.maxCapacity ? `
+                    <div class="event-capacity" style="font-size: 0.875rem; color: #5ED9A6; margin-top: 0.25rem;">
+                      👥 Max. ${event.maxCapacity} Teilnehmer
+                    </div>
+                  ` : ''}
                   ${event.status === 'tentative' ? '<div class="event-tentative-notice">⚠️ Details stehen noch nicht fest</div>' : ''}
+                  ${event.meetingLink ? `
+                    <a href="${event.meetingLink}" target="_blank" class="event-register-btn" style="display: inline-block; margin-top: 0.5rem; padding: 0.375rem 1rem; background: #5ED9A6; color: #000; text-decoration: none; border-radius: 6px; font-size: 0.875rem; font-weight: 500; transition: opacity 0.2s;">
+                      📅 Anmelden
+                    </a>
+                  ` : ''}
                 </li>
               `;
             }).join('')}
