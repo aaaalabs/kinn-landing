@@ -177,6 +177,29 @@
       display: block;
     }
 
+    /* Animations for invite form */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
     /* Toggle Switch */
     .toggle-switch {
       position: relative;
@@ -661,33 +684,64 @@
           </div>
         </div>
 
-        <!-- Invite Section -->
-        <div class="card" style="border-left: 4px solid #999; margin-bottom: 2rem;">
-          <h3 style="font-weight: 500; margin-bottom: 0.5rem;">📨 Manuell User einladen</h3>
+        <!-- Invite Section - Enhanced -->
+        <div class="card" style="border-left: 4px solid #5ED9A6; margin-bottom: 2rem;">
+          <h3 style="font-weight: 500; margin-bottom: 0.5rem;">🚀 Persönliche Einladungen</h3>
           <p style="color: #666; margin-bottom: 1.5rem; font-size: 0.95rem;">
-            Lade jemanden ein, den du bei einem Event getroffen hast.
+            Versende manuelle Einladungen mit personalisierten Nachrichten.
           </p>
 
+          <!-- Template Selection -->
           <div style="margin-bottom: 1rem;">
-            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Vorname *</label>
-            <input type="text" id="inviteName" placeholder="z.B. Sarah" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit;">
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Vorlage wählen</label>
+            <select id="inviteTemplate" onchange="loadInviteTemplate()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit; background: white;">
+              <option value="standard">Standard Einladung</option>
+              <option value="event-met">Bei Event getroffen</option>
+              <option value="bug-fix">Neu senden (Bug-Fix)</option>
+              <option value="vip">VIP Einladung</option>
+              <option value="custom">Eigene Nachricht</option>
+            </select>
           </div>
 
-          <div style="margin-bottom: 1rem;">
-            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Email *</label>
-            <input type="email" id="inviteEmail" placeholder="email@example.com" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit;">
+          <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+            <div style="flex: 1;">
+              <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Vorname *</label>
+              <input type="text" id="inviteName" placeholder="z.B. Martin" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit;">
+            </div>
+            <div style="flex: 2;">
+              <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Email *</label>
+              <input type="email" id="inviteEmail" placeholder="email@example.com" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit;">
+            </div>
           </div>
 
+          <!-- Personal Message -->
           <div style="margin-bottom: 1rem;">
-            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Eingeladen von (optional)</label>
-            <input type="text" id="invitedBy" placeholder="Thomas" value="Thomas" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit;">
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">
+              Persönliche Nachricht <span style="font-weight: 400; color: #999;">(optional)</span>
+            </label>
+            <textarea id="inviteMessage" placeholder="Füge eine persönliche Nachricht hinzu..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit; min-height: 100px; resize: vertical;"></textarea>
+            <div style="font-size: 0.75rem; color: #999; margin-top: 0.25rem;">
+              Die Nachricht wird vor dem Standard-Einladungstext eingefügt.
+            </div>
           </div>
 
-          <button class="btn" onclick="sendInvite()" style="margin-top: 0.5rem;">
-            Einladung senden
-          </button>
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <div style="flex: 1;">
+              <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Eingeladen von</label>
+              <input type="text" id="invitedBy" placeholder="Thomas" value="Thomas" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit;">
+            </div>
+            <button class="btn" onclick="sendInvite()" style="flex: 0 0 auto; margin-top: 1.5rem;">
+              📨 Einladung versenden
+            </button>
+          </div>
 
           <div id="inviteResult" style="margin-top: 1rem;"></div>
+
+          <!-- Recent Invites -->
+          <div id="recentInvites" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0; display: none;">
+            <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem; color: #666;">Kürzlich versendet</h4>
+            <div id="recentInvitesList" style="font-size: 0.875rem; color: #999;"></div>
+          </div>
         </div>
 
         <div class="subscriber-count" id="subscriber-count">Lade...</div>
@@ -1482,23 +1536,64 @@
     }
 
     // Send Invite
+    // Template messages for different scenarios
+    const inviteTemplates = {
+      standard: '',
+      'event-met': 'Es war schön, dich beim letzten Event zu treffen! Wie besprochen, hier deine Einladung zur KINN Community.',
+      'bug-fix': 'Wir hatten leider ein technisches Problem mit unserem Bestätigungslink. Falls du dich in den letzten Wochen angemeldet hast und der Link nicht funktioniert hat - das tut uns sehr leid! Der Fehler ist jetzt behoben.',
+      vip: 'Du wurdest als besonderer Gast zur KINN Community eingeladen. Wir freuen uns sehr darauf, dich in unserer exklusiven AI Community zu begrüßen!',
+      custom: ''
+    };
+
+    // Load template message
+    function loadInviteTemplate() {
+      const templateSelect = document.getElementById('inviteTemplate');
+      const messageTextarea = document.getElementById('inviteMessage');
+      const selectedTemplate = templateSelect.value;
+
+      messageTextarea.value = inviteTemplates[selectedTemplate] || '';
+
+      // Focus on message field for custom template
+      if (selectedTemplate === 'custom') {
+        messageTextarea.focus();
+      }
+    }
+
+    // Track recent invites in session
+    let recentInvites = [];
+
     async function sendInvite() {
       const nameInput = document.getElementById('inviteName');
       const emailInput = document.getElementById('inviteEmail');
       const invitedByInput = document.getElementById('invitedBy');
+      const messageInput = document.getElementById('inviteMessage');
+      const templateSelect = document.getElementById('inviteTemplate');
       const resultDiv = document.getElementById('inviteResult');
 
       const name = nameInput.value.trim();
       const email = emailInput.value.trim();
       const invitedBy = invitedByInput.value.trim() || 'Thomas';
+      const message = messageInput.value.trim();
+      const template = templateSelect.value;
 
       if (!name || !email) {
         resultDiv.innerHTML = '<div class="message error">❌ Bitte Name und Email eingeben</div>';
         return;
       }
 
-      // Show loading state
-      resultDiv.innerHTML = '<div class="message">⏳ Einladung wird versendet...</div>';
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        resultDiv.innerHTML = '<div class="message error">❌ Bitte eine gültige Email-Adresse eingeben</div>';
+        return;
+      }
+
+      // Show loading state with animation
+      resultDiv.innerHTML = `
+        <div class="message" style="background: linear-gradient(90deg, #f0f9f5 0%, #e8f7f1 50%, #f0f9f5 100%); background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite;">
+          ⏳ Einladung wird an ${name} versendet...
+        </div>
+      `;
 
       try {
         const response = await fetch('/api/admin/invite', {
@@ -1507,28 +1602,76 @@
             'Authorization': `Bearer ${adminPassword}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ name, email, invitedBy })
+          body: JSON.stringify({ name, email, invitedBy, message })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          resultDiv.innerHTML = `<div class="message success">✅ ${data.message}</div>`;
+          // Success animation
+          resultDiv.innerHTML = `
+            <div class="message success" style="animation: slideInUp 0.3s ease-out;">
+              ✅ ${data.message}
+              ${template === 'bug-fix' ? '<br><span style="font-size: 0.875rem;">Neuer funktionierender Link wurde versendet!</span>' : ''}
+            </div>
+          `;
+
+          // Add to recent invites
+          recentInvites.unshift({
+            name,
+            email,
+            time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+            template
+          });
+
+          // Keep only last 5 invites
+          recentInvites = recentInvites.slice(0, 5);
+
+          // Update recent invites display
+          updateRecentInvites();
+
           // Clear form
           nameInput.value = '';
           emailInput.value = '';
+          messageInput.value = '';
+          templateSelect.value = 'standard';
           invitedByInput.value = 'Thomas';
 
           // Refresh subscriber list after a short delay
           setTimeout(() => {
             loadSubscribers();
-          }, 1000);
+          }, 1500);
         } else {
-          resultDiv.innerHTML = `<div class="message error">❌ ${data.message || data.error}</div>`;
+          resultDiv.innerHTML = `
+            <div class="message error" style="animation: shake 0.3s ease-out;">
+              ❌ ${data.message || data.error}
+            </div>
+          `;
         }
       } catch (error) {
         console.error('[INVITE] Error:', error);
-        resultDiv.innerHTML = `<div class="message error">❌ Fehler: ${error.message}</div>`;
+        resultDiv.innerHTML = `
+          <div class="message error" style="animation: shake 0.3s ease-out;">
+            ❌ Fehler: ${error.message}
+          </div>
+        `;
+      }
+    }
+
+    // Update recent invites display
+    function updateRecentInvites() {
+      const container = document.getElementById('recentInvites');
+      const list = document.getElementById('recentInvitesList');
+
+      if (recentInvites.length > 0) {
+        container.style.display = 'block';
+        list.innerHTML = recentInvites.map(invite => `
+          <div style="padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+            <strong>${invite.name}</strong> (${invite.email})
+            <span style="float: right;">${invite.time}</span>
+            ${invite.template !== 'standard' ? `<br><span style="font-size: 0.75rem; color: #5ED9A6;">Template: ${invite.template}</span>` : ''}
+          </div>
+        `).join('');
       }
     }
 

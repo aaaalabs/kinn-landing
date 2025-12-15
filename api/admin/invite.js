@@ -8,7 +8,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  * Invite Email Template (HTML)
  * Personalized invitation from admin/organizer
  */
-function generateInviteEmail(name, confirmUrl, invitedBy = 'Thomas') {
+function generateInviteEmail(name, confirmUrl, invitedBy = 'Thomas', personalMessage = '') {
   return `
 <!DOCTYPE html>
 <html lang="de">
@@ -22,6 +22,12 @@ function generateInviteEmail(name, confirmUrl, invitedBy = 'Thomas') {
       <td style="padding: 20px;">
 
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Hey ${name}!</p>
+
+        ${personalMessage ? `
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px; padding: 12px; background-color: #f8f9fa; border-left: 3px solid #5ED9A6; border-radius: 4px;">
+          ${personalMessage}
+        </p>
+        ` : ''}
 
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
           <strong>${invitedBy}</strong> hat dich zu <strong>KINN</strong> eingeladen – der AI Community in Tirol.
@@ -87,11 +93,11 @@ function generateInviteEmail(name, confirmUrl, invitedBy = 'Thomas') {
 /**
  * Invite Email Template (Plain Text)
  */
-function generateInviteEmailPlainText(name, confirmUrl, invitedBy = 'Thomas') {
+function generateInviteEmailPlainText(name, confirmUrl, invitedBy = 'Thomas', personalMessage = '') {
   return `
 Hey ${name}!
 
-${invitedBy} hat dich zu KINN eingeladen – der AI Community in Tirol.
+${personalMessage ? personalMessage + '\n\n' : ''}${invitedBy} hat dich zu KINN eingeladen – der AI Community in Tirol.
 
 Was ist KINN?
 Monatlicher AI Treff in Innsbruck + Skills-Matching mit anderen AI Devs, Freelancern und Studenten in der Region.
@@ -149,7 +155,7 @@ export default async function handler(req, res) {
   }
 
   // Extract and validate data
-  const { name, email, invitedBy } = req.body;
+  const { name, email, invitedBy, message } = req.body;
 
   if (!name || !email) {
     return res.status(400).json({
@@ -195,8 +201,8 @@ export default async function handler(req, res) {
       from: process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>',
       to: normalizedEmail,
       subject: `${normalizedInvitedBy} hat dich zu KINN eingeladen`,
-      html: generateInviteEmail(normalizedName, confirmUrl, normalizedInvitedBy),
-      text: generateInviteEmailPlainText(normalizedName, confirmUrl, normalizedInvitedBy),
+      html: generateInviteEmail(normalizedName, confirmUrl, normalizedInvitedBy, message),
+      text: generateInviteEmailPlainText(normalizedName, confirmUrl, normalizedInvitedBy, message),
       // Add tags for tracking
       tags: [
         { name: 'type', value: 'invite' },
