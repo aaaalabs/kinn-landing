@@ -39,6 +39,7 @@ async function resendInvites(emails) {
           'Authorization': `Bearer ${adminPassword}`,
         },
         body: JSON.stringify({
+          name: email.split('@')[0].replace(/[.-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), // Extract name from email
           email,
           message: `Hallo!
 
