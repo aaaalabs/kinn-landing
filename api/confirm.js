@@ -16,7 +16,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  * - DSGVO compliant with Impressum
  */
 function generateWelcomeEmail(profileToken) {
-  const baseUrl = process.env.BASE_URL || 'https://kinn.at';
+  const baseUrl = (process.env.BASE_URL || 'https://kinn.at').trim();
   const calendarPageUrl = `${baseUrl}/pages/success.html?status=confirmed&token=${profileToken}`;
   const profilePageUrl = `${baseUrl}/pages/profil.html?token=${profileToken}`;
 
@@ -100,7 +100,7 @@ function generateWelcomeEmail(profileToken) {
  * Plain text version for better deliverability and spam filter compatibility
  */
 function generateWelcomeEmailPlainText(profileToken) {
-  const baseUrl = process.env.BASE_URL || 'https://kinn.at';
+  const baseUrl = (process.env.BASE_URL || 'https://kinn.at').trim();
   const calendarPageUrl = `${baseUrl}/pages/success.html?status=confirmed&token=${profileToken}`;
   const profilePageUrl = `${baseUrl}/pages/profil.html?token=${profileToken}`;
 
@@ -244,7 +244,7 @@ export default async function handler(req, res) {
         html: generateWelcomeEmail(authToken),
         text: generateWelcomeEmailPlainText(authToken),
         headers: {
-          'List-Unsubscribe': `<mailto:thomas@kinn.at?subject=Abmelden>, <${process.env.BASE_URL || 'https://kinn.at'}/pages/profil.html?token=${authToken}>`,
+          'List-Unsubscribe': `<mailto:thomas@kinn.at?subject=Abmelden>, <${(process.env.BASE_URL || 'https://kinn.at').trim()}/pages/profil.html?token=${authToken}>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         },
       });

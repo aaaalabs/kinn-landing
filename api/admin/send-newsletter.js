@@ -70,7 +70,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const baseUrl = process.env.BASE_URL || 'https://kinn.at';
+    const baseUrl = (process.env.BASE_URL || 'https://kinn.at').trim();
 
     // Get RSVP counts for social proof
     const rsvps = await getEventRSVPs(eventId);

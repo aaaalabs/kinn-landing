@@ -321,7 +321,7 @@ export default async function handler(req, res) {
       console.log(`[SIGNUP] Returning user detected - sending magic link`);
 
       const sessionToken = generateAuthToken(email);
-      const loginUrl = `${process.env.BASE_URL || 'https://kinn.at'}/api/auth/login?token=${sessionToken}`;
+      const loginUrl = `${(process.env.BASE_URL || 'https://kinn.at').trim()}/api/auth/login?token=${sessionToken}`;
 
       const magicLinkHtml = generateMagicLinkEmail(loginUrl);
       const magicLinkText = generateMagicLinkEmailPlainText(loginUrl);
@@ -343,7 +343,8 @@ export default async function handler(req, res) {
       console.log(`[SIGNUP] New user - sending confirmation email`);
 
       const confirmToken = generateConfirmToken(email);
-      const confirmUrl = `${process.env.BASE_URL || 'https://kinn.at'}/api/confirm?token=${confirmToken}`;
+      const baseUrl = (process.env.BASE_URL || 'https://kinn.at').trim();
+      const confirmUrl = `${baseUrl}/api/confirm?token=${confirmToken}`;
 
       const optInHtml = generateOptInEmail(confirmUrl);
       const optInText = generateOptInEmailPlainText(confirmUrl);

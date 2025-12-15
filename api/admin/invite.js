@@ -185,7 +185,7 @@ export default async function handler(req, res) {
     const confirmToken = generateConfirmToken(normalizedEmail);
 
     // Build confirmation URL
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const baseUrl = (process.env.BASE_URL || 'http://localhost:3000').trim();
     const confirmUrl = `${baseUrl}/api/confirm?token=${confirmToken}`;
 
     console.log('[INVITE] Generated token for:', normalizedEmail, 'URL:', confirmUrl.substring(0, 80) + '...');
