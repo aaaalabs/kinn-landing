@@ -577,6 +577,97 @@ async function sendLade(newsletterId, options) {
 
 ---
 
+## Option D.1: LinkedIn Event-Integration
+
+### Kontext
+
+Jedes KINN Event hat aktuell einen **LinkedIn Event-Link** für maximale Reichweite. Zusätzlich gibt es **exklusive Events** nur für ehemalige Teilnehmer.
+
+### Event-Typen
+
+| Event-Typ | Zielgruppe | Anmeldung | Sichtbarkeit |
+|-----------|------------|-----------|--------------|
+| **Öffentlich** | Alle | LinkedIn Event | Im Newsletter + LinkedIn |
+| **Exklusiv (members-only)** | Ehemalige Teilnehmer | Eigene RSVP | Nur im Newsletter |
+
+### LinkedIn vs. Eigene RSVP
+
+| Aspekt | LinkedIn Event | Eigene RSVP |
+|--------|----------------|-------------|
+| **Reichweite** | Hoch (LinkedIn Algo) | Nur Subscriber |
+| **Sichtbarkeit** | Im Feed der Teilnehmer | Nur in Email |
+| **Daten** | Bei LinkedIn | In Redis (eigene) |
+| **Reminder** | LinkedIn automatisch | Manuell/WhatsApp |
+| **Networking** | Teilnehmer sichtbar | Privat |
+| **Branding** | LinkedIn-Design | KINN-Design |
+
+**Empfehlung: Hybrid-Ansatz**
+- LinkedIn Event = Primär (für Reichweite & Discovery)
+- Eigene RSVP = Sekundär (für Daten & Reminder)
+- Members-only Events = Nur eigene RSVP
+
+### Zukünftiges Event-Schema
+
+```javascript
+// Event-Schema Erweiterung
+{
+  ...existingFields,
+  visibility: "public" | "members-only",
+  externalLinks: {
+    linkedin?: string,    // https://linkedin.com/events/...
+    meetup?: string,
+    eventbrite?: string
+  },
+  primaryRegistration: "linkedin" | "internal" | "both"
+}
+```
+
+### Newsletter-Darstellung
+
+```
+┌─────────────────────────────────────────────┐
+│  KOMMENDE KINN TREFFS                       │
+├─────────────────────────────────────────────┤
+│  ÖFFENTLICH                                 │
+│  Do 8.1. | WIFI LernBar | 8-9 Uhr           │
+│  [Auf LinkedIn anmelden]                    │
+├─────────────────────────────────────────────┤
+│  NUR FÜR KINN'DER                           │
+│  Fr 17.1. | Special Workshop                │
+│  [Dabei] [Vielleicht] [Nein]                │
+│  (Du bist eingeladen weil du dabei warst)   │
+└─────────────────────────────────────────────┘
+```
+
+### Berechtigungsprüfung für Exklusive Events
+
+```javascript
+// Beim Senden des Newsletters
+const profile = await getProfile(email);
+const hasAttended = profile?.engagement?.stats?.totalAttended > 0;
+
+// Exklusive Events nur an Berechtigte senden
+if (event.visibility === "members-only" && !hasAttended) {
+  // Event nicht anzeigen für diesen User
+  continue;
+}
+```
+
+### Wann LinkedIn-First vs. Eigene RSVP?
+
+**LinkedIn-First sinnvoll wenn:**
+- Community < 100 Subscriber
+- Reichweite wichtiger als Daten
+- Kein eigener Reminder-Workflow
+
+**Eigene RSVP-First sinnvoll wenn:**
+- Community > 200 Subscriber
+- WhatsApp-Reminder gewünscht
+- Datenhoheit wichtig
+- LinkedIn-Algo ändert sich negativ
+
+---
+
 ## Fazit
 
 Die beiden Newsletter-Typen haben unterschiedliche Zwecke und sollten **koexistieren**:
@@ -591,5 +682,7 @@ Die Integration erfolgt über:
 2. **Einheitliches Admin-Dashboard**
 3. **Konsistente Branding-Sprache**
 4. **Tracking via Resend Tags**
+5. **LinkedIn für öffentliche Events** (Reichweite)
+6. **Eigene RSVP für members-only Events** (Exklusivität)
 
 Der wichtigste nächste Schritt: `/api/admin/send-lade.js` implementieren.
