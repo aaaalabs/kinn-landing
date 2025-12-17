@@ -668,6 +668,242 @@ if (event.visibility === "members-only" && !hasAttended) {
 
 ---
 
+## Option E: Luma als Event-Plattform
+
+### Was ist Luma?
+
+[lu.ma](https://lu.ma) ist eine Event-Plattform speziell für Community Events. Vorteile gegenüber eigener Lösung:
+
+### Vergleich: Eigene Lösung vs. Luma
+
+| Aspekt | Eigene Lösung (Redis) | Luma |
+|--------|----------------------|------|
+| **Setup** | Selbst gebaut | Sofort nutzbar |
+| **RSVP** | Eigene Buttons | Luma-Formular |
+| **Reminder** | Manuell/WhatsApp | Automatisch (Email) |
+| **Waitlist** | Nicht implementiert | Built-in |
+| **Check-in** | Nicht implementiert | QR-Code App |
+| **Calendar Sync** | iCal-Feed | Google/Apple/Outlook |
+| **Teilnehmer-Liste** | Nur für Admin | Öffentlich (optional) |
+| **Branding** | Voll custom | Luma-Design + Logo |
+| **Kosten** | Hosting (minimal) | Kostenlos (Basis) |
+| **API** | Volle Kontrolle | Luma API verfügbar |
+| **Datenhoheit** | 100% eigen | Bei Luma |
+
+### Luma-Vorteile
+
+1. **Automatische Reminder** - 24h + 1h vor Event
+2. **Waitlist** - Bei limitierten Plätzen
+3. **Recurring Events** - Wöchentliche Serie anlegen
+4. **Check-in App** - QR-Code scannen
+5. **Teilnehmer sichtbar** - Networking vor Event
+6. **Calendar Integration** - 1-Click Add to Calendar
+7. **Mobile-optimiert** - Native App-Feeling
+8. **Analytics** - Attendance-Rate, No-Shows
+
+### Luma-Nachteile
+
+1. **Kein LinkedIn-Algo** - Weniger Discovery als LinkedIn Events
+2. **Daten bei Luma** - Export möglich, aber nicht in Redis
+3. **Design-Einschränkungen** - Luma-Look, nicht 100% KINN-Branding
+4. **Abhängigkeit** - Platform-Risk
+
+### Hybrid-Strategie mit Luma
+
+```
+┌─────────────────────────────────────────────┐
+│  Event-Ökosystem                            │
+├─────────────────────────────────────────────┤
+│                                             │
+│  LinkedIn Event ──────┐                     │
+│  (Reichweite)         │                     │
+│                       ▼                     │
+│                   [Luma Event] ◄── Primary  │
+│                       │                     │
+│                       ▼                     │
+│              Luma handles:                  │
+│              - RSVP                         │
+│              - Reminder                     │
+│              - Waitlist                     │
+│              - Check-in                     │
+│                                             │
+│  KINN Newsletter ─────┘                     │
+│  (Link zu Luma)                             │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+### Newsletter-Integration mit Luma
+
+```
+┌─────────────────────────────────────────────┐
+│  KOMMENDE KINN TREFFS                       │
+├─────────────────────────────────────────────┤
+│  Do 8.1. | WIFI LernBar | 8-9 Uhr           │
+│                                             │
+│  [Auf lu.ma anmelden]  ← Luma Event-Link    │
+│                                             │
+│  23 Zusagen · 5 auf Warteliste              │
+└─────────────────────────────────────────────┘
+```
+
+### Schema-Erweiterung für Luma
+
+```javascript
+{
+  ...existingFields,
+  externalLinks: {
+    linkedin?: string,
+    luma?: string,        // https://lu.ma/kinn-treff-8
+    meetup?: string,
+    eventbrite?: string
+  },
+  primaryPlatform: "luma" | "linkedin" | "internal"
+}
+```
+
+### Wann Luma nutzen?
+
+**Luma sinnvoll wenn:**
+- Recurring Events (wöchentlich/monatlich)
+- Limitierte Plätze (Waitlist nötig)
+- Check-in gewünscht
+- Automatische Reminder wichtig
+- Weniger Dev-Aufwand gewünscht
+
+**Eigene Lösung sinnvoll wenn:**
+- Volle Datenhoheit nötig
+- Custom RSVP-Flow (z.B. mit Profil-Fragen)
+- Members-only Events (Luma hat keine Auth)
+- Integration mit eigenem CRM
+
+### Empfohlene Architektur: iCal + Luma Hybrid
+
+**Prinzip:** Events selbst verwalten (iCal), aber Luma für Anmeldung nutzen.
+
+```
+┌─────────────────────────────────────────────┐
+│  Event-Flow                                 │
+├─────────────────────────────────────────────┤
+│                                             │
+│  1. Event in Redis anlegen                  │
+│     (Datum, Location, Beschreibung)         │
+│                                             │
+│  2. Luma-Event erstellen                    │
+│     → Link speichern in externalLinks.luma  │
+│                                             │
+│  3. iCal-Feed generieren                    │
+│     → /api/calendar.ics (abonnierbar)       │
+│     → Enthält Luma-Link in Beschreibung     │
+│                                             │
+│  4. Newsletter versenden                    │
+│     → Event-Block mit Luma-Anmeldelink      │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+**Vorteile:**
+- **iCal bleibt** - Subscriber können Kalender abonnieren
+- **Luma für RSVP** - Keine eigene Anmelde-Logik nötig
+- **Datenhoheit** - Events in Redis, nur Anmeldung bei Luma
+- **Flexibilität** - Kann jederzeit Luma ersetzen
+
+### iCal mit Luma-Link
+
+```javascript
+// /api/calendar.ics - Erweitert
+
+VEVENT
+SUMMARY:KINN Treff #8
+DTSTART:20260108T070000Z
+DTEND:20260108T080000Z
+LOCATION:WIFI LernBar, Innsbruck
+DESCRIPTION:Wöchentlicher KI-Treff in Tirol.\n\n
+  Anmeldung: https://lu.ma/kinn-treff-8\n
+  Mehr Infos: https://kinn.at
+URL:https://lu.ma/kinn-treff-8
+END:VEVENT
+```
+
+### Newsletter Event-Block
+
+```
+┌─────────────────────────────────────────────┐
+│  KOMMENDE KINN TREFFS                       │
+├─────────────────────────────────────────────┤
+│  Do 8.1. | WIFI LernBar | 8-9 Uhr           │
+│                                             │
+│  [Auf lu.ma anmelden]                       │
+│                                             │
+│  [+ Zum Kalender] ← Add-to-Calendar Links   │
+└─────────────────────────────────────────────┘
+```
+
+### Schema
+
+```javascript
+{
+  id: "kinn-treff-8",
+  title: "KINN Treff #8",
+  date: "2026-01-08",
+  startTime: "08:00",
+  location: "WIFI LernBar, Innsbruck",
+
+  // Luma für Anmeldung
+  externalLinks: {
+    luma: "https://lu.ma/kinn-treff-8",
+    linkedin: "https://linkedin.com/events/..."  // Optional für Reichweite
+  },
+
+  // iCal-Feed generiert aus diesen Daten
+  // Subscriber können /api/calendar.ics abonnieren
+}
+```
+
+### Migration zu Luma
+
+**Phase 1: Parallel betreiben**
+1. Events weiterhin in Redis anlegen
+2. Luma-Events parallel erstellen
+3. iCal-Feed enthält Luma-Link
+4. Newsletter verlinkt auf Luma
+
+**Phase 2: Luma als Primary Anmeldung**
+1. Alle öffentlichen Events mit Luma-Link
+2. LinkedIn Event verlinkt auf Luma
+3. Eigene RSVP-Buttons entfernen
+4. iCal bleibt für Kalender-Abo
+
+**Phase 3: Optional - Luma API Integration**
+1. Events via Luma API in Newsletter ziehen
+2. Teilnehmer-Zahlen live anzeigen
+3. Automatische Event-Blöcke generieren
+
+### Luma API Möglichkeiten
+
+```javascript
+// Luma API (https://docs.lu.ma/reference/getting-started)
+
+// Events abrufen
+GET /api/public/v1/calendar/events
+
+// Response
+{
+  "entries": [{
+    "api_id": "evt-xxx",
+    "name": "KINN Treff #8",
+    "start_at": "2026-01-08T07:00:00Z",
+    "end_at": "2026-01-08T08:00:00Z",
+    "url": "https://lu.ma/kinn-treff-8",
+    "geo_address_info": { "city": "Innsbruck" },
+    "guest_count": 23,
+    "waitlist_count": 5
+  }]
+}
+```
+
+---
+
 ## Fazit
 
 Die beiden Newsletter-Typen haben unterschiedliche Zwecke und sollten **koexistieren**:
