@@ -408,6 +408,175 @@ curl -X POST https://kinn.at/api/admin/send-lade \
 
 ---
 
+---
+
+## Option D: LADE + Events Hybrid (Beste UX)
+
+**Aufwand: 4-6 Stunden (aufbauend auf Option A/C)**
+
+KINN:LADE wird zum "Master-Newsletter" mit automatisch angehängten Events.
+
+### Konzept
+
+```
+┌─────────────────────────────────────────────┐
+│ KINN:LADE #01 - Das stille Paradoxon        │
+├─────────────────────────────────────────────┤
+│                                             │
+│  [Hero Image]                               │
+│                                             │
+│  Editorial Content...                       │
+│  - Das Gefühl                               │
+│  - Die Zahlen                               │
+│  - KI-Begleiter                             │
+│  - Was 2026 passiert                        │
+│  - etc.                                     │
+│                                             │
+├─────────────────────────────────────────────┤
+│  KOMMENDE KINN TREFFS           ← AUTO      │
+├─────────────────────────────────────────────┤
+│                                             │
+│  ┌─────────────────────────────────────┐   │
+│  │ Do 8.1. | WIFI LernBar | 8-9 Uhr    │   │
+│  │ [Ja ✓] [Vielleicht ?] [Nein ✗]      │   │
+│  └─────────────────────────────────────┘   │
+│                                             │
+│  ┌─────────────────────────────────────┐   │
+│  │ Do 15.1. | SOHO2.0 | 8-9 Uhr        │   │
+│  │ [Ja ✓] [Vielleicht ?] [Nein ✗]      │   │
+│  └─────────────────────────────────────┘   │
+│                                             │
+│  → Alle Events im Kalender abonnieren       │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+### Vorteile
+
+1. **Ein Newsletter statt zwei** - User bekommt nicht separat Event-Invite + LADE
+2. **RSVP direkt im Content-Newsletter** - Höhere Conversion
+3. **Weniger Email-Fatigue** - Monatlich statt pro Event
+4. **Kontext** - Events passen zum Editorial-Thema
+
+### Implementierung
+
+```javascript
+// /api/admin/send-lade.js (erweitert)
+
+async function sendLade(newsletterId, options) {
+  // 1. Lade LADE HTML
+  let html = await fetchLadeHtml(newsletterId);
+
+  // 2. Hole kommende Events (nächste 4 Wochen)
+  const events = await getUpcomingEvents({ weeks: 4 });
+
+  // 3. Generiere Event-Block HTML
+  const eventsHtml = renderEventsBlock(events, {
+    subscriberEmail: email,
+    includeRsvp: true  // RSVP-Buttons pro Event
+  });
+
+  // 4. Injiziere vor Footer
+  html = html.replace(
+    '<!-- EVENTS_PLACEHOLDER -->',
+    eventsHtml
+  );
+
+  // Alternativ: Automatisch vor </body> einfügen
+  // html = html.replace('</body>', `${eventsHtml}</body>`);
+
+  await resend.send({ ... });
+}
+```
+
+### Event-Block Template
+
+```html
+<!-- Wird automatisch eingefügt -->
+<table role="presentation" width="100%" style="margin: 40px 0; border-top: 1px solid #e0e0e0; padding-top: 40px;">
+  <tr>
+    <td>
+      <h2 style="font-size: 20px; font-weight: 600; color: #1a1a1a; margin: 0 0 25px 0;">
+        Kommende KINN Treffs
+      </h2>
+    </td>
+  </tr>
+
+  <!-- Event 1 -->
+  <tr>
+    <td style="padding: 20px; background: #f9f9f9; border-radius: 8px; margin-bottom: 15px;">
+      <p style="margin: 0 0 10px 0; font-size: 16px; font-weight: 600; color: #1a1a1a;">
+        Donnerstag, 8. Jänner 2026
+      </p>
+      <p style="margin: 0 0 15px 0; font-size: 14px; color: #666;">
+        8-9 Uhr | WIFI LernBar, Innsbruck
+      </p>
+      <table role="presentation">
+        <tr>
+          <td style="padding-right: 10px;">
+            <a href="{{rsvp_yes_1}}" style="display: inline-block; padding: 10px 20px; background: #5ED9A6; color: #1a1a1a; text-decoration: none; border-radius: 4px; font-weight: 500;">Dabei</a>
+          </td>
+          <td style="padding-right: 10px;">
+            <a href="{{rsvp_maybe_1}}" style="display: inline-block; padding: 10px 20px; background: #f0f0f0; color: #666; text-decoration: none; border-radius: 4px;">Vielleicht</a>
+          </td>
+          <td>
+            <a href="{{rsvp_no_1}}" style="display: inline-block; padding: 10px 20px; background: transparent; color: #888; text-decoration: none;">Nicht dabei</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- Event 2 -->
+  <tr>
+    <td style="padding: 20px; background: #f9f9f9; border-radius: 8px; margin-top: 15px;">
+      ...
+    </td>
+  </tr>
+
+  <!-- Calendar Link -->
+  <tr>
+    <td style="padding-top: 20px; text-align: center;">
+      <a href="https://kinn.at/api/calendar.ics" style="color: #5ED9A6; font-size: 14px;">
+        → Alle Events im Kalender abonnieren
+      </a>
+    </td>
+  </tr>
+</table>
+```
+
+### Workflow-Änderung
+
+**Alt (2 Emails):**
+1. LADE Newsletter (Content)
+2. Event-Invite (pro Event)
+
+**Neu (1 Email):**
+1. LADE Newsletter mit eingebetteten Events + RSVP
+
+### Wann separate Event-Invites noch sinnvoll sind
+
+- **Kurzfristige Events** (< 1 Woche) - Reminder
+- **Änderungen** (Location, Absage)
+- **Spezial-Events** (nicht wöchentlicher Treff)
+
+### Konfiguration
+
+```json
+// metadata.json
+{
+  "newsletters": [{
+    "id": "01",
+    "includeEvents": true,           // Events anhängen?
+    "eventsLookahead": 4,            // Wochen voraus
+    "eventsMaxCount": 3,             // Max Events anzeigen
+    "eventsIncludeRsvp": true        // RSVP-Buttons?
+  }]
+}
+```
+
+---
+
 ## Fazit
 
 Die beiden Newsletter-Typen haben unterschiedliche Zwecke und sollten **koexistieren**:
