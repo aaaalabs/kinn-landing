@@ -44,9 +44,26 @@
     {
       "source": "/pages/:path*",
       "destination": "/pages/:path*"
+    },
+    {
+      "source": "/lade",
+      "destination": "/lade/index.html"
+    },
+    {
+      "source": "/lade/:id",
+      "destination": "/lade/:id/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/lade/:id/images/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [

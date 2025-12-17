@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KINN:LADE #01 - Das stille Paradoxon</title>
+    <meta name="description" content="56% der Remote Worker verlassen ihre Wohnung ganze Wochen nicht. Warum Einsamkeit zum Business-Thema wird - und was wir dagegen tun.">
+    <meta property="og:title" content="KINN:LADE #01 - Das stille Paradoxon">
+    <meta property="og:description" content="56% der Remote Worker verlassen ihre Wohnung ganze Wochen nicht. Warum Einsamkeit zum Business-Thema wird.">
+    <meta property="og:image" content="https://kinn.at/lade/01/images/hero.png">
+    <meta property="og:url" content="https://kinn.at/lade/01">
+    <meta property="og:type" content="article">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #1a1a1a;
+            line-height: 1.7;
+        }
+        .header {
+            background: #1a1a1a;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header a {
+            color: #5ED9A6;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .header a:hover { text-decoration: underline; }
+        .logo {
+            color: #fff;
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+        .nav-links { display: flex; gap: 24px; }
+        .email-wrapper {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .email-frame {
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .email-frame iframe {
+            width: 100%;
+            height: 4000px;
+            border: none;
+        }
+        .cta-footer {
+            background: #1a1a1a;
+            padding: 48px 24px;
+            text-align: center;
+        }
+        .cta-footer p {
+            color: #888;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .cta-footer .btn {
+            display: inline-block;
+            background: #5ED9A6;
+            color: #1a1a1a;
+            padding: 14px 32px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 2px;
+        }
+        .cta-footer .btn:hover {
+            background: #4ec997;
+        }
+        @media (max-width: 640px) {
+            .nav-links { gap: 16px; }
+            .header a { font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="https://kinn.at" class="logo">KINN</a>
+        <nav class="nav-links">
+            <a href="/lade">Alle Ausgaben</a>
+            <a href="https://kinn.at">Anmelden</a>
+        </nav>
+    </header>
+
+    <main class="email-wrapper">
+        <div class="email-frame">
+            <iframe src="email.html" title="KINN:LADE #01 Newsletter"></iframe>
+        </div>
+    </main>
+
+    <footer class="cta-footer">
+        <p>Newsletter verpasst? Jetzt anmelden und keine Ausgabe verpassen.</p>
+        <a href="https://kinn.at" class="btn">Zur Anmeldung</a>
+    </footer>
+</body>
+</html>

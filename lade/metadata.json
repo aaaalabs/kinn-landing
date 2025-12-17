@@ -1,0 +1,35 @@
+{
+  "newsletters": [
+    {
+      "id": "01",
+      "title": "Das stille Paradoxon",
+      "subtitle": "Warum Einsamkeit zum Business-Thema wird",
+      "subject": "KINN:LADE #01 - Das stille Paradoxon",
+      "preheader": "56% der Remote Worker verlassen ihre Wohnung ganze Wochen nicht...",
+      "date": "2025-12",
+      "sentAt": null,
+      "recipientCount": 0,
+      "status": "draft",
+      "author": "Thomas Seiger",
+      "images": [
+        "hero.png",
+        "01-remote-worker.png",
+        "04-ai-companion.png",
+        "05-connection.png",
+        "kinn05a.jpg",
+        "kinn05b.jpg",
+        "kinn06a.jpg",
+        "libralab01.png",
+        "libralab02.png"
+      ],
+      "createdAt": "2025-12-17T12:00:00+01:00",
+      "updatedAt": "2025-12-17T12:00:00+01:00"
+    }
+  ],
+  "defaults": {
+    "author": "Thomas Seiger",
+    "fromEmail": "Thomas @ KINN <thomas@kinn.at>",
+    "replyTo": "thomas@kinn.at",
+    "listUnsubscribe": true
+  }
+}
