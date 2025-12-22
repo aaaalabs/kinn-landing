@@ -2139,6 +2139,17 @@
               <div id="modal-copy-status" style="margin-top: 0.75rem; font-size: 0.9rem;"></div>
             </div>
           </div>
+
+          <!-- Event Detail Modal -->
+          <div id="event-detail-modal" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;" onclick="if(event.target === this) closeEventModal()">
+            <div style="background: white; border-radius: 16px; padding: 2rem; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                <h3 id="event-modal-title" style="margin: 0; font-size: 1.25rem; line-height: 1.4;"></h3>
+                <button onclick="closeEventModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; padding: 0; line-height: 1;">&times;</button>
+              </div>
+              <div id="event-modal-content"></div>
+            </div>
+          </div>
         `;
       } catch (error) {
         console.error('[TOKEN-LINKS] Error:', error);
@@ -2242,6 +2253,81 @@
     function closeModal() {
       document.getElementById('generated-link-modal').classList.add('hidden');
       document.getElementById('generated-link-modal').style.display = 'none';
+    }
+
+    // === Event Detail Modal ===
+    function showEventDetail(eventId) {
+      const event = allRadarEvents.find(e => e.id === eventId);
+      if (!event) return;
+
+      const modalTitle = document.getElementById('event-modal-title');
+      const modalContent = document.getElementById('event-modal-content');
+      const modal = document.getElementById('event-detail-modal');
+
+      const isAI = event.category && event.category.toLowerCase().includes('ai');
+      const isApproved = event.approved === 'true' || event.approved === true;
+      const createdAt = event.createdAt ? new Date(event.createdAt).toLocaleString('de-AT') : '-';
+
+      modalTitle.textContent = event.title;
+      modalContent.innerHTML = `
+        <div style="display: grid; gap: 1rem;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+              <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; margin-bottom: 4px;">Datum & Zeit</div>
+              <div style="font-weight: 500;">${event.date} um ${event.time || '18:00'}</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; margin-bottom: 4px;">Kategorie</div>
+              <div><span style="background: ${isAI ? '#E0EEE9' : '#f0f0f0'}; color: ${isAI ? '#2C5530' : '#666'}; padding: 4px 8px; border-radius: 4px; font-size: 0.875rem;">${event.category || 'Sonstige'}</span></div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+              <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; margin-bottom: 4px;">Location</div>
+              <div>${event.location || 'Online'}</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; margin-bottom: 4px;">Stadt</div>
+              <div>${event.city || '-'}</div>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; margin-bottom: 4px;">Quelle</div>
+            <div><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 0.875rem;">${event.source}</span></div>
+          </div>
+
+          ${event.description ? `
+          <div>
+            <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; margin-bottom: 4px;">Beschreibung</div>
+            <div style="background: #f9f9f9; padding: 1rem; border-radius: 8px; font-size: 0.9rem; line-height: 1.5;">${event.description}</div>
+          </div>
+          ` : ''}
+
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap; padding-top: 0.5rem; border-top: 1px solid #eee;">
+            ${event.detailUrl ? `<a href="${event.detailUrl}" target="_blank" class="btn" style="text-decoration: none;">Event-Seite</a>` : ''}
+            ${event.registrationUrl ? `<a href="${event.registrationUrl}" target="_blank" class="btn btn-secondary" style="text-decoration: none;">Anmeldung</a>` : ''}
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding-top: 0.5rem; border-top: 1px solid #eee; font-size: 0.75rem; color: #999;">
+            <div>
+              <span>Status: </span>
+              <span style="color: ${isApproved ? '#059669' : '#f59e0b'};">${isApproved ? 'Freigegeben' : 'Pending'}</span>
+            </div>
+            <div>Hinzugefuegt: ${createdAt}</div>
+          </div>
+        </div>
+      `;
+
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+    }
+
+    function closeEventModal() {
+      const modal = document.getElementById('event-detail-modal');
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
     }
 
     // === Radar Events Management ===
@@ -2521,7 +2607,7 @@
                     <span style="color: #999; font-size: 0.75rem;">${event.time || '18:00'}</span>
                   </td>
                   <td style="padding: 0.5rem;">
-                    <span style="${isAI ? 'color: #2C5530; font-weight: 500;' : ''}">${event.title}</span>
+                    <span style="${isAI ? 'color: #2C5530; font-weight: 500;' : ''} cursor: pointer; text-decoration: underline; text-decoration-color: #ddd;" onclick="showEventDetail('${event.id}')">${event.title}</span>
                     ${isApproved ? '<span style="margin-left: 8px; color: #059669; font-size: 0.75rem;">✓</span>' : ''}
                   </td>
                   <td style="padding: 0.5rem;">
