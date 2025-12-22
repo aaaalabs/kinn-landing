@@ -858,9 +858,67 @@
           </div>
         </div>
 
+        <!-- Event Radar Calendar Widget -->
+        <details open style="margin-bottom: 1.5rem; border: 1px solid #e5e7eb; border-radius: 12px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+          <summary style="padding: 1rem 1.25rem; cursor: pointer; font-weight: 500; color: #1F2937; user-select: none; display: flex; justify-content: space-between; align-items: center;">
+            <span>KI Event Radar Tirol</span>
+            <span style="display: flex; gap: 0; align-items: center;">
+              <button onclick="event.stopPropagation(); setRadarView('calendar')" id="radar-view-calendar" style="padding: 6px 14px; border: 1px solid #e5e7eb; border-radius: 12px 0 0 12px; background: #5ED9A6; color: white; font-size: 0.75rem; cursor: pointer; font-weight: 500;">Kalender</button>
+              <button onclick="event.stopPropagation(); setRadarView('list')" id="radar-view-list" style="padding: 6px 14px; border: 1px solid #e5e7eb; border-left: none; border-radius: 0 12px 12px 0; background: white; color: #1F2937; font-size: 0.75rem; cursor: pointer; font-weight: 500;">Liste</button>
+            </span>
+          </summary>
+          <div style="padding: 0 1.25rem 1.25rem;">
+
+            <!-- Calendar View -->
+            <div id="radar-calendar-view">
+              <!-- Calendar Grid -->
+              <div id="radar-calendar-container" style="position: relative;">
+                <!-- Grid with fixed weekday labels -->
+                <div style="display: flex;">
+                  <!-- Fixed Weekday Labels -->
+                  <div style="display: flex; flex-direction: column; gap: 3px; margin-right: 6px; font-size: 10px; color: #6B7280; font-weight: 500; padding-top: 20px;">
+                    <div style="height: 20px; display: flex; align-items: center;">M</div>
+                    <div style="height: 20px; display: flex; align-items: center;">D</div>
+                    <div style="height: 20px; display: flex; align-items: center;">M</div>
+                    <div style="height: 20px; display: flex; align-items: center;">D</div>
+                    <div style="height: 20px; display: flex; align-items: center;">F</div>
+                    <div style="height: 20px; display: flex; align-items: center;">S</div>
+                    <div style="height: 20px; display: flex; align-items: center;">S</div>
+                  </div>
+
+                  <!-- Scrollable Area (months + grid) -->
+                  <div id="radar-calendar-scroll" style="overflow-x: auto; overflow-y: hidden; flex: 1; scrollbar-width: thin;">
+                    <!-- Month Labels (inside scroll) -->
+                    <div id="radar-month-labels" style="display: flex; margin-bottom: 4px; font-size: 11px; color: #6B7280; font-weight: 500; height: 16px;"></div>
+                    <!-- Grid -->
+                    <div id="radar-calendar-grid" style="display: flex; gap: 3px;"></div>
+                  </div>
+                </div>
+
+                <!-- Scroll Indicator -->
+                <div style="text-align: center; margin-top: 8px; font-size: 10px; color: #9CA3AF;">← scroll →</div>
+
+                <!-- Detail Panel (hidden by default) -->
+                <div id="radar-day-detail" style="display: none; margin-top: 12px; padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;"></div>
+              </div>
+
+              <!-- Legend -->
+              <div id="radar-calendar-legend" style="display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #4B5563;"></div>
+            </div>
+
+            <!-- List View (hidden by default) -->
+            <div id="radar-list-view" style="display: none;">
+              <div id="radar-list-content" style="max-height: 400px; overflow-y: auto;">
+                <div style="padding: 20px; color: #9CA3AF; text-align: center;">Lade Events...</div>
+              </div>
+            </div>
+
+          </div>
+        </details>
+
         <!-- Filters Row -->
         <div style="margin-bottom: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 8px; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
-          <input type="text" id="radar-search" placeholder="🔍 Suche..."
+          <input type="text" id="radar-search" placeholder="Suche..."
                  style="flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px;"
                  oninput="filterRadarTable()">
 
@@ -1108,14 +1166,13 @@
         // Show dashboard immediately to prevent login screen flash
         document.getElementById('admin-dashboard').classList.remove('hidden');
         // Auto-login with stored credentials
-        loadEvents().then(success => {
-          if (success) {
+        loadSubscribers().then(() => {
             // Successfully authenticated, keep dashboard visible
             document.getElementById('login-error').classList.add('hidden');
             loadEventLinks(); // Load event short links
             loadTechLinks(); // Load tech short links
             loadRadarMetrics(); // Load radar pending badge
-          } else {
+          }).catch(() => {
             // If stored auth is invalid, show login screen
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('admin-dashboard').classList.add('hidden');
@@ -1123,8 +1180,7 @@
             adminPassword = null;
             document.getElementById('password-input').value = '';
             showLoginError();
-          }
-        });
+          });
       } else {
         // No saved auth, show login screen
         document.getElementById('login-screen').classList.remove('hidden');
@@ -1183,6 +1239,7 @@
       } else if (tabName === 'radar') {
         loadRadarEvents();
         loadRadarMetrics();
+        setRadarView(currentRadarView || 'calendar');
       } else if (tabName === 'spotlights') {
         loadSpotlightStatus();
       } else if (tabName === 'events') {
@@ -2815,6 +2872,367 @@
       const checkboxes = document.querySelectorAll('.radar-row-checkbox');
       const allChecked = checkboxes.length > 0 && Array.from(checkboxes).every(cb => cb.checked);
       checkboxes.forEach(cb => cb.checked = !allChecked);
+    }
+
+    // ==================== RADAR CALENDAR WIDGET ====================
+
+    let currentRadarView = 'calendar';
+    let radarCalendarData = null;
+    let radarListData = null;
+
+    function setRadarView(view) {
+      currentRadarView = view;
+
+      const calendarBtn = document.getElementById('radar-view-calendar');
+      const listBtn = document.getElementById('radar-view-list');
+      const calendarView = document.getElementById('radar-calendar-view');
+      const listView = document.getElementById('radar-list-view');
+
+      if (view === 'calendar') {
+        calendarBtn.style.background = '#5ED9A6';
+        calendarBtn.style.color = 'white';
+        listBtn.style.background = 'white';
+        listBtn.style.color = '#1F2937';
+        calendarView.style.display = 'block';
+        listView.style.display = 'none';
+        loadRadarCalendar(2026); // Default to 2026 where events exist
+      } else {
+        listBtn.style.background = '#5ED9A6';
+        listBtn.style.color = 'white';
+        calendarBtn.style.background = 'white';
+        calendarBtn.style.color = '#1F2937';
+        calendarView.style.display = 'none';
+        listView.style.display = 'block';
+        loadRadarListView();
+      }
+    }
+
+    async function loadRadarListView() {
+      const contentEl = document.getElementById('radar-list-content');
+      contentEl.innerHTML = '<div style="padding: 20px; color: #9CA3AF; text-align: center;">Lade Events...</div>';
+
+      try {
+        // Fetch events for current and next year to get all upcoming
+        const currentYear = new Date().getFullYear();
+        const [res1, res2] = await Promise.all([
+          fetch(`/api/radar/calendar?year=${currentYear}`),
+          fetch(`/api/radar/calendar?year=${currentYear + 1}`)
+        ]);
+
+        const data1 = await res1.json();
+        const data2 = await res2.json();
+
+        // Combine all events from both years
+        const allEvents = [];
+        const today = new Date().toISOString().split('T')[0];
+
+        [...(data1.days || []), ...(data2.days || [])].forEach(day => {
+          if (day.date >= today) {
+            day.events.forEach(event => {
+              allEvents.push({
+                ...event,
+                date: day.date
+              });
+            });
+          }
+        });
+
+        // Sort by date, then time
+        allEvents.sort((a, b) => {
+          if (a.date !== b.date) return a.date.localeCompare(b.date);
+          return (a.time || '00:00').localeCompare(b.time || '00:00');
+        });
+
+        renderRadarListView(allEvents);
+
+      } catch (error) {
+        console.error('Error loading radar list:', error);
+        contentEl.innerHTML = '<div style="padding: 20px; color: #ef4444; text-align: center;">Fehler beim Laden der Events</div>';
+      }
+    }
+
+    function renderRadarListView(events) {
+      const contentEl = document.getElementById('radar-list-content');
+
+      if (events.length === 0) {
+        contentEl.innerHTML = '<div style="padding: 40px; color: #9CA3AF; text-align: center;">Keine kommenden Events</div>';
+        return;
+      }
+
+      const dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+      const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+
+      let currentMonth = '';
+      let html = '';
+
+      events.forEach((event, idx) => {
+        const date = new Date(event.date);
+        const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+
+        // Month header
+        if (monthKey !== currentMonth) {
+          currentMonth = monthKey;
+          const monthLabel = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+          html += `<div style="font-size: 0.75rem; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; padding: 12px 0 6px; ${idx > 0 ? 'border-top: 1px solid #e5e7eb; margin-top: 8px;' : ''}">${monthLabel}</div>`;
+        }
+
+        const dayLabel = `${dayNames[date.getDay()]}, ${date.getDate()}.`;
+        const isToday = event.date === new Date().toISOString().split('T')[0];
+        const isTomorrow = event.date === new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+        html += `
+          <div style="display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; ${isToday ? 'background: #f0fdf4; margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 6px;' : ''}">
+            <div style="width: 50px; flex-shrink: 0; text-align: right;">
+              <div style="font-size: 0.8rem; font-weight: 500; color: ${isToday ? '#16a34a' : '#1F2937'};">${isToday ? 'Heute' : isTomorrow ? 'Morgen' : dayLabel}</div>
+              <div style="font-size: 0.7rem; color: #9CA3AF;">${event.time || ''}</div>
+            </div>
+            <div style="width: 10px; height: 10px; border-radius: 50%; background: ${event.sourceColor}; margin-top: 5px; flex-shrink: 0;"></div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-weight: 500; color: #1F2937; font-size: 0.9rem; line-height: 1.3;">${event.title}</div>
+              <div style="font-size: 0.8rem; color: #6B7280; margin-top: 2px;">
+                ${event.location}
+                <span style="color: #9CA3AF; margin-left: 6px;">${event.source}</span>
+              </div>
+            </div>
+            ${event.detailUrl ? `<a href="${event.detailUrl}" target="_blank" style="color: #5ED9A6; text-decoration: none; font-size: 1.1rem; flex-shrink: 0; padding: 4px;">→</a>` : ''}
+          </div>
+        `;
+      });
+
+      // Event count footer
+      html += `<div style="padding: 12px 0; text-align: center; font-size: 0.75rem; color: #9CA3AF;">${events.length} kommende Events</div>`;
+
+      contentEl.innerHTML = html;
+    }
+
+    async function loadRadarCalendar(year) {
+      const gridEl = document.getElementById('radar-calendar-grid');
+      const monthLabelsEl = document.getElementById('radar-month-labels');
+      const legendEl = document.getElementById('radar-calendar-legend');
+
+      gridEl.innerHTML = '<div style="padding: 20px; color: #9CA3AF;">Lade Kalender...</div>';
+      monthLabelsEl.innerHTML = '';
+      legendEl.innerHTML = '';
+
+      try {
+        const res = await fetch(`/api/radar/calendar?year=${year}`);
+        if (!res.ok) throw new Error('Failed to load calendar data');
+
+        radarCalendarData = await res.json();
+        renderRadarCalendar(radarCalendarData);
+
+      } catch (error) {
+        console.error('Error loading radar calendar:', error);
+        gridEl.innerHTML = '<div style="padding: 20px; color: #ef4444;">Fehler beim Laden des Kalenders</div>';
+      }
+    }
+
+    function renderRadarCalendar(data) {
+      const gridEl = document.getElementById('radar-calendar-grid');
+      const monthLabelsEl = document.getElementById('radar-month-labels');
+      const legendEl = document.getElementById('radar-calendar-legend');
+      const detailEl = document.getElementById('radar-day-detail');
+
+      // Create day lookup for quick access
+      const dayLookup = {};
+      data.days.forEach(day => {
+        dayLookup[day.date] = day.events;
+      });
+
+      // Render month labels (one per week column, synchronized with grid)
+      const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+      let lastMonth = -1;
+      let monthHtml = '';
+
+      data.weeks.forEach((week, idx) => {
+        const firstDay = new Date(week.days[0].date);
+        const weekMonth = firstDay.getMonth();
+        const isFirstWeekOfMonth = firstDay.getDate() <= 7;
+        const showLabel = weekMonth !== lastMonth || isFirstWeekOfMonth;
+
+        // Each week gets a fixed-width label slot (23px = 20px cell + 3px gap)
+        if (showLabel && week.days.some(d => d.isInYear)) {
+          monthHtml += `<span style="display: inline-block; width: 23px; font-size: 10px;">${monthNames[weekMonth]}</span>`;
+          lastMonth = weekMonth;
+        } else {
+          monthHtml += `<span style="display: inline-block; width: 23px;"></span>`;
+        }
+      });
+      monthLabelsEl.innerHTML = monthHtml;
+
+      // Render grid (weeks as columns, days as rows)
+      let gridHtml = '';
+
+      data.weeks.forEach((week, weekIdx) => {
+        let weekHtml = `<div class="radar-week" style="display: flex; flex-direction: column; gap: 3px;">`;
+
+        week.days.forEach((day, dayIdx) => {
+          const events = dayLookup[day.date] || [];
+          const hasEvents = events.length > 0;
+
+          let cellStyle = `
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            cursor: ${hasEvents ? 'pointer' : 'default'};
+          `;
+
+          let bgColor = '#E5E7EB'; // Empty cell color
+
+          if (!day.isInYear) {
+            bgColor = '#F3F4F6'; // Dimmed for days outside year
+          } else if (hasEvents) {
+            if (events.length === 1) {
+              bgColor = events[0].sourceColor || '#5ED9A6';
+            } else {
+              // Multi-event: use gradient
+              const colors = [...new Set(events.map(e => e.sourceColor))];
+              if (colors.length === 1) {
+                bgColor = colors[0];
+              } else {
+                bgColor = `linear-gradient(90deg, ${colors.slice(0, 2).join(', ')})`;
+                cellStyle += `background: ${bgColor};`;
+                bgColor = ''; // Clear so we use the gradient
+              }
+            }
+          }
+
+          if (bgColor) {
+            cellStyle += `background: ${bgColor};`;
+          }
+
+          // Tooltip data
+          const tooltipData = hasEvents ? JSON.stringify({
+            date: day.date,
+            events: events.map(e => ({ title: e.title, source: e.source, sourceColor: e.sourceColor }))
+          }).replace(/"/g, '&quot;') : '';
+
+          weekHtml += `<div
+            class="radar-cell ${hasEvents ? 'has-events' : ''}"
+            style="${cellStyle}"
+            data-date="${day.date}"
+            data-tooltip="${tooltipData}"
+            ${hasEvents ? `onclick="showRadarDayDetail('${day.date}')"` : ''}
+            onmouseenter="showRadarTooltip(event, this)"
+            onmouseleave="hideRadarTooltip()"
+          ></div>`;
+        });
+
+        weekHtml += '</div>';
+        gridHtml += weekHtml;
+      });
+
+      gridEl.innerHTML = gridHtml;
+
+      // Render legend
+      let legendHtml = '';
+      Object.entries(data.bySource).forEach(([source, count]) => {
+        if (count > 0) {
+          const color = data.sourceColors[source] || '#9CA3AF';
+          legendHtml += `
+            <span style="display: flex; align-items: center; gap: 4px;">
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: ${color};"></span>
+              ${source} (${count})
+            </span>
+          `;
+        }
+      });
+      legendEl.innerHTML = legendHtml || `<span style="color: #9CA3AF;">Keine Events im Jahr ${data.year}</span>`;
+
+      // Hide detail panel initially
+      detailEl.style.display = 'none';
+    }
+
+    // Tooltip handling
+    let radarTooltip = null;
+
+    function showRadarTooltip(event, cell) {
+      const tooltipData = cell.getAttribute('data-tooltip');
+      if (!tooltipData) return;
+
+      const data = JSON.parse(tooltipData.replace(/&quot;/g, '"'));
+      const date = new Date(data.date);
+      const dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+      const formattedDate = `${dayNames[date.getDay()]}, ${date.getDate()}. ${['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'][date.getMonth()]}`;
+
+      // Create tooltip
+      if (!radarTooltip) {
+        radarTooltip = document.createElement('div');
+        radarTooltip.style.cssText = `
+          position: fixed;
+          background: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          padding: 8px 12px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          font-size: 12px;
+          z-index: 1000;
+          pointer-events: none;
+          max-width: 200px;
+        `;
+        document.body.appendChild(radarTooltip);
+      }
+
+      // Build tooltip content
+      const dots = data.events.map(e => `<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${e.sourceColor};"></span>`).join(' ');
+
+      radarTooltip.innerHTML = `
+        <div style="font-weight: 500; margin-bottom: 4px;">${formattedDate}</div>
+        <div style="display: flex; gap: 4px; margin-bottom: 2px;">${dots}</div>
+        <div style="color: #6B7280;">${data.events.length} Event${data.events.length > 1 ? 's' : ''}</div>
+      `;
+
+      // Position tooltip
+      const rect = cell.getBoundingClientRect();
+      radarTooltip.style.left = `${rect.left + rect.width / 2 - 60}px`;
+      radarTooltip.style.top = `${rect.top - 70}px`;
+      radarTooltip.style.display = 'block';
+    }
+
+    function hideRadarTooltip() {
+      if (radarTooltip) {
+        radarTooltip.style.display = 'none';
+      }
+    }
+
+    function showRadarDayDetail(dateStr) {
+      if (!radarCalendarData) return;
+
+      const dayData = radarCalendarData.days.find(d => d.date === dateStr);
+      if (!dayData) return;
+
+      const detailEl = document.getElementById('radar-day-detail');
+      const date = new Date(dateStr);
+      const dayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+      const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+      const formattedDate = `${dayNames[date.getDay()]}, ${date.getDate()}. ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+
+      let eventsHtml = dayData.events.map(event => `
+        <div style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: ${event.sourceColor}; margin-top: 5px; flex-shrink: 0;"></span>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 500; color: #1F2937;">${event.title}</div>
+            <div style="font-size: 0.875rem; color: #6B7280;">
+              ${event.time} · ${event.location}
+              <span style="color: #9CA3AF; margin-left: 8px;">${event.source}</span>
+            </div>
+          </div>
+          ${event.detailUrl ? `<a href="${event.detailUrl}" target="_blank" style="color: #5ED9A6; text-decoration: none; font-size: 1.25rem;">→</a>` : ''}
+        </div>
+      `).join('');
+
+      detailEl.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h4 style="margin: 0; font-size: 0.875rem; font-weight: 600; color: #1F2937;">${formattedDate}</h4>
+          <button onclick="document.getElementById('radar-day-detail').style.display='none'" style="background: none; border: none; cursor: pointer; color: #9CA3AF; font-size: 1.25rem;">&times;</button>
+        </div>
+        ${eventsHtml}
+      `;
+
+      detailEl.style.display = 'block';
+
+      // Scroll detail into view
+      detailEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   </script>
 

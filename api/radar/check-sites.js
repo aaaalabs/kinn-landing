@@ -254,7 +254,8 @@ For each qualifying FREE event in TYROL, extract:
   "city": "City in Tyrol",
   "category": "AI" | "Tech" | "Startup" | "Innovation" | "Business" | "Education" | "Other",
   "description": "Brief description (max 200 chars)",
-  "registrationUrl": "URL if found"
+  "registrationUrl": "URL for registration if found",
+  "detailUrl": "URL to event detail page (IMPORTANT - always extract if available!)"
 }
 
 Categories:
@@ -341,7 +342,8 @@ async function storeEvent(event, source) {
     id: eventId,
     ...event,
     source: source,
-    location: event.location || event.city || 'unknown', // Store location in data
+    location: event.location || event.city || 'unknown',
+    detailUrl: event.detailUrl || event.registrationUrl || null,
     createdAt: new Date().toISOString(),
     status: 'pending'
   };

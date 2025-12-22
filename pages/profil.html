@@ -1808,8 +1808,8 @@
           </div>
         </div>
 
-        <!-- Radar Events Widget - Only shows when 2+ approved events exist -->
-        <div id="radar-events-widget" class="card" style="display: none;">
+        <!-- OLD Radar Events Widget - DISABLED, replaced by new calendar widget -->
+        <!-- <div id="radar-events-widget" class="card" style="display: none;">
           <h2 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.75rem;">
             🚀 AI & Tech Events in Tirol
             <span style="font-size: 0.75rem; color: #5ED9A6; font-weight: 400; margin-left: 0.5rem;">Radar</span>
@@ -1820,6 +1820,50 @@
           <div id="radar-events-container" style="max-height: 420px; overflow-y: auto;">
             <div style="text-align: center; padding: 20px; color: #999;">
               <p style="font-size: 0.875rem;">Lade Events...</p>
+            </div>
+          </div>
+        </div> -->
+
+        <!-- NEW: KI Event Radar Calendar Widget (admin only for now) -->
+        <div id="radar-calendar-widget" class="card" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin: 0;">
+              KI Event Radar Tirol
+            </h2>
+            <span style="display: flex; gap: 0; align-items: center;">
+              <button onclick="setUserRadarView('calendar')" id="user-radar-view-calendar" style="padding: 5px 12px; border: 1px solid #e5e7eb; border-radius: 10px 0 0 10px; background: #5ED9A6; color: white; font-size: 0.7rem; cursor: pointer; font-weight: 500;">Kalender</button>
+              <button onclick="setUserRadarView('list')" id="user-radar-view-list" style="padding: 5px 12px; border: 1px solid #e5e7eb; border-left: none; border-radius: 0 10px 10px 0; background: white; color: #1F2937; font-size: 0.7rem; cursor: pointer; font-weight: 500;">Liste</button>
+            </span>
+          </div>
+
+          <!-- Calendar View -->
+          <div id="user-radar-calendar-view">
+            <div id="user-radar-calendar-container" style="position: relative;">
+              <div style="display: flex;">
+                <div style="display: flex; flex-direction: column; gap: 3px; margin-right: 6px; font-size: 9px; color: #6B7280; font-weight: 500; padding-top: 18px;">
+                  <div style="height: 18px; display: flex; align-items: center;">M</div>
+                  <div style="height: 18px; display: flex; align-items: center;">D</div>
+                  <div style="height: 18px; display: flex; align-items: center;">M</div>
+                  <div style="height: 18px; display: flex; align-items: center;">D</div>
+                  <div style="height: 18px; display: flex; align-items: center;">F</div>
+                  <div style="height: 18px; display: flex; align-items: center;">S</div>
+                  <div style="height: 18px; display: flex; align-items: center;">S</div>
+                </div>
+                <div id="user-radar-calendar-scroll" style="overflow-x: auto; overflow-y: hidden; flex: 1; scrollbar-width: thin;">
+                  <div id="user-radar-month-labels" style="display: flex; margin-bottom: 3px; font-size: 9px; color: #6B7280; font-weight: 500; height: 14px;"></div>
+                  <div id="user-radar-calendar-grid" style="display: flex; gap: 3px;"></div>
+                </div>
+              </div>
+              <div style="text-align: center; margin-top: 6px; font-size: 9px; color: #9CA3AF;">← scroll →</div>
+              <div id="user-radar-day-detail" style="display: none; margin-top: 10px; padding: 10px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; font-size: 0.875rem;"></div>
+            </div>
+            <div id="user-radar-calendar-legend" style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb; font-size: 10px; color: #4B5563;"></div>
+          </div>
+
+          <!-- List View (hidden by default) -->
+          <div id="user-radar-list-view" style="display: none;">
+            <div id="user-radar-list-content" style="max-height: 350px; overflow-y: auto;">
+              <div style="padding: 20px; color: #9CA3AF; text-align: center;">Lade Events...</div>
             </div>
           </div>
         </div>
@@ -2930,118 +2974,291 @@
       }
     }
 
-    // Load Radar Events Widget (AI & Tech events from external sources)
-    let radarPage = 1;
-    let radarLoading = false;
-    let radarHasMore = true;
+    // ==================== NEW RADAR CALENDAR WIDGET ====================
+    // Only visible for admin@libralab.ai for now
+
+    let userRadarCalendarData = null;
+    let userRadarView = 'calendar';
 
     async function loadRadarEventsWidget() {
-      console.log('[FRONTEND DEBUG] loadRadarEventsWidget called');
-      const widgetEl = document.getElementById('radar-events-widget');
-      const container = document.getElementById('radar-events-container');
+      // Check if user is admin - only show widget for admin@libralab.ai
+      const isAdmin = userEmail === 'admin@libralab.ai';
+      const widgetEl = document.getElementById('radar-calendar-widget');
 
-      if (!widgetEl || !container) {
-        console.log('[FRONTEND DEBUG] Widget elements not found, skipping');
-        return; // Not on dashboard tab
+      if (!widgetEl) return;
+
+      if (!isAdmin) {
+        widgetEl.style.display = 'none';
+        return;
       }
 
+      // Show widget for admin
+      widgetEl.style.display = 'block';
+      setUserRadarView('calendar');
+    }
+
+    function setUserRadarView(view) {
+      userRadarView = view;
+
+      const calendarBtn = document.getElementById('user-radar-view-calendar');
+      const listBtn = document.getElementById('user-radar-view-list');
+      const calendarView = document.getElementById('user-radar-calendar-view');
+      const listView = document.getElementById('user-radar-list-view');
+
+      if (!calendarBtn || !listBtn) return;
+
+      if (view === 'calendar') {
+        calendarBtn.style.background = '#5ED9A6';
+        calendarBtn.style.color = 'white';
+        listBtn.style.background = 'white';
+        listBtn.style.color = '#1F2937';
+        calendarView.style.display = 'block';
+        listView.style.display = 'none';
+        loadUserRadarCalendar(2026);
+      } else {
+        listBtn.style.background = '#5ED9A6';
+        listBtn.style.color = 'white';
+        calendarBtn.style.background = 'white';
+        calendarBtn.style.color = '#1F2937';
+        calendarView.style.display = 'none';
+        listView.style.display = 'block';
+        loadUserRadarListView();
+      }
+    }
+
+    async function loadUserRadarCalendar(year) {
+      const gridEl = document.getElementById('user-radar-calendar-grid');
+      const monthLabelsEl = document.getElementById('user-radar-month-labels');
+      const legendEl = document.getElementById('user-radar-calendar-legend');
+
+      if (!gridEl) return;
+
+      gridEl.innerHTML = '<div style="padding: 15px; color: #9CA3AF; font-size: 0.8rem;">Lade...</div>';
+
       try {
-        console.log('[FRONTEND DEBUG] Fetching /api/events/widget?page=1');
-        const response = await fetch(`/api/events/widget?page=1`);
-        console.log('[FRONTEND DEBUG] Response status:', response.status);
+        const res = await fetch(`/api/radar/calendar?year=${year}`);
+        if (!res.ok) throw new Error('Failed to load');
 
-        if (!response.ok) {
-          throw new Error('Failed to load radar events');
-        }
+        userRadarCalendarData = await res.json();
+        renderUserRadarCalendar(userRadarCalendarData);
+      } catch (error) {
+        console.error('Error loading radar calendar:', error);
+        gridEl.innerHTML = '<div style="padding: 15px; color: #ef4444; font-size: 0.8rem;">Fehler</div>';
+      }
+    }
 
-        const data = await response.json();
-        console.log('[FRONTEND DEBUG] Widget API response:', {
-          showWidget: data.showWidget,
-          eventsCount: data.events?.length || 0,
-          hasMore: data.hasMore,
-          total: data.total,
-          debug: data.debug,
-          firstEvent: data.events?.[0] || null
-        });
+    function renderUserRadarCalendar(data) {
+      const gridEl = document.getElementById('user-radar-calendar-grid');
+      const monthLabelsEl = document.getElementById('user-radar-month-labels');
+      const legendEl = document.getElementById('user-radar-calendar-legend');
+      const detailEl = document.getElementById('user-radar-day-detail');
 
-        // Check if widget should be shown (2+ approved events exist)
-        if (!data.showWidget || data.events.length === 0) {
-          console.log('[FRONTEND DEBUG] Hiding widget - showWidget:', data.showWidget, 'events:', data.events?.length || 0);
-          widgetEl.style.display = 'none';
+      if (!gridEl || !monthLabelsEl) return;
+
+      const dayLookup = {};
+      data.days.forEach(day => { dayLookup[day.date] = day.events; });
+
+      // Month labels - show once per month, track weeks per month for proper spacing
+      const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+      let lastShownMonth = -1;
+      let monthHtml = '';
+
+      data.weeks.forEach((week, idx) => {
+        // Find the first day in this week that's actually in our target year
+        const inYearDays = week.days.filter(d => d.isInYear);
+        if (inYearDays.length === 0) {
+          monthHtml += `<span style="display: inline-block; width: 21px;"></span>`;
           return;
         }
 
-        // Show the widget
-        console.log('[FRONTEND DEBUG] Showing widget with', data.events.length, 'events');
-        widgetEl.style.display = 'block';
+        const firstInYearDay = new Date(inYearDays[0].date);
+        const weekMonth = firstInYearDay.getMonth();
 
-        // Reset state
-        radarPage = 1;
-        radarHasMore = data.hasMore || false;
-        container.innerHTML = '';
+        // Only show label when month changes
+        if (weekMonth !== lastShownMonth) {
+          monthHtml += `<span style="display: inline-block; width: 21px; font-size: 9px; white-space: nowrap;">${monthNames[weekMonth]}</span>`;
+          lastShownMonth = weekMonth;
+        } else {
+          monthHtml += `<span style="display: inline-block; width: 21px;"></span>`;
+        }
+      });
+      monthLabelsEl.innerHTML = monthHtml;
 
-        // Display initial events
-        displayRadarEvents(data.events, container, false);
+      // Grid - store events data directly on elements for click handling
+      let gridHtml = '';
+      data.weeks.forEach(week => {
+        let weekHtml = '<div style="display: flex; flex-direction: column; gap: 3px;">';
+        week.days.forEach(day => {
+          const events = dayLookup[day.date] || [];
+          const hasEvents = events.length > 0;
+          let bg = day.isInYear ? '#E5E7EB' : '#F3F4F6';
+          if (hasEvents) bg = events[0].sourceColor || '#5ED9A6';
 
-        // Set up infinite scroll
-        container.addEventListener('scroll', handleRadarScroll, { passive: true });
-      } catch (error) {
-        console.error('[RADAR] Error loading widget:', error);
-        widgetEl.style.display = 'none';
-      }
+          const tooltipData = hasEvents ? JSON.stringify({ date: day.date, events: events.map(e => ({ title: e.title, source: e.source, sourceColor: e.sourceColor, time: e.time, location: e.location, detailUrl: e.detailUrl })) }).replace(/"/g, '&quot;') : '';
+
+          weekHtml += `<div style="width: 18px; height: 18px; border-radius: 3px; background: ${bg}; cursor: ${hasEvents ? 'pointer' : 'default'};" data-date="${day.date}" data-events="${tooltipData}" ${hasEvents ? `onclick="showUserRadarDayDetail(this)"` : ''} onmouseenter="showUserRadarTooltip(event, this)" onmouseleave="hideUserRadarTooltip()"></div>`;
+        });
+        weekHtml += '</div>';
+        gridHtml += weekHtml;
+      });
+      gridEl.innerHTML = gridHtml;
+
+      // Legend
+      let legendHtml = '';
+      Object.entries(data.bySource).forEach(([source, count]) => {
+        if (count > 0) {
+          const color = data.sourceColors[source] || '#9CA3AF';
+          legendHtml += `<span style="display: flex; align-items: center; gap: 3px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: ${color};"></span>${source} (${count})</span>`;
+        }
+      });
+      legendEl.innerHTML = legendHtml || `<span style="color: #9CA3AF;">Keine Events</span>`;
+      if (detailEl) detailEl.style.display = 'none';
     }
 
-    function handleRadarScroll(e) {
-      const container = e.target;
-      const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    async function loadUserRadarListView() {
+      const contentEl = document.getElementById('user-radar-list-content');
+      if (!contentEl) return;
 
-      // Load more when within 50px of bottom
-      if (scrollBottom < 50 && !radarLoading && radarHasMore) {
-        loadMoreRadarEvents();
-      }
-    }
-
-    async function loadMoreRadarEvents() {
-      if (radarLoading || !radarHasMore) return;
-
-      radarLoading = true;
-      radarPage++;
-
-      const container = document.getElementById('radar-events-container');
-      if (!container) return;
-
-      // Show loading indicator
-      const loadingEl = document.createElement('div');
-      loadingEl.className = 'radar-loading';
-      loadingEl.style.cssText = 'text-align: center; padding: 1rem; color: #6B6B6B; font-size: 0.875rem;';
-      loadingEl.textContent = 'Lade weitere Events...';
-      container.appendChild(loadingEl);
+      contentEl.innerHTML = '<div style="padding: 15px; color: #9CA3AF; text-align: center; font-size: 0.8rem;">Lade...</div>';
 
       try {
-        const response = await fetch(`/api/events/widget?page=${radarPage}`);
-        if (!response.ok) throw new Error('Failed to load more events');
+        const [res1, res2] = await Promise.all([
+          fetch('/api/radar/calendar?year=' + new Date().getFullYear()),
+          fetch('/api/radar/calendar?year=' + (new Date().getFullYear() + 1))
+        ]);
+        const data1 = await res1.json();
+        const data2 = await res2.json();
 
-        const data = await response.json();
+        const allEvents = [];
+        const today = new Date().toISOString().split('T')[0];
 
-        // Remove loading indicator
-        loadingEl.remove();
+        [...(data1.days || []), ...(data2.days || [])].forEach(day => {
+          if (day.date >= today) {
+            day.events.forEach(event => allEvents.push({ ...event, date: day.date }));
+          }
+        });
 
-        if (data.events && data.events.length > 0) {
-          displayRadarEvents(data.events, container, true);
-          radarHasMore = data.hasMore || false;
-        } else {
-          radarHasMore = false;
-        }
+        allEvents.sort((a, b) => a.date !== b.date ? a.date.localeCompare(b.date) : (a.time || '').localeCompare(b.time || ''));
+        renderUserRadarListView(allEvents);
       } catch (error) {
-        console.error('[RADAR] Error loading more events:', error);
-        loadingEl.textContent = 'Fehler beim Laden';
-        radarHasMore = false;
-      } finally {
-        radarLoading = false;
+        contentEl.innerHTML = '<div style="padding: 15px; color: #ef4444; text-align: center; font-size: 0.8rem;">Fehler</div>';
       }
     }
 
+    function renderUserRadarListView(events) {
+      const contentEl = document.getElementById('user-radar-list-content');
+      if (events.length === 0) {
+        contentEl.innerHTML = '<div style="padding: 30px; color: #9CA3AF; text-align: center; font-size: 0.8rem;">Keine kommenden Events</div>';
+        return;
+      }
+
+      const dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+      const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+      let currentMonth = '';
+      let html = '';
+
+      events.forEach((event, idx) => {
+        const date = new Date(event.date);
+        const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+
+        if (monthKey !== currentMonth) {
+          currentMonth = monthKey;
+          html += `<div style="font-size: 0.7rem; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 0 5px; ${idx > 0 ? 'border-top: 1px solid #e5e7eb; margin-top: 6px;' : ''}">${monthNames[date.getMonth()]} ${date.getFullYear()}</div>`;
+        }
+
+        const dayLabel = `${dayNames[date.getDay()]}, ${date.getDate()}.`;
+        const isToday = event.date === new Date().toISOString().split('T')[0];
+
+        html += `<div style="display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f3f4f6; ${isToday ? 'background: #f0fdf4; margin: 0 -6px; padding-left: 6px; padding-right: 6px; border-radius: 4px;' : ''}">
+          <div style="width: 45px; flex-shrink: 0; text-align: right;">
+            <div style="font-size: 0.75rem; font-weight: 500; color: ${isToday ? '#16a34a' : '#1F2937'};">${isToday ? 'Heute' : dayLabel}</div>
+            <div style="font-size: 0.65rem; color: #9CA3AF;">${event.time || ''}</div>
+          </div>
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: ${event.sourceColor}; margin-top: 4px; flex-shrink: 0;"></div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 500; color: #1F2937; font-size: 0.8rem; line-height: 1.3;">${event.title}</div>
+            <div style="font-size: 0.7rem; color: #6B7280; margin-top: 1px;">${event.location} <span style="color: #9CA3AF;">${event.source}</span></div>
+          </div>
+          ${event.detailUrl ? `<a href="${event.detailUrl}" target="_blank" style="color: #5ED9A6; text-decoration: none; font-size: 1rem; flex-shrink: 0;">→</a>` : ''}
+        </div>`;
+      });
+
+      html += `<div style="padding: 10px 0; text-align: center; font-size: 0.7rem; color: #9CA3AF;">${events.length} kommende Events</div>`;
+      contentEl.innerHTML = html;
+    }
+
+    // Tooltip
+    let userRadarTooltip = null;
+
+    function showUserRadarTooltip(event, cell) {
+      const tooltipData = cell.getAttribute('data-tooltip');
+      if (!tooltipData) return;
+
+      const data = JSON.parse(tooltipData.replace(/&quot;/g, '"'));
+      const date = new Date(data.date);
+      const dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+      const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+
+      if (!userRadarTooltip) {
+        userRadarTooltip = document.createElement('div');
+        userRadarTooltip.style.cssText = 'position: fixed; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 6px 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 11px; z-index: 1000; pointer-events: none; max-width: 180px;';
+        document.body.appendChild(userRadarTooltip);
+      }
+
+      const dots = data.events.map(e => `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${e.sourceColor};"></span>`).join(' ');
+      userRadarTooltip.innerHTML = `<div style="font-weight: 500; margin-bottom: 3px;">${dayNames[date.getDay()]}, ${date.getDate()}. ${monthNames[date.getMonth()]}</div><div style="display: flex; gap: 3px; margin-bottom: 2px;">${dots}</div><div style="color: #6B7280;">${data.events.length} Event${data.events.length > 1 ? 's' : ''}</div>`;
+
+      const rect = cell.getBoundingClientRect();
+      userRadarTooltip.style.left = `${rect.left + rect.width / 2 - 50}px`;
+      userRadarTooltip.style.top = `${rect.top - 60}px`;
+      userRadarTooltip.style.display = 'block';
+    }
+
+    function hideUserRadarTooltip() {
+      if (userRadarTooltip) userRadarTooltip.style.display = 'none';
+    }
+
+    function showUserRadarDayDetail(element) {
+      const eventsData = element.getAttribute('data-events');
+      if (!eventsData) return;
+
+      let data;
+      try {
+        data = JSON.parse(eventsData.replace(/&quot;/g, '"'));
+      } catch(e) {
+        console.error('Failed to parse events data:', e);
+        return;
+      }
+
+      const detailEl = document.getElementById('user-radar-day-detail');
+      const date = new Date(data.date);
+      const dayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+      const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+
+      let eventsHtml = data.events.map(e => `<div style="display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid #e5e7eb;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: ${e.sourceColor}; margin-top: 4px; flex-shrink: 0;"></span>
+        <div style="flex: 1;"><div style="font-weight: 500; color: #1F2937; font-size: 0.8rem;">${e.title}</div><div style="font-size: 0.75rem; color: #6B7280;">${e.time} · ${e.location} <span style="color: #9CA3AF;">${e.source}</span></div></div>
+        ${e.detailUrl ? `<a href="${e.detailUrl}" target="_blank" style="color: #5ED9A6; text-decoration: none;">→</a>` : ''}
+      </div>`).join('');
+
+      detailEl.innerHTML = `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;"><h4 style="margin: 0; font-size: 0.8rem; font-weight: 600;">${dayNames[date.getDay()]}, ${date.getDate()}. ${monthNames[date.getMonth()]}</h4><button onclick="document.getElementById('user-radar-day-detail').style.display='none'" style="background: none; border: none; cursor: pointer; color: #9CA3AF; font-size: 1rem;">&times;</button></div>${eventsHtml}`;
+      detailEl.style.display = 'block';
+    }
+
+    // OLD RADAR WIDGET CODE - DISABLED
     function displayRadarEvents(events, container, append = false) {
+      // Disabled - old widget removed
+      return;
+    }
+    function handleRadarScroll() { return; }
+    function loadMoreRadarEvents() { return; }
+
+    // PLACEHOLDER for old code compatibility
+    let radarPage = 1;
+    let radarLoading = false;
+    let radarHasMore = false;
+
+    function displayRadarEventsOLD(events, container, append = false) {
       const fragment = document.createDocumentFragment();
 
       events.forEach(event => {

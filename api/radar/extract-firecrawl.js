@@ -92,6 +92,81 @@ async function getExtractionPatterns(sourceName) {
 /**
  * Extract events using Groq AI
  */
+/**
+ * Checks if location needs enrichment (TBD, unspecified, etc.)
+ */
+function needsLocationEnrichment(location) {
+  if (!location) return true;
+  const tbdPatterns = ['tbd', 'tba', 'unspecified', 'unknown', 'n/a', 'wird bekannt gegeben', 'folgt', 'siehe website'];
+  return tbdPatterns.some(p => location.toLowerCase().includes(p));
+}
+
+/**
+ * Enriches event with details from its detail page
+ * @param {Object} event - Event with detailUrl
+ * @returns {Object} - Enriched event
+ */
+async function enrichEventFromDetailPage(event) {
+  if (!event.detailUrl || !needsLocationEnrichment(event.location)) {
+    return event;
+  }
+
+  logger.debug(`[ENRICH] Fetching detail page for "${event.title}": ${event.detailUrl}`);
+
+  try {
+    const scrapeResult = await scrapeWithFirecrawl(event.detailUrl, 2000); // Shorter wait for detail pages
+    if (!scrapeResult.success || !scrapeResult.markdown) {
+      return event;
+    }
+
+    // Use Groq to extract missing info from detail page
+    const response = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [{
+        role: "system",
+        content: "You extract event details from webpage content. Return only the requested JSON."
+      }, {
+        role: "user",
+        content: `Extract location and time details from this event page for: "${event.title}" on ${event.date}
+
+CONTENT:
+${scrapeResult.markdown.slice(0, 6000)}
+
+Return JSON with only the fields you can find:
+{
+  "location": "Full venue name and address if found",
+  "city": "City name if found",
+  "time": "HH:MM format if found and different from ${event.time || 'unknown'}"
+}
+
+Only include fields with actual values found. Use null for fields not found.`
+      }],
+      temperature: 0.1,
+      max_tokens: 500,
+      response_format: { type: "json_object" }
+    });
+
+    const extracted = JSON.parse(response.choices[0]?.message?.content || '{}');
+
+    // Merge extracted data (only non-null values that improve on TBD)
+    if (extracted.location && !needsLocationEnrichment(extracted.location)) {
+      logger.debug(`[ENRICH] Found location for "${event.title}": ${extracted.location}`);
+      event.location = extracted.location;
+    }
+    if (extracted.city && !event.city) {
+      event.city = extracted.city;
+    }
+    if (extracted.time && extracted.time !== event.time) {
+      event.time = extracted.time;
+    }
+
+    return event;
+  } catch (error) {
+    logger.warn(`[ENRICH] Failed to enrich "${event.title}": ${error.message}`);
+    return event; // Return original on error
+  }
+}
+
 async function extractEventsWithAI(content, sourceName, patterns) {
   const prompt = `
 You are extracting FREE events from ${sourceName}.
@@ -245,6 +320,15 @@ export default async function handler(req, res) {
     // Extract events using AI
     const events = await extractEventsWithAI(content, sourceName, patterns);
     logger.debug(`[EXTRACT-FIRECRAWL] Found ${events.length} events from ${sourceName}`);
+
+    // Enrich events with TBD locations by fetching detail pages
+    const eventsNeedingEnrichment = events.filter(e => needsLocationEnrichment(e.location) && e.detailUrl);
+    if (eventsNeedingEnrichment.length > 0) {
+      logger.debug(`[EXTRACT-FIRECRAWL] Enriching ${eventsNeedingEnrichment.length} events with TBD locations`);
+      for (const event of eventsNeedingEnrichment) {
+        await enrichEventFromDetailPage(event);
+      }
+    }
 
     // In test mode, return detailed info
     if (testMode) {
