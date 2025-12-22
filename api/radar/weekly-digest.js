@@ -46,12 +46,19 @@ export default async function handler(req, res) {
 
     // Send email
     const senderEmail = process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>';
-    const emailResult = await resend.emails.send({
-      from: senderEmail,
-      to: ADMIN_EMAIL,
-      subject: `KINN Radar Weekly: ${metrics.eventsFound} Events gefunden`,
-      html: emailHtml,
-    });
+    let emailResult = { id: null, error: null };
+    try {
+      emailResult = await resend.emails.send({
+        from: senderEmail,
+        to: ADMIN_EMAIL,
+        subject: `KINN Radar Weekly: ${metrics.eventsFound} Events gefunden`,
+        html: emailHtml,
+      });
+      console.log('[WEEKLY-DIGEST] Email result:', JSON.stringify(emailResult));
+    } catch (emailError) {
+      console.error('[WEEKLY-DIGEST] Email send error:', emailError);
+      emailResult = { id: null, error: emailError.message };
+    }
 
     // Check for source failures and notify via Pushbullet
     const failingSources = sourceHealth.filter(s => s.status === 'failing');
@@ -62,6 +69,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       emailSent: emailResult.id ? true : false,
+      emailError: emailResult.error || null,
       metrics: {
         eventsFound: metrics.eventsFound,
         eventsAdded: metrics.eventsAdded,
