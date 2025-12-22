@@ -2,6 +2,35 @@
 // Each source needs custom logic!
 
 export const SOURCE_CONFIGS = {
+  // ================== KINN OWNED ==================
+
+  'KINN': {
+    url: 'https://lu.ma/kinns?k=c',
+    active: true,
+    extraction: {
+      method: 'luma',
+      instructions: `
+        KINN - KI Netzwerk Tirol official Luma calendar.
+        This is our own event source - all events should be included.
+
+        Luma page structure:
+        - Events listed with title, date, time, location
+        - All KINN events are FREE community events
+        - Categories: TechTalk, Networking, Workshop, Stammtisch
+
+        IMPORTANT: These are KINN's own events - always include them!
+        Set category based on event title:
+        - "TechTalk" in title → category: "AI"
+        - "KINN#" numbered events → category: "Networking"
+        - Default → category: "AI" (KINN focus)
+      `,
+      requiresJS: true,
+      extractNotes: 'KINN official Luma calendar. All events are free and should be auto-approved.',
+      autoApprove: true,
+      maxChars: 30000
+    }
+  },
+
   // ================== HIGH PRIORITY ==================
 
   'InnCubator': {
