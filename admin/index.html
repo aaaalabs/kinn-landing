@@ -168,6 +168,17 @@
       color: #000;
     }
 
+    .tab .badge {
+      background: #ef4444;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 10px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
     /* Tab Content */
     .tab-content {
       display: none;
@@ -529,7 +540,7 @@
       <div class="tabs">
         <button class="tab" onclick="switchTab('dashboard')">Dashboard</button>
         <button class="tab active" onclick="switchTab('events')">Event Links</button>
-        <button class="tab" onclick="switchTab('radar')">Radar Events</button>
+        <button class="tab" onclick="switchTab('radar')">Radar Events <span id="radar-pending-badge" class="badge" style="display:none;"></span></button>
         <button class="tab" onclick="switchTab('subscribers')">Teilnehmer</button>
         <button class="tab" onclick="switchTab('newsletter')">Newsletter</button>
         <button class="tab" onclick="switchTab('tokenlinks')">Token Links</button>
@@ -825,7 +836,27 @@
 
       <!-- Radar Events Tab -->
       <div id="radar-tab" class="tab-content">
-        <h2 style="font-weight: 400; margin-bottom: 2rem;">Radar Events - Pending Approval</h2>
+        <h2 style="font-weight: 400; margin-bottom: 1rem;">Radar Events</h2>
+
+        <!-- Metrics Bar -->
+        <div id="radar-metrics-bar" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1rem; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.75rem; font-weight: 600; color: #166534;" id="metric-today">-</div>
+            <div style="font-size: 0.75rem; color: #6B6B6B;">Heute</div>
+          </div>
+          <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 1rem; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.75rem; font-weight: 600; color: #1e40af;" id="metric-week">-</div>
+            <div style="font-size: 0.75rem; color: #6B6B6B;">Diese Woche</div>
+          </div>
+          <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1rem; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.75rem; font-weight: 600; color: #92400e;" id="metric-pending">-</div>
+            <div style="font-size: 0.75rem; color: #6B6B6B;">Pending</div>
+          </div>
+          <div style="background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); padding: 1rem; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.75rem; font-weight: 600; color: #6b21a8;" id="metric-approval">-</div>
+            <div style="font-size: 0.75rem; color: #6B6B6B;">Approval Rate</div>
+          </div>
+        </div>
 
         <!-- Filters Row -->
         <div style="margin-bottom: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 8px; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
@@ -1030,6 +1061,7 @@
           document.getElementById('admin-dashboard').classList.remove('hidden');
           loadEventLinks(); // Load event short links
           loadTechLinks(); // Load tech short links
+          loadRadarMetrics(); // Load radar pending badge
           document.getElementById('login-error').classList.add('hidden');
         } else {
           showLoginError();
@@ -1069,6 +1101,7 @@
             document.getElementById('login-error').classList.add('hidden');
             loadEventLinks(); // Load event short links
             loadTechLinks(); // Load tech short links
+            loadRadarMetrics(); // Load radar pending badge
           } else {
             // If stored auth is invalid, show login screen
             document.getElementById('login-screen').classList.remove('hidden');
@@ -1136,6 +1169,7 @@
         loadTokenLinksTab();
       } else if (tabName === 'radar') {
         loadRadarEvents();
+        loadRadarMetrics();
       } else if (tabName === 'spotlights') {
         loadSpotlightStatus();
       } else if (tabName === 'events') {
@@ -2208,6 +2242,34 @@
       category: 'all',
       search: ''
     };
+
+    // Load Radar Metrics (for metrics bar and pending badge)
+    async function loadRadarMetrics() {
+      try {
+        const res = await fetch('/api/radar/metrics');
+        if (!res.ok) return;
+
+        const data = await res.json();
+
+        // Update metrics bar
+        document.getElementById('metric-today').textContent = data.summary?.today?.found || 0;
+        document.getElementById('metric-week').textContent = data.summary?.week?.found || 0;
+        document.getElementById('metric-pending').textContent = data.status?.pending || 0;
+        document.getElementById('metric-approval').textContent = (data.status?.approvalRate || 0) + '%';
+
+        // Update pending badge
+        const pending = data.status?.pending || 0;
+        const badge = document.getElementById('radar-pending-badge');
+        if (pending > 0) {
+          badge.textContent = pending;
+          badge.style.display = 'inline';
+        } else {
+          badge.style.display = 'none';
+        }
+      } catch (error) {
+        console.error('Error loading radar metrics:', error);
+      }
+    }
 
     // Radar Health Check
     async function runRadarHealthCheck() {

@@ -343,12 +343,19 @@ async function storeEvent(event, source) {
 
 async function updateSourceMetrics(sourceName, found, added) {
   const metricsKey = `radar:metrics:source:${sourceName.toLowerCase().replace(/\s+/g, '-')}`;
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
+  // Source-specific metrics
   await kv.hincrby(metricsKey, 'eventsFound', found);
   await kv.hincrby(metricsKey, 'eventsAdded', added);
   await kv.hset(metricsKey, 'lastSuccess', new Date().toISOString());
 
-  // Update global metrics
+  // Daily metrics (for trends)
+  await kv.hincrby(`radar:metrics:daily:${today}`, 'found', found);
+  await kv.hincrby(`radar:metrics:daily:${today}`, 'added', added);
+
+  // Global metrics
   await kv.hincrby('radar:metrics:global', 'totalFound', found);
   await kv.hincrby('radar:metrics:global', 'totalAdded', added);
+  await kv.hset('radar:metrics:global', 'lastRun', new Date().toISOString());
 }
