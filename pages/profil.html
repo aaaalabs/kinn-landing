@@ -3245,6 +3245,11 @@
       detailEl.style.display = 'block';
     }
 
+    // Expose functions to global scope (required for inline event handlers in ES modules)
+    window.showUserRadarTooltip = showUserRadarTooltip;
+    window.hideUserRadarTooltip = hideUserRadarTooltip;
+    window.showUserRadarDayDetail = showUserRadarDayDetail;
+
     // OLD RADAR WIDGET CODE - DISABLED
     function displayRadarEvents(events, container, append = false) {
       // Disabled - old widget removed
