@@ -45,8 +45,9 @@ export default async function handler(req, res) {
     const emailHtml = buildDigestEmail(metrics, sourceHealth, pendingEvents);
 
     // Send email
+    const senderEmail = process.env.SENDER_EMAIL || 'KINN <thomas@kinn.at>';
     const emailResult = await resend.emails.send({
-      from: 'KINN Radar <noreply@kinn.at>',
+      from: senderEmail,
       to: ADMIN_EMAIL,
       subject: `KINN Radar Weekly: ${metrics.eventsFound} Events gefunden`,
       html: emailHtml,
