@@ -16,11 +16,12 @@ const groq = new Groq({
 // Firecrawl API configuration
 const FIRECRAWL_API_URL = 'https://api.firecrawl.dev/v1';
 const FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
+const FIRECRAWL_WAIT_MS = parseInt(process.env.FIRECRAWL_WAIT_MS || '3000', 10);
 
 /**
  * Scrapes a webpage using Firecrawl API (handles JavaScript rendering)
  */
-async function scrapeWithFirecrawl(url, waitTime = 3000) {
+async function scrapeWithFirecrawl(url, waitTime = FIRECRAWL_WAIT_MS) {
   if (!FIRECRAWL_API_KEY) {
     throw new Error('FIRECRAWL_API_KEY not configured');
   }
@@ -300,42 +301,28 @@ export default async function handler(req, res) {
 }
 
 async function checkDuplicate(event) {
-  // Check duplicates based on title and date only (not location)
-  // This prevents same event with different location formats being added multiple times
+  // Create event key matching storeEvent logic: title-date-location
+  const location = event.location || event.city || 'unknown';
+  const eventKey = `${event.title}-${event.date}-${location}`
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
 
-  // Get all existing event IDs
-  const allEventIds = await kv.smembers('radar:events');
+  // Simple key-based check (O(1) vs O(n) loop)
+  const exists = await kv.exists(`radar:event:${eventKey}`);
 
-  // Normalize the incoming event's title and date for comparison
-  const incomingTitle = (event.title || '').toLowerCase().trim();
-  const incomingDate = event.date;
-
-  // Check each existing event for matching title+date
-  for (const eventId of allEventIds) {
-    try {
-      const existingEvent = await kv.hgetall(`radar:event:${eventId}`);
-
-      if (existingEvent && existingEvent.title && existingEvent.date) {
-        const existingTitle = (existingEvent.title || '').toLowerCase().trim();
-        const existingDate = existingEvent.date;
-
-        // Check if title and date match (exact match after normalization)
-        if (existingTitle === incomingTitle && existingDate === incomingDate) {
-          logger.debug(`[DUPLICATE] Found duplicate: "${event.title}" on ${event.date}`);
-          return true; // Duplicate found
-        }
-      }
-    } catch (error) {
-      logger.error(`[DUPLICATE-CHECK] Error checking event ${eventId}:`, error);
-    }
+  if (exists) {
+    logger.debug(`[DUPLICATE] Event exists: "${event.title}" on ${event.date} at ${location}`);
   }
 
-  return false; // No duplicate found
+  return exists;
 }
 
 async function storeEvent(event, source) {
-  // Use title-date for ID (not location) to ensure consistent duplicate detection
-  const eventId = `${event.title}-${event.date}`.toLowerCase()
+  // Use title-date-location for ID (consistent with checkDuplicate and inbound.js)
+  const location = event.location || event.city || 'unknown';
+  const eventId = `${event.title}-${event.date}-${location}`
+    .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '');
 
