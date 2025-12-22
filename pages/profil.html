@@ -3064,19 +3064,14 @@
       let monthHtml = '';
 
       data.weeks.forEach((week, idx) => {
-        // Find the first day in this week that's actually in our target year
-        const inYearDays = week.days.filter(d => d.isInYear);
-        if (inYearDays.length === 0) {
-          monthHtml += `<span style="display: inline-block; width: 21px;"></span>`;
-          return;
-        }
+        const firstDay = new Date(week.days[0].date);
+        const weekMonth = firstDay.getMonth();
+        const isFirstWeekOfMonth = firstDay.getDate() <= 7;
+        const showLabel = weekMonth !== lastShownMonth || isFirstWeekOfMonth;
 
-        const firstInYearDay = new Date(inYearDays[0].date);
-        const weekMonth = firstInYearDay.getMonth();
-
-        // Only show label when month changes
-        if (weekMonth !== lastShownMonth) {
-          monthHtml += `<span style="display: inline-block; width: 21px; font-size: 9px; white-space: nowrap;">${monthNames[weekMonth]}</span>`;
+        // Each week gets a fixed-width label slot (21px = 18px cell + 3px gap)
+        if (showLabel && week.days.some(d => d.isInYear)) {
+          monthHtml += `<span style="display: inline-block; width: 21px; font-size: 9px;">${monthNames[weekMonth]}</span>`;
           lastShownMonth = weekMonth;
         } else {
           monthHtml += `<span style="display: inline-block; width: 21px;"></span>`;
