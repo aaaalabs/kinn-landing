@@ -528,11 +528,12 @@
       <!-- Tabs -->
       <div class="tabs">
         <button class="tab" onclick="switchTab('dashboard')">Dashboard</button>
-        <button class="tab active" onclick="switchTab('events')">Events</button>
-        <button class="tab" onclick="switchTab('radar')">🔍 Radar Events</button>
+        <button class="tab active" onclick="switchTab('events')">Event Links</button>
+        <button class="tab" onclick="switchTab('radar')">Radar Events</button>
         <button class="tab" onclick="switchTab('subscribers')">Teilnehmer</button>
         <button class="tab" onclick="switchTab('newsletter')">Newsletter</button>
         <button class="tab" onclick="switchTab('tokenlinks')">Token Links</button>
+        <button class="tab" onclick="switchTab('spotlights')">Spotlights</button>
         <button class="tab" onclick="logout()" style="margin-left: auto;">Logout</button>
       </div>
 
@@ -547,104 +548,62 @@
 
       <!-- Events Tab -->
       <div id="events-tab" class="tab-content active">
-        <div class="loading" id="events-loading">Lade Events...</div>
-        <div id="events-content" style="display: none;">
-          <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 2rem;">
-            <button class="btn" onclick="showEventForm()">+ Neues Event</button>
+        <!-- Event Short Links -->
+        <div class="card" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 1.25rem; margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-size: 0.875rem; font-weight: 600; color: #166534; margin: 0;">Event Short Links</h3>
+            <button onclick="toggleEventLinkForm()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #166534; color: #fff; border: none; border-radius: 4px; cursor: pointer;">+ Neu</button>
           </div>
 
-        <!-- Event Form (hidden by default) -->
-        <div id="event-form" class="hidden" style="background: #f9f9f9; padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
-          <h3 style="margin-bottom: 1.5rem; font-weight: 400;">Event Details</h3>
-
-          <div class="form-group">
-            <label>Event ID (wird automatisch generiert)</label>
-            <input type="text" id="event-id" placeholder="kinn-treff-13-1733234567" readonly style="background: #e9ecef; cursor: not-allowed;" />
-            <small style="display: block; margin-top: 0.5rem; color: #6B6B6B; font-size: 0.875rem;">
-              Format: kinn-treff-{nummer}-{timestamp} - Nummer zählt automatisch hoch
-            </small>
-          </div>
-
-          <div class="form-group">
-            <label>Titel *</label>
-            <input type="text" id="event-title" placeholder="KINN - KI Treff Innsbruck" />
-          </div>
-
-          <div class="form-group">
-            <label>Event Typ *</label>
-            <select id="event-type" onchange="toggleEventTypeFields()" style="width: 100%; padding: 12px 16px; font-size: 1rem; border: 2px solid #e0e0e0; border-radius: 8px; font-family: inherit;">
-              <option value="in-person">Präsenz (vor Ort in Tirol)</option>
-              <option value="online">Online (Google Meet / Zoom)</option>
-              <option value="hybrid">Hybrid (Präsenz + Online)</option>
-            </select>
-          </div>
-
-          <div class="form-group" id="meeting-link-group" style="display: none;">
-            <label>Meeting Link (für Online/Hybrid) *</label>
-            <input type="url" id="event-meeting-link" placeholder="https://meet.google.com/abc-defg-hij" />
-            <small style="display: block; margin-top: 0.5rem; color: #6B6B6B; font-size: 0.875rem;">
-              Google Meet, Zoom, oder andere Video-Conferencing URL
-            </small>
-          </div>
-
-          <div class="form-group" id="max-capacity-group" style="display: none;">
-            <label>Max. Teilnehmer (für Präsenz/Hybrid)</label>
-            <input type="number" id="event-max-capacity" placeholder="20" min="1" />
-            <small style="display: block; margin-top: 0.5rem; color: #6B6B6B; font-size: 0.875rem;">
-              Optional: Maximale Anzahl für physische Location
-            </small>
-          </div>
-
-          <div class="form-group">
-            <label>Datum *</label>
-            <input type="date" id="event-date" onchange="generateEventId()" />
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div class="form-group">
-              <label>Start Zeit *</label>
-              <input type="time" id="event-start-time" />
-            </div>
-
-            <div class="form-group">
-              <label>End Zeit *</label>
-              <input type="time" id="event-end-time" />
+          <!-- Add Event Link Form (hidden by default) -->
+          <div id="event-link-form" style="display: none; margin-bottom: 1rem; padding: 0.75rem; background: #fff; border-radius: 6px; border: 1px solid #d1fae5;">
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: flex-end;">
+              <div>
+                <label style="font-size: 0.6875rem; color: #166534; display: block; margin-bottom: 0.25rem;">KINN#</label>
+                <input type="text" id="new-event-id" placeholder="8" style="width: 50px; padding: 0.375rem; font-size: 0.8125rem; border: 1px solid #d1fae5; border-radius: 4px;">
+              </div>
+              <div style="flex: 1; min-width: 200px;">
+                <label style="font-size: 0.6875rem; color: #166534; display: block; margin-bottom: 0.25rem;">Luma URL</label>
+                <input type="text" id="new-event-url" placeholder="https://lu.ma/kinn-8" style="width: 100%; padding: 0.375rem; font-size: 0.8125rem; border: 1px solid #d1fae5; border-radius: 4px;">
+              </div>
+              <button onclick="saveEventLink()" style="padding: 0.375rem 0.75rem; font-size: 0.75rem; background: #5ED9A6; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Speichern</button>
             </div>
           </div>
 
-          <div class="form-group">
-            <label>Location *</label>
-            <input type="text" id="event-location" placeholder="Coworkingspace Innsbruck" />
-          </div>
-
-          <div class="form-group">
-            <label>Beschreibung *</label>
-            <textarea id="event-description" placeholder="Monatlicher KI-Austausch in Innsbruck..."></textarea>
-          </div>
-
-          <div class="form-group">
-            <label>URL</label>
-            <input type="url" id="event-url" placeholder="https://kinn.at" />
-          </div>
-
-          <div class="form-group">
-            <label>Status</label>
-            <select id="event-status" style="width: 100%; padding: 12px 16px; font-size: 1rem; border: 2px solid #e0e0e0; border-radius: 8px; font-family: inherit;">
-              <option value="confirmed">Bestätigt</option>
-              <option value="tentative">Vorläufig</option>
-              <option value="cancelled">Abgesagt</option>
-            </select>
-          </div>
-
-          <div class="form-actions">
-            <button class="btn" onclick="saveEvent()">Speichern</button>
-            <button class="btn btn-secondary" onclick="cancelEventForm()">Abbrechen</button>
+          <p style="font-size: 0.8125rem; color: #166534; margin-bottom: 0.75rem;">Diese URLs teilen statt lu.ma direkt:</p>
+          <div id="event-links-list" style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+            <span style="color: #6b7280; font-size: 0.8125rem;">Lade...</span>
           </div>
         </div>
 
-        <!-- Event List -->
-        <div id="events-list" class="loading">Lade Events...</div>
-        </div> <!-- End of events-content -->
+        <!-- TechTalk Short Links -->
+        <div class="card" style="background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 12px; padding: 1.25rem; margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-size: 0.875rem; font-weight: 600; color: #5b21b6; margin: 0;">TechTalk Short Links</h3>
+            <button onclick="toggleTechLinkForm()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #5b21b6; color: #fff; border: none; border-radius: 4px; cursor: pointer;">+ Neu</button>
+          </div>
+
+          <!-- Add TechTalk Link Form (hidden by default) -->
+          <div id="tech-link-form" style="display: none; margin-bottom: 1rem; padding: 0.75rem; background: #fff; border-radius: 6px; border: 1px solid #ddd6fe;">
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: flex-end;">
+              <div>
+                <label style="font-size: 0.6875rem; color: #5b21b6; display: block; margin-bottom: 0.25rem;">TechTalk#</label>
+                <input type="text" id="new-tech-id" placeholder="1" style="width: 50px; padding: 0.375rem; font-size: 0.8125rem; border: 1px solid #ddd6fe; border-radius: 4px;">
+              </div>
+              <div style="flex: 1; min-width: 200px;">
+                <label style="font-size: 0.6875rem; color: #5b21b6; display: block; margin-bottom: 0.25rem;">Luma URL</label>
+                <input type="text" id="new-tech-url" placeholder="https://lu.ma/kinn-tech-1" style="width: 100%; padding: 0.375rem; font-size: 0.8125rem; border: 1px solid #ddd6fe; border-radius: 4px;">
+              </div>
+              <button onclick="saveTechLink()" style="padding: 0.375rem 0.75rem; font-size: 0.75rem; background: #7C3AED; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Speichern</button>
+            </div>
+          </div>
+
+          <p style="font-size: 0.8125rem; color: #5b21b6; margin-bottom: 0.75rem;">kinn.at/tech/[id] URLs:</p>
+          <div id="tech-links-list" style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+            <span style="color: #6b7280; font-size: 0.8125rem;">Lade...</span>
+          </div>
+        </div>
+
       </div>
 
       <!-- Subscribers Tab -->
@@ -767,6 +726,103 @@
         <div id="tokenlinks-content" class="loading">Lade Subscriber...</div>
       </div>
 
+      <!-- Spotlights Tab -->
+      <div id="spotlights-tab" class="tab-content">
+        <h2 style="font-weight: 400; margin-bottom: 2rem;">KINN'der Spotlights</h2>
+        <p style="color: #666; margin-bottom: 2rem;">
+          Preview-Links für Spotlight-Freigaben. Nach Klick auf "Ich bin einverstanden" wird der Status in Redis gespeichert.
+        </p>
+
+        <div class="card" style="background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 2px solid #f0f0f0;">
+                <th style="text-align: left; padding: 0.75rem; font-weight: 600;">ID</th>
+                <th style="text-align: left; padding: 0.75rem; font-weight: 600;">Name</th>
+                <th style="text-align: left; padding: 0.75rem; font-weight: 600;">Status</th>
+                <th style="text-align: left; padding: 0.75rem; font-weight: 600;">Preview Link</th>
+                <th style="text-align: left; padding: 0.75rem; font-weight: 600;">LinkedIn Post</th>
+                <th style="text-align: left; padding: 0.75rem; font-weight: 600;">Profil</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid #f0f0f0;">
+                <td style="padding: 0.75rem; font-family: monospace;">b8211f</td>
+                <td style="padding: 0.75rem;">David Moling</td>
+                <td style="padding: 0.75rem;">
+                  <span id="spotlight-b8211f-status" style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 500; background: #fff3cd; color: #856404;">Ausstehend</span>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <a href="https://kinn.at/spotlight/b8211f" target="_blank" style="color: #5ED9A6; text-decoration: none; font-weight: 500;">kinn.at/spotlight/b8211f</a>
+                  <button onclick="copyToClipboard('https://kinn.at/spotlight/b8211f')" style="margin-left: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #f5f5f5; border: none; border-radius: 4px; cursor: pointer;">Copy</button>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <button id="spotlight-b8211f-text-btn" onclick="copySpotlightText('b8211f')" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; background: #5ED9A6; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Copy Post</button>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <a href="https://linkedin.com/in/david-moling" target="_blank" style="color: #0077b5; text-decoration: none;">David Moling</a>
+                </td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f0f0f0;">
+                <td style="padding: 0.75rem; font-family: monospace;">f768d7</td>
+                <td style="padding: 0.75rem;">Martin Hies</td>
+                <td style="padding: 0.75rem;">
+                  <span id="spotlight-f768d7-status" style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 500; background: #fff3cd; color: #856404;">Ausstehend</span>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <a href="https://kinn.at/spotlight/f768d7" target="_blank" style="color: #5ED9A6; text-decoration: none; font-weight: 500;">kinn.at/spotlight/f768d7</a>
+                  <button onclick="copyToClipboard('https://kinn.at/spotlight/f768d7')" style="margin-left: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #f5f5f5; border: none; border-radius: 4px; cursor: pointer;">Copy</button>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <button id="spotlight-f768d7-text-btn" onclick="copySpotlightText('f768d7')" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; background: #5ED9A6; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Copy Post</button>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <a href="https://www.linkedin.com/in/martin-hies-a19b59157/" target="_blank" style="color: #0077b5; text-decoration: none;">Martin Hies</a>
+                </td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f0f0f0;">
+                <td style="padding: 0.75rem; font-family: monospace;">82c026</td>
+                <td style="padding: 0.75rem;">Matteo Castellani</td>
+                <td style="padding: 0.75rem;">
+                  <span id="spotlight-82c026-status" style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 500; background: #fff3cd; color: #856404;">Ausstehend</span>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <a href="https://kinn.at/spotlight/82c026" target="_blank" style="color: #5ED9A6; text-decoration: none; font-weight: 500;">kinn.at/spotlight/82c026</a>
+                  <button onclick="copyToClipboard('https://kinn.at/spotlight/82c026')" style="margin-left: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #f5f5f5; border: none; border-radius: 4px; cursor: pointer;">Copy</button>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <button id="spotlight-82c026-text-btn" onclick="copySpotlightText('82c026')" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; background: #5ED9A6; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Copy Post</button>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <a href="https://www.linkedin.com/in/matteocastellani89/" target="_blank" style="color: #0077b5; text-decoration: none;">Matteo Castellani</a>
+                </td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f0f0f0;">
+                <td style="padding: 0.75rem; font-family: monospace;">192ca0</td>
+                <td style="padding: 0.75rem;">Steven Lahmann</td>
+                <td style="padding: 0.75rem;">
+                  <span id="spotlight-192ca0-status" style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 500; background: #fff3cd; color: #856404;">Ausstehend</span>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <a href="https://kinn.at/spotlight/192ca0" target="_blank" style="color: #5ED9A6; text-decoration: none; font-weight: 500;">kinn.at/spotlight/192ca0</a>
+                  <button onclick="copyToClipboard('https://kinn.at/spotlight/192ca0')" style="margin-left: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #f5f5f5; border: none; border-radius: 4px; cursor: pointer;">Copy</button>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <button id="spotlight-192ca0-text-btn" onclick="copySpotlightText('192ca0')" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; background: #5ED9A6; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Copy Post</button>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <a href="https://www.linkedin.com/in/steven-lahmann/" target="_blank" style="color: #0077b5; text-decoration: none;">Steven Lahmann</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p style="margin-top: 1.5rem; font-size: 0.875rem; color: #999;">
+          Neue Spotlights: Ordner in <code>/spotlight/[id]/</code> anlegen mit page.html und Bild.
+        </p>
+      </div>
+
       <!-- Radar Events Tab -->
       <div id="radar-tab" class="tab-content">
         <h2 style="font-weight: 400; margin-bottom: 2rem;">Radar Events - Pending Approval</h2>
@@ -816,6 +872,68 @@
         <div id="radar-events-list" style="overflow-x: auto;">
           <div class="loading">Lade Radar Events...</div>
         </div>
+
+        <!-- Radar Tools Section (Collapsible) -->
+        <details style="margin-top: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa;">
+          <summary style="padding: 1rem; cursor: pointer; font-weight: 500; color: #3A3A3A; user-select: none;">
+            Radar Tools (Extraction, Cleanup, Validation)
+          </summary>
+          <div style="padding: 1rem; border-top: 1px solid #e0e0e0;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+
+              <!-- Run All Extractions -->
+              <div style="background: white; padding: 1rem; border-radius: 8px; border: 1px solid #e8e8e8;">
+                <h4 style="margin-bottom: 0.5rem; font-size: 0.875rem;">Run All Extractions</h4>
+                <p style="font-size: 0.75rem; color: #6B6B6B; margin-bottom: 0.75rem;">Alle konfigurierten Sources scrapen</p>
+                <button class="btn btn-small" onclick="window.open('/radar-run-all.html', '_blank')"
+                        style="width: 100%; padding: 8px; font-size: 0.8rem;">
+                  Extraction starten
+                </button>
+              </div>
+
+              <!-- Cleanup -->
+              <div style="background: white; padding: 1rem; border-radius: 8px; border: 1px solid #e8e8e8;">
+                <h4 style="margin-bottom: 0.5rem; font-size: 0.875rem;">Cleanup</h4>
+                <p style="font-size: 0.75rem; color: #6B6B6B; margin-bottom: 0.75rem;">Duplikate & alte Events entfernen</p>
+                <button class="btn btn-small btn-secondary" onclick="window.open('/radar-cleanup.html', '_blank')"
+                        style="width: 100%; padding: 8px; font-size: 0.8rem;">
+                  Cleanup Tool
+                </button>
+              </div>
+
+              <!-- Source Validation -->
+              <div style="background: white; padding: 1rem; border-radius: 8px; border: 1px solid #e8e8e8;">
+                <h4 style="margin-bottom: 0.5rem; font-size: 0.875rem;">Source Validation</h4>
+                <p style="font-size: 0.75rem; color: #6B6B6B; margin-bottom: 0.75rem;">Source-Status & Erreichbarkeit</p>
+                <button class="btn btn-small btn-secondary" onclick="window.open('/radar-validation.html', '_blank')"
+                        style="width: 100%; padding: 8px; font-size: 0.8rem;">
+                  Validation Check
+                </button>
+              </div>
+
+              <!-- Source Audit -->
+              <div style="background: white; padding: 1rem; border-radius: 8px; border: 1px solid #e8e8e8;">
+                <h4 style="margin-bottom: 0.5rem; font-size: 0.875rem;">Source Audit</h4>
+                <p style="font-size: 0.75rem; color: #6B6B6B; margin-bottom: 0.75rem;">Detaillierte Source-Analyse</p>
+                <button class="btn btn-small btn-secondary" onclick="window.open('/radar-source-audit.html', '_blank')"
+                        style="width: 100%; padding: 8px; font-size: 0.8rem;">
+                  Audit Dashboard
+                </button>
+              </div>
+
+            </div>
+
+            <!-- Quick Actions -->
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e8e8e8;">
+              <span style="font-size: 0.75rem; color: #999;">Quick Actions:</span>
+              <button class="btn btn-small" onclick="runRadarHealthCheck()"
+                      style="margin-left: 0.5rem; padding: 4px 10px; font-size: 0.75rem; background: #5ED9A6;">
+                Health Check
+              </button>
+              <span id="radar-health-status" style="margin-left: 0.5rem; font-size: 0.75rem; color: #6B6B6B;"></span>
+            </div>
+          </div>
+        </details>
       </div>
     </div>
   </div>
@@ -910,6 +1028,8 @@
         if (success) {
           document.getElementById('login-screen').classList.add('hidden');
           document.getElementById('admin-dashboard').classList.remove('hidden');
+          loadEventLinks(); // Load event short links
+          loadTechLinks(); // Load tech short links
           document.getElementById('login-error').classList.add('hidden');
         } else {
           showLoginError();
@@ -947,6 +1067,8 @@
           if (success) {
             // Successfully authenticated, keep dashboard visible
             document.getElementById('login-error').classList.add('hidden');
+            loadEventLinks(); // Load event short links
+            loadTechLinks(); // Load tech short links
           } else {
             // If stored auth is invalid, show login screen
             document.getElementById('login-screen').classList.remove('hidden');
@@ -1014,6 +1136,223 @@
         loadTokenLinksTab();
       } else if (tabName === 'radar') {
         loadRadarEvents();
+      } else if (tabName === 'spotlights') {
+        loadSpotlightStatus();
+      } else if (tabName === 'events') {
+        loadEventLinks();
+        loadTechLinks();
+      }
+    }
+
+    // === Event Links ===
+    async function loadEventLinks() {
+      try {
+        const response = await fetch('/api/admin/event-links');
+        const data = await response.json();
+        renderEventLinks(data.links || {});
+      } catch (error) {
+        console.error('Error loading event links:', error);
+        document.getElementById('event-links-list').innerHTML = '<span style="color: #dc2626; font-size: 0.8125rem;">Fehler beim Laden</span>';
+      }
+    }
+
+    function renderEventLinks(links) {
+      const container = document.getElementById('event-links-list');
+      const entries = Object.entries(links).sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+
+      if (entries.length === 0) {
+        container.innerHTML = '<span style="color: #6b7280; font-size: 0.8125rem;">Keine Event-Links konfiguriert</span>';
+        return;
+      }
+
+      container.innerHTML = entries.map(([id, url]) => `
+        <div style="display: flex; align-items: center; gap: 0.5rem; background: #fff; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid #d1fae5;">
+          <code style="font-size: 0.8125rem; color: #166534;">kinn.at/${id}</code>
+          <button onclick="copyToClipboard('https://kinn.at/${id}')" style="padding: 0.25rem 0.5rem; font-size: 0.6875rem; background: #5ED9A6; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Copy</button>
+          <button onclick="deleteEventLink('${id}')" style="padding: 0.25rem 0.375rem; font-size: 0.6875rem; background: #fecaca; color: #991b1b; border: none; border-radius: 4px; cursor: pointer;" title="Löschen">x</button>
+        </div>
+      `).join('');
+    }
+
+    function toggleEventLinkForm() {
+      const form = document.getElementById('event-link-form');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function saveEventLink() {
+      const id = document.getElementById('new-event-id').value.trim();
+      const url = document.getElementById('new-event-url').value.trim();
+
+      if (!id || !url) {
+        showMessage('Bitte KINN# und Luma URL eingeben', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/admin/event-links', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminPassword}`
+          },
+          body: JSON.stringify({ id, url })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showMessage(`Event Link kinn.at/${id} gespeichert!`, 'success');
+          renderEventLinks(data.links);
+          document.getElementById('new-event-id').value = '';
+          document.getElementById('new-event-url').value = '';
+          document.getElementById('event-link-form').style.display = 'none';
+        } else {
+          showMessage(data.error || 'Fehler beim Speichern', 'error');
+        }
+      } catch (error) {
+        showMessage('Fehler: ' + error.message, 'error');
+      }
+    }
+
+    async function deleteEventLink(id) {
+      if (!confirm(`Event Link kinn.at/${id} wirklich löschen?`)) return;
+
+      try {
+        const response = await fetch('/api/admin/event-links', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminPassword}`
+          },
+          body: JSON.stringify({ id, action: 'delete' })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showMessage(`Event Link kinn.at/${id} gelöscht`, 'success');
+          renderEventLinks(data.links);
+        }
+      } catch (error) {
+        showMessage('Fehler: ' + error.message, 'error');
+      }
+    }
+
+    // === TechTalk Links ===
+    async function loadTechLinks() {
+      try {
+        const response = await fetch('/api/admin/tech-links');
+        const data = await response.json();
+        renderTechLinks(data.links || {});
+      } catch (error) {
+        console.error('Failed to load tech links:', error);
+        document.getElementById('tech-links-list').innerHTML =
+          '<span style="color: #ef4444; font-size: 0.8125rem;">Fehler beim Laden</span>';
+      }
+    }
+
+    function renderTechLinks(links) {
+      const container = document.getElementById('tech-links-list');
+      const entries = Object.entries(links).sort((a, b) => Number(a[0]) - Number(b[0]));
+
+      if (entries.length === 0) {
+        container.innerHTML = '<span style="color: #6b7280; font-size: 0.8125rem;">Keine TechTalk-Links konfiguriert</span>';
+        return;
+      }
+
+      container.innerHTML = entries.map(([id, url]) => `
+        <div style="display: flex; align-items: center; gap: 0.5rem; background: #fff; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid #ddd6fe;">
+          <code style="font-size: 0.8125rem; color: #5b21b6;">kinn.at/tech/${id}</code>
+          <button onclick="copyToClipboard('https://kinn.at/tech/${id}')" style="padding: 0.25rem 0.5rem; font-size: 0.6875rem; background: #7C3AED; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Copy</button>
+          <button onclick="deleteTechLink('${id}')" style="padding: 0.25rem 0.375rem; font-size: 0.6875rem; background: #fecaca; color: #991b1b; border: none; border-radius: 4px; cursor: pointer;" title="Löschen">x</button>
+        </div>
+      `).join('');
+    }
+
+    function toggleTechLinkForm() {
+      const form = document.getElementById('tech-link-form');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function saveTechLink() {
+      const id = document.getElementById('new-tech-id').value.trim();
+      const url = document.getElementById('new-tech-url').value.trim();
+
+      if (!id || !url) {
+        showMessage('ID und URL erforderlich', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/admin/tech-links', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminPassword}`
+          },
+          body: JSON.stringify({ id, url })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showMessage(`TechTalk Link kinn.at/tech/${id} gespeichert!`, 'success');
+          renderTechLinks(data.links);
+          document.getElementById('new-tech-id').value = '';
+          document.getElementById('new-tech-url').value = '';
+          document.getElementById('tech-link-form').style.display = 'none';
+        } else {
+          showMessage(data.error || 'Fehler beim Speichern', 'error');
+        }
+      } catch (error) {
+        showMessage('Fehler: ' + error.message, 'error');
+      }
+    }
+
+    async function deleteTechLink(id) {
+      if (!confirm(`TechTalk Link kinn.at/tech/${id} wirklich löschen?`)) return;
+
+      try {
+        const response = await fetch('/api/admin/tech-links', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminPassword}`
+          },
+          body: JSON.stringify({ id, action: 'delete' })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showMessage(`TechTalk Link kinn.at/tech/${id} gelöscht`, 'success');
+          renderTechLinks(data.links);
+        }
+      } catch (error) {
+        showMessage('Fehler: ' + error.message, 'error');
+      }
+    }
+
+    // === Spotlight Status ===
+    async function loadSpotlightStatus() {
+      try {
+        const response = await fetch('/api/spotlight/status');
+        const data = await response.json();
+
+        if (data.spotlights) {
+          data.spotlights.forEach(spotlight => {
+            const statusEl = document.getElementById(`spotlight-${spotlight.id}-status`);
+            if (statusEl) {
+              if (spotlight.status === 'approved') {
+                statusEl.style.background = '#d4edda';
+                statusEl.style.color = '#155724';
+                statusEl.textContent = 'Freigegeben';
+              } else {
+                statusEl.style.background = '#fff3cd';
+                statusEl.style.color = '#856404';
+                statusEl.textContent = 'Ausstehend';
+              }
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load spotlight status:', error);
       }
     }
 
@@ -1032,360 +1371,9 @@
       }, 5000);
     }
 
-    // === Events Management ===
-
-    async function loadEvents() {
-      try {
-        const response = await apiCall('/events');
-        eventsConfig = response.data;
-
-        // Load scan counts
-        try {
-          const scansResponse = await apiCall('/scans');
-          scanCounts = scansResponse.data || {};
-        } catch (error) {
-          console.warn('Failed to load scan counts:', error);
-          scanCounts = {};
-        }
-
-        renderEvents();
-        // Hide loading and show content
-        const loadingEl = document.getElementById('events-loading');
-        const contentEl = document.getElementById('events-content');
-        if (loadingEl) loadingEl.style.display = 'none';
-        if (contentEl) contentEl.style.display = 'block';
-        return true;
-      } catch (error) {
-        console.error('Failed to load events:', error);
-        // Hide loading and show error in events-list
-        const loadingEl = document.getElementById('events-loading');
-        const contentEl = document.getElementById('events-content');
-        if (loadingEl) loadingEl.style.display = 'none';
-        if (contentEl) contentEl.style.display = 'block';
-        document.getElementById('events-list').innerHTML =
-          `<div class="message error">Fehler beim Laden: ${error.message}</div>`;
-        return false;
-      }
-    }
-
-    function renderEvents() {
-      const container = document.getElementById('events-list');
-      const events = eventsConfig.events || [];
-
-      if (events.length === 0) {
-        container.innerHTML = '<p style="color: #999; text-align: center; padding: 2rem;">Noch keine Events vorhanden.</p>';
-        return;
-      }
-
-      container.innerHTML = events.map((event, index) => `
-        <div class="event-card">
-          <h3>
-            ${event.title}
-            ${getEventTypeBadge(event.type)}
-          </h3>
-          <div class="event-meta">
-            ${formatDate(event.date)} • ${event.startTime} - ${event.endTime}
-            ${scanCounts[event.id] ? ` • <span style="color: #5ED9A6; font-weight: 500;">📊 ${scanCounts[event.id]} unique scans</span>` : ''}
-          </div>
-          ${event.meetingLink ? `<div class="event-meta">💻 <a href="${event.meetingLink}" target="_blank" style="color: #5ED9A6;">Meeting Link</a></div>` : ''}
-          <div class="event-meta">📍 ${event.location}</div>
-          ${event.maxCapacity ? `<div class="event-meta">👥 Max ${event.maxCapacity} Personen</div>` : ''}
-          <div class="event-meta">${event.description}</div>
-          ${event.url ? `<div class="event-meta"><a href="${event.url}" target="_blank" style="color: #5ED9A6;">${event.url}</a></div>` : ''}
-          <div class="event-meta">Status: ${getStatusLabel(event.status)}</div>
-
-          ${event.rsvps ? `
-            <div class="event-meta" style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(94, 217, 166, 0.08); border-radius: 8px;">
-              <strong>RSVPs:</strong>
-              <span style="color: #059669;">✅ ${event.rsvps.yes?.length || 0}</span> •
-              <span style="color: #FFA500;">❓ ${event.rsvps.maybe?.length || 0}</span> •
-              <span style="color: #999;">❌ ${event.rsvps.no?.length || 0}</span>
-            </div>
-          ` : ''}
-
-          <div class="event-actions">
-            ${isUpcomingOrToday(event.date) ? `
-              <button class="btn btn-small" style="background: #5ED9A6; color: #000;" onclick="sendEventInvites('${event.id}', '${event.title}')">
-                📧 Send Invites
-              </button>
-              <button class="btn btn-small" style="background: #7C3AED; color: white;" onclick="showDiscordQR('${event.id}', '${event.title}')">
-                🔗 Discord QR
-              </button>
-            ` : ''}
-            <button class="btn btn-small" style="background: #3B82F6; color: white;" onclick="openEngagement('${event.id}')">
-              📊 Engagement
-            </button>
-            <button class="btn btn-small btn-secondary" onclick="editEvent(${index})">Bearbeiten</button>
-            <button class="btn btn-small btn-danger" onclick="deleteEvent(${index})">Löschen</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function formatDate(dateStr) {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('de-DE', {
-        weekday: 'short',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    }
-
-    function getStatusLabel(status) {
-      const labels = {
-        confirmed: 'Bestätigt',
-        tentative: 'Vorläufig',
-        cancelled: 'Abgesagt'
-      };
-      return labels[status] || status;
-    }
-
-    function getEventTypeBadge(type) {
-      const badges = {
-        'online': '<span style="display: inline-block; padding: 4px 12px; background: #3B82F6; color: white; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem;">Online</span>',
-        'in-person': '<span style="display: inline-block; padding: 4px 12px; background: #059669; color: white; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem;">Präsenz</span>',
-        'hybrid': '<span style="display: inline-block; padding: 4px 12px; background: #8B5CF6; color: white; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem;">Hybrid</span>'
-      };
-      return badges[type] || '<span style="display: inline-block; padding: 4px 12px; background: #999; color: white; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem;">Präsenz</span>';
-    }
-
-    function isUpcomingOrToday(dateStr) {
-      const eventDate = new Date(dateStr);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      eventDate.setHours(0, 0, 0, 0);
-      return eventDate >= today;
-    }
-
-    function showEventForm(event = null) {
-      document.getElementById('event-form').classList.remove('hidden');
-
-      if (event) {
-        // Edit mode
-        document.getElementById('event-id').value = event.id;
-        document.getElementById('event-title').value = event.title;
-        document.getElementById('event-type').value = event.type || 'in-person';
-        document.getElementById('event-date').value = event.date;
-        document.getElementById('event-start-time').value = event.startTime;
-        document.getElementById('event-end-time').value = event.endTime;
-        document.getElementById('event-location').value = event.location;
-        document.getElementById('event-description').value = event.description;
-        document.getElementById('event-url').value = event.url || '';
-        document.getElementById('event-status').value = event.status || 'confirmed';
-        document.getElementById('event-meeting-link').value = event.meetingLink || '';
-        document.getElementById('event-max-capacity').value = event.maxCapacity || '';
-
-        // Show/hide conditional fields based on type
-        toggleEventTypeFields();
-      } else {
-        // Add mode
-        clearEventForm();
-
-        // Show next event number in placeholder
-        const nextEventNumber = (eventsConfig.events || []).length + 1;
-        document.getElementById('event-id').placeholder = `kinn-treff-${nextEventNumber}-[timestamp]`;
-      }
-
-      // Scroll to form
-      document.getElementById('event-form').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function generateEventId() {
-      const dateInput = document.getElementById('event-date').value;
-      if (!dateInput) {
-        document.getElementById('event-id').value = '';
-        return;
-      }
-
-      // Automatic sequential numbering: count existing events + 1
-      const existingEvents = eventsConfig.events || [];
-      const nextEventNumber = existingEvents.length + 1;
-
-      // Generate timestamp from selected date (00:00:00 local time)
-      const selectedDate = new Date(dateInput + 'T00:00:00');
-      const timestamp = Math.floor(selectedDate.getTime() / 1000);
-
-      // Format: kinn-treff-{number}-{timestamp}
-      const eventId = `kinn-treff-${nextEventNumber}-${timestamp}`;
-      document.getElementById('event-id').value = eventId;
-
-      console.log('Auto-generated Event ID:', {
-        eventNumber: nextEventNumber,
-        totalEvents: existingEvents.length,
-        date: dateInput,
-        timestamp,
-        eventId
-      });
-    }
-
-    function clearEventForm() {
-      document.getElementById('event-id').value = '';
-      document.getElementById('event-title').value = '';
-      document.getElementById('event-type').value = 'in-person';
-      document.getElementById('event-date').value = '';
-      document.getElementById('event-start-time').value = '';
-      document.getElementById('event-end-time').value = '';
-      document.getElementById('event-location').value = '';
-      document.getElementById('event-description').value = '';
-      document.getElementById('event-url').value = 'https://kinn.at';
-      document.getElementById('event-status').value = 'confirmed';
-      document.getElementById('event-meeting-link').value = '';
-      document.getElementById('event-max-capacity').value = '';
-
-      // Set default date to today and generate ID
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('event-date').value = today;
-      generateEventId();
-
-      // Reset conditional fields visibility
-      toggleEventTypeFields();
-    }
-
-    function toggleEventTypeFields() {
-      const eventType = document.getElementById('event-type').value;
-      const meetingLinkGroup = document.getElementById('meeting-link-group');
-      const maxCapacityGroup = document.getElementById('max-capacity-group');
-
-      // Show meeting link for online & hybrid
-      if (eventType === 'online' || eventType === 'hybrid') {
-        meetingLinkGroup.style.display = 'block';
-      } else {
-        meetingLinkGroup.style.display = 'none';
-      }
-
-      // Show max capacity for in-person & hybrid
-      if (eventType === 'in-person' || eventType === 'hybrid') {
-        maxCapacityGroup.style.display = 'block';
-      } else {
-        maxCapacityGroup.style.display = 'none';
-      }
-    }
-
-    function cancelEventForm() {
-      document.getElementById('event-form').classList.add('hidden');
-      editingEventIndex = null;
-    }
-
-    function editEvent(index) {
-      editingEventIndex = index;
-      showEventForm(eventsConfig.events[index]);
-    }
-
-    async function deleteEvent(index) {
-      if (!confirm('Event wirklich löschen?')) return;
-
-      const events = [...eventsConfig.events];
-      events.splice(index, 1);
-
-      try {
-        await apiCall('/events', 'PUT', {
-          events,
-          defaults: eventsConfig.defaults
-        });
-
-        showMessage('Event gelöscht!');
-        await loadEvents();
-      } catch (error) {
-        showMessage('Fehler beim Löschen: ' + error.message, 'error');
-      }
-    }
-
-    async function saveEvent() {
-      // Get form values
-      const eventType = document.getElementById('event-type').value;
-      const event = {
-        id: document.getElementById('event-id').value.trim(),
-        title: document.getElementById('event-title').value.trim(),
-        type: eventType,
-        date: document.getElementById('event-date').value,
-        startTime: document.getElementById('event-start-time').value,
-        endTime: document.getElementById('event-end-time').value,
-        location: document.getElementById('event-location').value.trim(),
-        description: document.getElementById('event-description').value.trim(),
-        url: document.getElementById('event-url').value.trim() || 'https://kinn.at',
-        status: document.getElementById('event-status').value
-      };
-
-      // Add conditional fields based on type
-      if (eventType === 'online' || eventType === 'hybrid') {
-        const meetingLink = document.getElementById('event-meeting-link').value.trim();
-        if (!meetingLink) {
-          showMessage('Meeting Link ist erforderlich für Online/Hybrid Events!', 'error');
-          return;
-        }
-        event.meetingLink = meetingLink;
-      }
-
-      if (eventType === 'in-person' || eventType === 'hybrid') {
-        const maxCapacity = document.getElementById('event-max-capacity').value;
-        if (maxCapacity) {
-          event.maxCapacity = parseInt(maxCapacity, 10);
-        }
-      }
-
-      // Validate
-      const required = ['id', 'title', 'type', 'date', 'startTime', 'endTime', 'location', 'description'];
-      for (const field of required) {
-        if (!event[field]) {
-          showMessage(`Bitte ${field} ausfüllen!`, 'error');
-          return;
-        }
-      }
-
-      // Generate ISO8601 start/end timestamps for calendar feeds and email templates
-      // Note: We interpret the time as Vienna local time (Europe/Vienna)
-      try {
-        // Create date in Vienna timezone
-        // Format: 2025-11-06T18:00:00
-        const localStart = `${event.date}T${event.startTime}:00`;
-        const localEnd = `${event.date}T${event.endTime}:00`;
-
-        // Parse as local time and convert to UTC
-        // This automatically handles CET/CEST (winter/summer time)
-        const startDate = new Date(localStart);
-        const endDate = new Date(localEnd);
-
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-          showMessage('Ungültiges Datum oder Uhrzeit!', 'error');
-          return;
-        }
-
-        // Store as ISO8601 UTC timestamps
-        event.start = startDate.toISOString();
-        event.end = endDate.toISOString();
-
-        console.log('[SAVE-EVENT] Vienna time:', localStart, '→ UTC:', event.start);
-      } catch (error) {
-        showMessage('Fehler beim Generieren der Zeitstempel!', 'error');
-        return;
-      }
-
-      // Update or add
-      const events = [...eventsConfig.events];
-      if (editingEventIndex !== null) {
-        events[editingEventIndex] = event;
-      } else {
-        events.push(event);
-      }
-
-      // Sort by date
-      events.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-      try {
-        await apiCall('/events', 'PUT', {
-          events,
-          defaults: eventsConfig.defaults
-        });
-
-        showMessage(editingEventIndex !== null ? 'Event aktualisiert!' : 'Event erstellt!');
-        cancelEventForm();
-        await loadEvents();
-        editingEventIndex = null;
-      } catch (error) {
-        showMessage('Fehler beim Speichern: ' + error.message, 'error');
-      }
-    }
+    // === Events Management (moved to Luma) ===
+    // Event creation/editing removed - using Luma for event management
+    // Only Event Links management remains (see loadEventLinks, saveEventLink, deleteEventLink)
 
     // === Subscribers Management ===
 
@@ -1675,175 +1663,34 @@
       }
     }
 
-    // Open Engagement Tracking Page
-    async function showDiscordQR(eventId, eventTitle) {
-      // Show loading modal first
-      const loadingHtml = `
-        <div id="qr-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 10000;">
-          <div style="background: white; border-radius: 16px; padding: 2rem; max-width: 600px; width: 90%; text-align: center;">
-            <h2 style="margin-bottom: 1rem; color: #2C3E50;">Generiere Short Link...</h2>
-            <p style="color: #6B6B6B;">Einen Moment bitte...</p>
-          </div>
-        </div>
-      `;
-      document.body.insertAdjacentHTML('beforeend', loadingHtml);
-
-      try {
-        // Fetch short link from API
-        const response = await fetch(`/api/shortlink?eventId=${encodeURIComponent(eventId)}`, {
-          headers: {
-            'Authorization': `Bearer ${adminPassword}`
-          }
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          console.error('Short link API error:', {
-            status: response.status,
-            statusText: response.statusText,
-            error: errorData
-          });
-          throw new Error(`API Error: ${errorData.error || response.statusText}`);
-        }
-
-        const data = await response.json();
-        const shortUrl = data.shortUrl;
-        const shortId = data.shortId;
-
-        // Replace loading modal with full modal
-        const modal = document.getElementById('qr-modal');
-        modal.innerHTML = `
-          <div style="background: white; border-radius: 16px; padding: 2rem; max-width: 600px; width: 90%;" onclick="event.stopPropagation()">
-            <h2 style="margin-bottom: 1rem; color: #2C3E50;">Discord QR Code</h2>
-            <p style="margin-bottom: 1.5rem; color: #6B6B6B;"><strong>${eventTitle}</strong></p>
-
-            <!-- Short Link (Primary) -->
-            <div style="margin-bottom: 0.5rem;">
-              <label style="display: block; font-size: 0.75rem; font-weight: 600; color: #7C3AED; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
-                🔗 Short Link (für QR Code)
-              </label>
-              <div style="background: linear-gradient(135deg, #7C3AED 0%, #6366F1 100%); border: none; border-radius: 8px; padding: 1rem; font-family: monospace; font-size: 1rem; font-weight: 600; color: white; word-break: break-all;">
-                ${shortUrl}
-              </div>
-            </div>
-
-            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
-              <button id="copy-shortlink-btn" data-url="${shortUrl}" style="flex: 1; padding: 12px; background: #5ED9A6; color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                📋 URL kopieren
-              </button>
-              <button onclick="window.open('https://www.adobe.com/express/feature/image/qr-code-generator', '_blank')" style="flex: 1; padding: 12px; background: #7C3AED; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                🎨 QR erstellen
-              </button>
-            </div>
-
-            <!-- Info Box -->
-            <div style="background: rgba(94, 217, 166, 0.08); border-radius: 8px; padding: 1rem; font-size: 0.875rem; color: #333; line-height: 1.6; margin-bottom: 1rem;">
-              <strong>✅ Vorteile Short Link:</strong><br>
-              • Einfacherer QR Code (besser scanbar)<br>
-              • 6-Zeichen verschlüsselt (${shortId})<br>
-              • Schwerer zu faken<br>
-              • Professioneller Look
-            </div>
-
-            <!-- Full URL (Reference only) -->
-            <details style="margin-bottom: 1rem;">
-              <summary style="cursor: pointer; font-size: 0.875rem; color: #999; padding: 0.5rem;">
-                🔍 Vollständige URL anzeigen
-              </summary>
-              <div style="background: #f9f9f9; border: 2px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-top: 0.5rem; font-family: monospace; font-size: 0.75rem; word-break: break-all; color: #666;">
-                https://kinn.at/api/discord/auth?event=${eventId}
-              </div>
-            </details>
-
-            <button onclick="document.getElementById('qr-modal').remove()" style="width: 100%; padding: 12px; background: #f0f0f0; color: #333; border: none; border-radius: 8px; font-weight: 500; cursor: pointer;">
-              Schließen
-            </button>
-          </div>
-        `;
-
-        // Click outside to close
-        modal.onclick = (e) => {
-          if (e.target.id === 'qr-modal') {
-            modal.remove();
-          }
-        };
-
-        // Copy button event listener
-        const copyBtn = document.getElementById('copy-shortlink-btn');
-        if (copyBtn) {
-          copyBtn.addEventListener('click', () => {
-            const url = copyBtn.getAttribute('data-url');
-            copyToClipboard(url);
-          });
-        }
-
-      } catch (error) {
-        console.error('Error generating short link:', error);
-        document.getElementById('qr-modal').remove();
-        showMessage('❌ Fehler beim Generieren des Short Links', 'error');
-      }
-    }
-
     function copyToClipboard(text) {
       navigator.clipboard.writeText(text).then(() => {
-        showMessage('✅ URL kopiert!', 'success');
+        showMessage('URL kopiert!', 'success');
       }).catch(err => {
-        showMessage('❌ Kopieren fehlgeschlagen', 'error');
+        showMessage('Kopieren fehlgeschlagen', 'error');
       });
     }
 
-    function openEngagement(eventId) {
-      window.location.href = `/admin/event-engagement.html?eventId=${eventId}`;
-    }
-
-    // Send Event Invites to all subscribers
-    async function sendEventInvites(eventId, eventTitle) {
-      if (!confirm(`Event-Einladungen versenden?\n\n"${eventTitle}" an alle Subscriber?\n\nDies kann einige Sekunden dauern.`)) {
-        return;
-      }
+    async function copySpotlightText(spotlightId) {
+      const btn = document.getElementById(`spotlight-${spotlightId}-text-btn`);
+      const originalText = btn.textContent;
+      btn.textContent = '...';
+      btn.disabled = true;
 
       try {
-        showMessage('📧 Versende Event-Einladungen...', 'info');
-
-        const response = await fetch('/api/admin/send-event-invites', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${adminPassword}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ eventId })
-        });
-
+        const response = await fetch(`/spotlight/${spotlightId}/content.json`);
+        if (!response.ok) throw new Error('Content not found');
         const data = await response.json();
 
-        if (response.ok) {
-          const { stats } = data;
-          const skippedTotal = stats.skipped.alreadyInvited + stats.skipped.notifications + stats.skipped.location;
-
-          let message = `✅ Event-Einladungen versendet!\n\n`;
-          message += `📊 Von ${stats.total} Subscribern:\n`;
-          message += `✓ ${stats.sent} versendet\n`;
-
-          if (skippedTotal > 0) {
-            message += `⊘ ${skippedTotal} übersprungen:\n`;
-            if (stats.skipped.alreadyInvited > 0) message += `  • ${stats.skipped.alreadyInvited} bereits eingeladen\n`;
-            if (stats.skipped.notifications > 0) message += `  • ${stats.skipped.notifications} notifications aus\n`;
-            if (stats.skipped.location > 0) message += `  • ${stats.skipped.location} location mismatch\n`;
-          }
-
-          if (stats.failed > 0) {
-            message += `✗ ${stats.failed} fehlgeschlagen`;
-          }
-
-          showMessage(message, 'success');
-          // Reload events to show updated RSVP counts
-          loadEvents();
-        } else {
-          showMessage(`❌ Fehler: ${data.message || data.error}`, 'error');
-        }
-      } catch (error) {
-        console.error('[SEND-EVENT-INVITES] Error:', error);
-        showMessage(`❌ Fehler beim Versenden: ${error.message}`, 'error');
+        await navigator.clipboard.writeText(data.text);
+        showMessage('✅ LinkedIn Post kopiert!', 'success');
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = originalText; }, 2000);
+      } catch (err) {
+        showMessage('❌ Fehler: ' + err.message, 'error');
+        btn.textContent = originalText;
+      } finally {
+        btn.disabled = false;
       }
     }
 
@@ -2361,6 +2208,30 @@
       category: 'all',
       search: ''
     };
+
+    // Radar Health Check
+    async function runRadarHealthCheck() {
+      const statusEl = document.getElementById('radar-health-status');
+      statusEl.textContent = 'Checking...';
+      statusEl.style.color = '#6B6B6B';
+
+      try {
+        const res = await fetch('/api/radar/health', {
+          headers: { 'Authorization': `Bearer ${adminPassword}` }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const eventsCount = data.events?.total || 0;
+          const sourcesCount = data.sources?.active || 0;
+          statusEl.innerHTML = `<span style="color: #22c55e;">OK</span> - ${eventsCount} events, ${sourcesCount} sources`;
+        } else {
+          statusEl.innerHTML = `<span style="color: #ef4444;">Error ${res.status}</span>`;
+        }
+      } catch (error) {
+        statusEl.innerHTML = `<span style="color: #ef4444;">Connection failed</span>`;
+      }
+    }
 
     async function loadRadarEvents() {
       try {
