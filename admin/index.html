@@ -2140,17 +2140,7 @@
             </div>
           </div>
 
-          <!-- Event Detail Modal -->
-          <div id="event-detail-modal" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;" onclick="if(event.target === this) closeEventModal()">
-            <div style="background: white; border-radius: 16px; padding: 2rem; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
-                <h3 id="event-modal-title" style="margin: 0; font-size: 1.25rem; line-height: 1.4;"></h3>
-                <button onclick="closeEventModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; padding: 0; line-height: 1;">&times;</button>
-              </div>
-              <div id="event-modal-content"></div>
-            </div>
-          </div>
-        `;
+          `;
       } catch (error) {
         console.error('[TOKEN-LINKS] Error:', error);
         container.innerHTML = `<div class="message error">Fehler beim Laden: ${error.message}</div>`;
@@ -2830,5 +2820,16 @@
       checkboxes.forEach(cb => cb.checked = !allChecked);
     }
   </script>
+
+  <!-- Event Detail Modal (global) -->
+  <div id="event-detail-modal" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;" onclick="if(event.target === this) closeEventModal()">
+    <div style="background: white; border-radius: 16px; padding: 2rem; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+        <h3 id="event-modal-title" style="margin: 0; font-size: 1.25rem; line-height: 1.4;"></h3>
+        <button onclick="closeEventModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; padding: 0; line-height: 1;">&times;</button>
+      </div>
+      <div id="event-modal-content"></div>
+    </div>
+  </div>
 </body>
 </html>
