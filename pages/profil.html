@@ -3064,11 +3064,17 @@
       let monthHtml = '';
 
       data.weeks.forEach((week, idx) => {
-        const firstDay = new Date(week.days[0].date);
-        const weekMonth = firstDay.getMonth();
+        // Find first day actually in the target year
+        const inYearDay = week.days.find(d => d.isInYear);
+        if (!inYearDay) {
+          monthHtml += `<span style="display: inline-block; width: 21px;"></span>`;
+          return;
+        }
+
+        const weekMonth = new Date(inYearDay.date).getMonth();
 
         // Show label only when month changes (each month ~4 weeks)
-        if (weekMonth !== lastShownMonth && week.days.some(d => d.isInYear)) {
+        if (weekMonth !== lastShownMonth) {
           monthHtml += `<span style="display: inline-block; width: 21px; font-size: 9px;">${monthNames[weekMonth]}</span>`;
           lastShownMonth = weekMonth;
         } else {
