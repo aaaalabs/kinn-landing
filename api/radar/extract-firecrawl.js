@@ -293,6 +293,13 @@ export default async function handler(req, res) {
 
   } catch (error) {
     logger.error(`[EXTRACT-FIRECRAWL] Error:`, error);
+
+    // Track error for source health
+    const { sourceName } = req.method === 'GET' ? req.query : req.body;
+    if (sourceName) {
+      await trackSourceError(sourceName, error);
+    }
+
     return res.status(500).json({
       error: 'Extraction failed',
       message: error.message
@@ -342,13 +349,21 @@ async function storeEvent(event, source) {
 }
 
 async function updateSourceMetrics(sourceName, found, added) {
-  const metricsKey = `radar:metrics:source:${sourceName.toLowerCase().replace(/\s+/g, '-')}`;
+  const normalizedName = sourceName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const metricsKey = `radar:metrics:source:${normalizedName}`;
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const now = new Date().toISOString();
 
   // Source-specific metrics
   await kv.hincrby(metricsKey, 'eventsFound', found);
   await kv.hincrby(metricsKey, 'eventsAdded', added);
-  await kv.hset(metricsKey, 'lastSuccess', new Date().toISOString());
+  await kv.hset(metricsKey, 'lastSuccess', now);
+
+  // Source health tracking (for source-health.js)
+  await kv.set(`radar:source:${normalizedName}:lastSuccess`, now);
+  await kv.del(`radar:source:${normalizedName}:lastError`); // Clear error on success
+  await kv.incrby(`radar:source:${normalizedName}:events7d`, found);
+  await kv.expire(`radar:source:${normalizedName}:events7d`, 7 * 24 * 60 * 60); // 7 day TTL
 
   // Daily metrics (for trends)
   await kv.hincrby(`radar:metrics:daily:${today}`, 'found', found);
@@ -357,5 +372,11 @@ async function updateSourceMetrics(sourceName, found, added) {
   // Global metrics
   await kv.hincrby('radar:metrics:global', 'totalFound', found);
   await kv.hincrby('radar:metrics:global', 'totalAdded', added);
-  await kv.hset('radar:metrics:global', 'lastRun', new Date().toISOString());
+  await kv.hset('radar:metrics:global', 'lastRun', now);
+}
+
+// Track extraction errors for source health
+async function trackSourceError(sourceName, error) {
+  const normalizedName = sourceName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  await kv.set(`radar:source:${normalizedName}:lastError`, error.message || 'Unknown error');
 }

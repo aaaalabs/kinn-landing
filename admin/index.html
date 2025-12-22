@@ -963,6 +963,19 @@
               </button>
               <span id="radar-health-status" style="margin-left: 0.5rem; font-size: 0.75rem; color: #6B6B6B;"></span>
             </div>
+
+            <!-- Source Health Status -->
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e8e8e8;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <span style="font-size: 0.875rem; font-weight: 500;">Source Health</span>
+                <button class="btn btn-small btn-secondary" onclick="loadSourceHealth()" style="padding: 4px 10px; font-size: 0.75rem;">
+                  Refresh
+                </button>
+              </div>
+              <div id="source-health-list" style="font-size: 0.8rem; color: #6B6B6B;">
+                Klick auf Refresh um Source Health zu laden...
+              </div>
+            </div>
           </div>
         </details>
       </div>
@@ -2292,6 +2305,61 @@
         }
       } catch (error) {
         statusEl.innerHTML = `<span style="color: #ef4444;">Connection failed</span>`;
+      }
+    }
+
+    // Load Source Health
+    async function loadSourceHealth() {
+      const container = document.getElementById('source-health-list');
+      container.innerHTML = '<span style="color: #999;">Lade...</span>';
+
+      try {
+        const res = await fetch('/api/radar/source-health');
+        if (!res.ok) throw new Error('Failed to load');
+
+        const data = await res.json();
+        const sources = data.sources || [];
+
+        if (sources.length === 0) {
+          container.innerHTML = '<span style="color: #999;">Keine Sources konfiguriert</span>';
+          return;
+        }
+
+        // Build HTML
+        let html = `<div style="margin-bottom: 0.5rem; font-size: 0.7rem; color: #999;">
+          ${data.summary.healthy} healthy, ${data.summary.degraded} degraded, ${data.summary.failing} failing
+        </div>`;
+
+        html += '<div style="display: grid; gap: 0.5rem;">';
+        for (const source of sources.slice(0, 10)) {
+          const statusIcon = source.status === 'healthy' ? '●' :
+                           source.status === 'degraded' ? '◐' :
+                           source.status === 'inactive' ? '○' : '○';
+          const statusColor = source.status === 'healthy' ? '#22c55e' :
+                             source.status === 'degraded' ? '#eab308' :
+                             source.status === 'failing' ? '#ef4444' : '#9ca3af';
+
+          const eventsText = source.events7d > 0 ? `${source.events7d} events` : 'no events';
+          const errorText = source.lastError ? `Error: ${source.lastError.substring(0, 30)}` : '';
+
+          html += `<div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; border-bottom: 1px solid #f0f0f0;">
+            <span style="color: ${statusColor}; font-size: 0.9rem;">${statusIcon}</span>
+            <span style="flex: 1; font-weight: 500;">${source.name}</span>
+            <span style="color: #6B6B6B;">${eventsText}</span>
+            ${source.approvalRate !== null ? `<span style="color: #6B6B6B;">${source.approvalRate}%</span>` : ''}
+          </div>`;
+
+          if (errorText) {
+            html += `<div style="font-size: 0.7rem; color: #ef4444; margin-left: 1.5rem; margin-top: -0.25rem;">${errorText}</div>`;
+          }
+        }
+        html += '</div>';
+
+        container.innerHTML = html;
+
+      } catch (error) {
+        container.innerHTML = '<span style="color: #ef4444;">Fehler beim Laden</span>';
+        console.error('Error loading source health:', error);
       }
     }
 
