@@ -255,7 +255,8 @@ For each qualifying FREE event in TYROL, extract:
   "category": "AI" | "Tech" | "Startup" | "Innovation" | "Business" | "Education" | "Other",
   "description": "Brief description (max 200 chars)",
   "registrationUrl": "URL for registration if found",
-  "detailUrl": "URL to event detail page (IMPORTANT - always extract if available!)"
+  "detailUrl": "URL to event detail page (IMPORTANT - always extract if available!)",
+  "thumbnail": "URL to event image/thumbnail if available (og:image, event banner, hero image)"
 }
 
 Categories:
@@ -344,6 +345,7 @@ async function storeEvent(event, source) {
     source: source,
     location: event.location || event.city || 'unknown',
     detailUrl: event.detailUrl || event.registrationUrl || null,
+    thumbnail: event.thumbnail || null,
     createdAt: new Date().toISOString(),
     status: 'pending'
   };

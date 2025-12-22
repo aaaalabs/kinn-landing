@@ -136,7 +136,8 @@ Return JSON with only the fields you can find:
 {
   "location": "Full venue name and address if found",
   "city": "City name if found",
-  "time": "HH:MM format if found and different from ${event.time || 'unknown'}"
+  "time": "HH:MM format if found and different from ${event.time || 'unknown'}",
+  "thumbnail": "URL to event image (look for og:image meta tag, event banner, hero image, or featured image)"
 }
 
 Only include fields with actual values found. Use null for fields not found.`
@@ -158,6 +159,10 @@ Only include fields with actual values found. Use null for fields not found.`
     }
     if (extracted.time && extracted.time !== event.time) {
       event.time = extracted.time;
+    }
+    if (extracted.thumbnail && !event.thumbnail) {
+      logger.debug(`[ENRICH] Found thumbnail for "${event.title}": ${extracted.thumbnail}`);
+      event.thumbnail = extracted.thumbnail;
     }
 
     return event;
@@ -206,7 +211,8 @@ Return a JSON object with an "events" array:
       "category": "AI|Startup|Workshop|Networking|Tech|Innovation|Other",
       "description": "Brief description (max 200 chars)",
       "registrationUrl": "Direct registration/ticket URL if available",
-      "detailUrl": "URL to event detail page (IMPORTANT - always include!)"
+      "detailUrl": "URL to event detail page (IMPORTANT - always include!)",
+      "thumbnail": "URL to event image/thumbnail if available (look for og:image, event banner, hero image)"
     }
   ]
 }

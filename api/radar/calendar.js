@@ -124,7 +124,8 @@ export default async function handler(req, res) {
         location: event.location || event.city || 'TBA',
         source: event.source,
         sourceColor: getSourceColor(event.source),
-        detailUrl: event.detailUrl || event.registrationUrl || null
+        detailUrl: event.detailUrl || event.registrationUrl || null,
+        thumbnail: event.thumbnail || null
       });
     });
 
