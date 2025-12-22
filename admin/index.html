@@ -2255,7 +2255,7 @@
       const modal = document.getElementById('event-detail-modal');
 
       const isAI = event.category && event.category.toLowerCase().includes('ai');
-      const isApproved = event.approved === 'true' || event.approved === true;
+      const isApproved = event.status === 'approved' || event.approved === 'true' || event.approved === true;
       const createdAt = event.createdAt ? new Date(event.createdAt).toLocaleString('de-AT') : '-';
 
       modalTitle.textContent = event.title;
@@ -2470,7 +2470,7 @@
       filteredRadarEvents = allRadarEvents.filter(event => {
         // Status filter
         if (radarFilters.status !== 'all') {
-          const isApproved = event.approved === 'true' || event.approved === true;
+          const isApproved = event.status === 'approved' || event.approved === 'true' || event.approved === true;
           if (radarFilters.status === 'approved' && !isApproved) return false;
           if (radarFilters.status === 'pending' && isApproved) return false;
         }
@@ -2573,7 +2573,7 @@
           <tbody>
             ${filteredRadarEvents.map(event => {
               const isAI = event.category && event.category.toLowerCase().includes('ai');
-              const isApproved = event.approved === 'true' || event.approved === true;
+              const isApproved = event.status === 'approved' || event.approved === 'true' || event.approved === true;
               const createdAt = event.createdAt ? new Date(event.createdAt) : null;
               const now = new Date();
               const hoursSinceCreated = createdAt ? (now - createdAt) / (1000 * 60 * 60) : Infinity;
@@ -2672,15 +2672,12 @@
 
         if (res.ok) {
           showMessage(isApproved ? 'Event freigegeben ✓' : 'Event zurückgezogen');
-          // Update the local data only - don't re-render the table
+          // Update the local data with new status schema
           const event = allRadarEvents.find(e => e.id === id);
           if (event) {
+            event.status = isApproved ? 'approved' : 'rejected';
+            // Also update legacy fields for compatibility
             event.approved = isApproved ? 'true' : 'false';
-            if (!isApproved) {
-              event.rejected = 'true';
-            } else {
-              delete event.rejected;
-            }
           }
           // Don't call renderRadarTable() - this prevents animation glitches
           // The toggle already shows the correct state visually
