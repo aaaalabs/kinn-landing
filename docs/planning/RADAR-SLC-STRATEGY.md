@@ -301,12 +301,33 @@ Im Admin Tab Button:
 
 ---
 
-## Nächste Schritte
+## Implementierungsstatus
 
-1. **Heute:** Metrics Counter implementieren
-2. **Diese Woche:** Admin Dashboard mit Metrics Bar
-3. **Nächste Woche:** Source Health Monitoring
-4. **Januar:** Daily Digest + Auto-Approve
+### Phase 1: Visibility - COMPLETE
+- [x] `/api/radar/metrics.js` - Metrics Endpoint
+- [x] Metrics Bar im Admin (Today, Week, Pending, Approval Rate)
+- [x] Pending Badge am Tab Button
+- [x] Daily Metrics Tracking in Redis
+
+### Phase 2: Source Health - COMPLETE
+- [x] `/api/radar/source-health.js` - Health Status Endpoint
+- [x] Health Tracking in `extract-firecrawl.js`
+- [x] Source Health Section im Admin UI
+- [x] Status Badges (healthy/degraded/failing)
+
+### Phase 3: Automation - COMPLETE
+- [x] `/api/radar/weekly-digest.js` - Weekly Email an admin@libralab.ai
+- [x] Pushbullet Integration für Source Failures
+- [x] Cron Job: Montags 9:00 Uhr
+- [x] "NEU" Badge für Events der letzten 24-48h
+- [x] Sortierung nach Hinzufügedatum (neueste zuerst)
+
+### Env Variables Required
+```bash
+PUSHBULLET_API_KEY=...      # Für Failure Notifications
+RESEND_API_KEY=...          # Für Weekly Digest Email
+RADAR_ADMIN_TOKEN=...       # Admin Auth
+```
 
 ---
 

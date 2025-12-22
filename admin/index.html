@@ -2247,8 +2247,8 @@
     // === Radar Events Management ===
     let allRadarEvents = [];
     let filteredRadarEvents = [];
-    let radarSortColumn = 'date';
-    let radarSortDirection = 'asc';
+    let radarSortColumn = 'createdAt';
+    let radarSortDirection = 'desc'; // Neueste zuerst
     let radarFilters = {
       status: 'all',
       source: 'all',
@@ -2408,6 +2408,10 @@
       filteredRadarEvents.sort((a, b) => {
         let aVal, bVal;
         switch(radarSortColumn) {
+          case 'createdAt':
+            aVal = a.createdAt ? new Date(a.createdAt) : new Date(0);
+            bVal = b.createdAt ? new Date(b.createdAt) : new Date(0);
+            break;
           case 'date':
             aVal = new Date(`${a.date}T${a.time || '00:00'}`);
             bVal = new Date(`${b.date}T${b.time || '00:00'}`);
@@ -2469,6 +2473,9 @@
               <th style="padding: 0.5rem; text-align: left; width: 30px;">
                 <input type="checkbox" id="radar-select-all" onchange="selectAllRadarTable()">
               </th>
+              <th style="padding: 0.5rem; text-align: left; cursor: pointer;" onclick="sortRadarTable('createdAt')" title="Sortiere nach Hinzufügedatum">
+                Neu ${radarSortColumn === 'createdAt' ? (radarSortDirection === 'asc' ? '↑' : '↓') : ''}
+              </th>
               <th style="padding: 0.5rem; text-align: left; cursor: pointer;" onclick="sortRadarTable('date')">
                 Datum ${radarSortColumn === 'date' ? (radarSortDirection === 'asc' ? '↑' : '↓') : ''}
               </th>
@@ -2491,13 +2498,23 @@
             ${filteredRadarEvents.map(event => {
               const isAI = event.category && event.category.toLowerCase().includes('ai');
               const isApproved = event.approved === 'true' || event.approved === true;
+              const createdAt = event.createdAt ? new Date(event.createdAt) : null;
+              const now = new Date();
+              const hoursSinceCreated = createdAt ? (now - createdAt) / (1000 * 60 * 60) : Infinity;
+              const isNew = hoursSinceCreated < 48;
+              const isVeryNew = hoursSinceCreated < 24;
               const rowStyle = isApproved
                 ? 'background: #f0fdf4; border-left: 4px solid #5ED9A6;'
-                : 'border-left: 4px solid transparent;';
+                : isVeryNew
+                  ? 'background: #fffbeb; border-left: 4px solid #f59e0b;'
+                  : 'border-left: 4px solid transparent;';
               return `
                 <tr style="border-bottom: 1px solid #e0e0e0; ${rowStyle}">
                   <td style="padding: 0.5rem;">
                     <input type="checkbox" data-id="${event.id}" class="radar-row-checkbox">
+                  </td>
+                  <td style="padding: 0.5rem; text-align: center;">
+                    ${isVeryNew ? '<span style="background: #f59e0b; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.65rem; font-weight: 600;">NEU</span>' : isNew ? '<span style="background: #fcd34d; color: #92400e; padding: 2px 6px; border-radius: 3px; font-size: 0.65rem;">48h</span>' : '<span style="color: #d1d5db;">-</span>'}
                   </td>
                   <td style="padding: 0.5rem; white-space: nowrap;">
                     ${event.date}<br>
