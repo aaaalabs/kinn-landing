@@ -1,0 +1,16 @@
+{
+  "spotlights": [
+    {
+      "id": "b8211f",
+      "name": "David Moling",
+      "title": "KI Automatisierung für KMU",
+      "location": "Innsbruck",
+      "quote": "Die besten KI-Lösungen entstehen nicht am Bildschirm. Sie entstehen in Gesprächen.",
+      "image": "kspot_DavidMolig.png",
+      "linkedIn": "https://linkedin.com/in/david-moling",
+      "status": "pending",
+      "createdAt": "2025-12-21",
+      "approvedAt": null
+    }
+  ]
+}

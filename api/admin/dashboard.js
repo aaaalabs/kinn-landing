@@ -46,87 +46,69 @@ export default async function handler(req, res) {
     const allSubscribers = await getAllSubscribers();
     const totalSubscribers = allSubscribers.length;
 
-    // 2. Profile Completion Rate
+    // 2. Profile Completion Rate (PARALLEL fetch)
+    const profilePromises = allSubscribers.map(email =>
+      redis.get(`profile:${email}`).catch(() => null)
+    );
+    const profiles = await Promise.all(profilePromises);
+
     let completeProfiles = 0;
     let incompleteProfiles = [];
 
-    for (const email of allSubscribers) {
-      try {
-        const profile = await redis.get(`profile:${email}`);
+    profiles.forEach((profile, i) => {
+      const email = allSubscribers[i];
+      if (profile) {
+        const hasName = profile.identity?.name && profile.identity.name.trim() !== '';
+        const hasSkills = profile.supply?.skills && profile.supply.skills.length > 0;
+        const hasExperience = profile.supply?.experience;
 
-        if (profile) {
-          const hasName = profile.identity?.name && profile.identity.name.trim() !== '';
-          const hasSkills = profile.supply?.skills && profile.supply.skills.length > 0;
-          const hasExperience = profile.supply?.experience;
-
-          if (hasName && hasSkills && hasExperience) {
-            completeProfiles++;
-          } else {
-            incompleteProfiles.push({
-              email,
-              missing: {
-                name: !hasName,
-                skills: !hasSkills,
-                experience: !hasExperience
-              }
-            });
-          }
+        if (hasName && hasSkills && hasExperience) {
+          completeProfiles++;
         } else {
-          // No profile at all
           incompleteProfiles.push({
             email,
-            missing: { name: true, skills: true, experience: true }
+            missing: { name: !hasName, skills: !hasSkills, experience: !hasExperience }
           });
         }
-      } catch (error) {
-        console.error(`[DASHBOARD] Error checking profile ${email}:`, error.message);
+      } else {
+        incompleteProfiles.push({
+          email,
+          missing: { name: true, skills: true, experience: true }
+        });
       }
-    }
+    });
 
     const completionRate = totalSubscribers > 0
       ? Math.round((completeProfiles / totalSubscribers) * 100)
       : 0;
 
-    // 3. Top Skills (from skill:* indexes)
+    // 3. Top Skills (PARALLEL fetch)
     const skillKeys = await redis.keys('skill:*');
-    const skillCounts = [];
+    const skillCountPromises = skillKeys.map(key =>
+      redis.scard(key).then(count => ({ skill: key.replace('skill:', ''), count }))
+    );
+    const skillCounts = (await Promise.all(skillCountPromises)).filter(s => s.count > 0);
+    const topSkills = skillCounts.sort((a, b) => b.count - a.count).slice(0, 10);
 
-    for (const key of skillKeys) {
-      const skillName = key.replace('skill:', '');
-      const count = await redis.scard(key);
-      if (count > 0) {
-        skillCounts.push({ skill: skillName, count });
-      }
-    }
+    // 4-6. Location, Work, Level Stats (PARALLEL)
+    const [locTirol, locOnline, locAll, workEmployed, workFreelancer, workStudent, workBetween, workSide, lvlJunior, lvlMid, lvlSenior, lvlLead] = await Promise.all([
+      redis.scard('loc:tirol'),
+      redis.scard('loc:online'),
+      redis.scard('loc:all'),
+      redis.scard('work:employed'),
+      redis.scard('work:freelancer'),
+      redis.scard('work:student'),
+      redis.scard('work:between-jobs'),
+      redis.scard('work:side-projects'),
+      redis.scard('level:junior'),
+      redis.scard('level:mid'),
+      redis.scard('level:senior'),
+      redis.scard('level:lead')
+    ]);
 
-    // Sort by count desc, take top 10
-    const topSkills = skillCounts
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
-
-    // 4. Location Distribution
-    const locationStats = {
-      tirol: await redis.scard('loc:tirol') || 0,
-      online: await redis.scard('loc:online') || 0,
-      all: await redis.scard('loc:all') || 0
-    };
-
-    // 5. Work Status Distribution
-    const workStats = {
-      employed: await redis.scard('work:employed') || 0,
-      freelancer: await redis.scard('work:freelancer') || 0,
-      student: await redis.scard('work:student') || 0,
-      betweenJobs: await redis.scard('work:between-jobs') || 0,
-      sideProjects: await redis.scard('work:side-projects') || 0
-    };
-
-    // 6. Experience Level Distribution
-    const levelStats = {
-      junior: await redis.scard('level:junior') || 0,
-      mid: await redis.scard('level:mid') || 0,
-      senior: await redis.scard('level:senior') || 0,
-      lead: await redis.scard('level:lead') || 0
-    };
+    const locationStats = { tirol: locTirol || 0, online: locOnline || 0, all: locAll || 0 };
+    const workStats = { employed: workEmployed || 0, freelancer: workFreelancer || 0, student: workStudent || 0, betweenJobs: workBetween || 0, sideProjects: workSide || 0 };
+    const levelStats = { junior: lvlJunior || 0, mid: lvlMid || 0, senior: lvlSenior || 0, lead: lvlLead || 0 };
 
     // 7. Event Stats
     const eventsConfig = await getEventsConfig();

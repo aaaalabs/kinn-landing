@@ -52,6 +52,22 @@
     {
       "source": "/lade/:id",
       "destination": "/lade/:id/index.html"
+    },
+    {
+      "source": "/spotlight",
+      "destination": "/spotlight/index.html"
+    },
+    {
+      "source": "/spotlight/:id",
+      "destination": "/spotlight/:id/index.html"
+    },
+    {
+      "source": "/:id(\\d+)",
+      "destination": "/api/event/:id"
+    },
+    {
+      "source": "/tech/:id",
+      "destination": "/api/tech/:id"
     }
   ],
   "headers": [
@@ -61,6 +77,24 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
         }
       ]
     },
@@ -89,7 +123,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.vercel.app https://*.upstash.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://embed.lu.ma; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://embed.lu.ma; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.vercel.app https://*.upstash.io https://api.lu.ma; frame-src https://lu.ma https://luma.com https://embed.lu.ma; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
         }
       ]
     }

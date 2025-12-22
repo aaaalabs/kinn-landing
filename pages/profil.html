@@ -1626,10 +1626,10 @@
       }
       renderProfile();
 
-      // Load events, voting widget and radar widget when switching to dashboard
+      // Load voting widget and radar widget when switching to dashboard
+      // Note: Events now rendered via Luma embed (static iframe)
       if (activeTab === 'dashboard') {
         setTimeout(() => {
-          loadEvents();
           loadVotingWidget();
           loadRadarEventsWidget();
         }, 100);
@@ -1642,10 +1642,10 @@
       window.location.hash = `#${tab}`;
       renderProfile();
 
-      // Load events and widgets when switching to dashboard
+      // Load widgets when switching to dashboard
+      // Note: Events now rendered via Luma embed (static iframe)
       if (tab === 'dashboard') {
         setTimeout(() => {
-          loadEvents();
           loadVotingWidget();
           loadRadarEventsWidget();
         }, 100);
@@ -1714,10 +1714,10 @@
         }, 0);
       }
 
-      // Load events, voting widget and radar widget on initial dashboard render
+      // Load voting widget and radar widget on initial dashboard render
+      // Note: Events now rendered via Luma embed (static iframe)
       if (activeTab === 'dashboard') {
         setTimeout(() => {
-          loadEvents();
           loadVotingWidget();
           loadRadarEventsWidget();
         }, 100);
@@ -1790,10 +1790,21 @@
         ${profileHint}
 
         <div class="card">
-          <h2>Kommende Events</h2>
-          <div id="eventsContainer" class="loading">
-            <div class="spinner"></div>
-            <p>Lade Events...</p>
+          <h2>Kommende Events & Tickets</h2>
+          <div id="eventsContainer" style="margin-top: 1rem;">
+            <iframe
+              src="https://lu.ma/embed/calendar/cal-B8hLVGBZAUdaFkv/events?lt=light"
+              width="100%"
+              height="320"
+              frameborder="0"
+              style="border: 1px solid #bfcbda88; border-radius: 8px;"
+              allowfullscreen=""
+              aria-hidden="false"
+              tabindex="0"
+            ></iframe>
+            <p style="font-size: 0.75rem; color: #999; margin-top: 0.5rem; text-align: center;">
+              Events via <a href="https://luma.com/kinns" target="_blank" rel="noopener" style="color: #5ED9A6;">luma.com/kinns</a>
+            </p>
           </div>
         </div>
 
@@ -1815,9 +1826,12 @@
 
         <!-- KINN #7 Voting Widget -->
         <div class="card">
-          <h2 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.75rem;">
-            Themen für KINN #7
-            <span id="vote-count" style="font-size: 0.75rem; color: #999; font-weight: 400; margin-left: 0.5rem;"></span>
+          <h2 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+            <span>
+              Themen für KINN#7
+              <span id="vote-count" style="font-size: 0.75rem; color: #999; font-weight: 400; margin-left: 0.5rem;"></span>
+            </span>
+            <a href="https://lu.ma/g09qnnud" class="luma-checkout--button" data-luma-action="checkout" data-luma-event-id="evt-HvWF9r2AsTYZygY" style="font-size: 0.75rem; font-weight: 500; padding: 0.25rem 0.75rem; background: #5ED9A6; color: #000; text-decoration: none; border-radius: 4px; cursor: pointer;">Anmelden</a>
           </h2>
           <p style="margin-bottom: 1rem; color: #6B6B6B; font-size: 0.875rem;">
             Vote für Themen, die dich beim nächsten Treff interessieren.
@@ -3229,5 +3243,7 @@
       }, 500);
     }
   </script>
+  <!-- Luma Checkout Popup -->
+  <script id="luma-checkout" src="https://embed.lu.ma/checkout-button.js"></script>
 </body>
 </html>
