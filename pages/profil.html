@@ -3066,11 +3066,9 @@
       data.weeks.forEach((week, idx) => {
         const firstDay = new Date(week.days[0].date);
         const weekMonth = firstDay.getMonth();
-        const isFirstWeekOfMonth = firstDay.getDate() <= 7;
-        const showLabel = weekMonth !== lastShownMonth || isFirstWeekOfMonth;
 
-        // Each week gets a fixed-width label slot (21px = 18px cell + 3px gap)
-        if (showLabel && week.days.some(d => d.isInYear)) {
+        // Show label only when month changes (each month ~4 weeks)
+        if (weekMonth !== lastShownMonth && week.days.some(d => d.isInYear)) {
           monthHtml += `<span style="display: inline-block; width: 21px; font-size: 9px;">${monthNames[weekMonth]}</span>`;
           lastShownMonth = weekMonth;
         } else {
