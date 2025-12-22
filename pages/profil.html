@@ -1850,7 +1850,7 @@
                   <div style="height: 18px; display: flex; align-items: center;">S</div>
                 </div>
                 <div id="user-radar-calendar-scroll" style="overflow-x: auto; overflow-y: hidden; flex: 1; scrollbar-width: thin;">
-                  <div id="user-radar-month-labels" style="display: flex; margin-bottom: 3px; font-size: 9px; color: #6B7280; font-weight: 500; height: 14px;"></div>
+                  <div id="user-radar-month-labels" style="display: flex; gap: 3px; margin-bottom: 3px; font-size: 9px; color: #6B7280; font-weight: 500; height: 14px;"></div>
                   <div id="user-radar-calendar-grid" style="display: flex; gap: 3px;"></div>
                 </div>
               </div>
@@ -3067,7 +3067,7 @@
         // Find first day actually in the target year
         const inYearDay = week.days.find(d => d.isInYear);
         if (!inYearDay) {
-          monthHtml += `<span style="display: inline-block; width: 21px;"></span>`;
+          monthHtml += `<span style="width: 18px;"></span>`;
           return;
         }
 
@@ -3075,10 +3075,10 @@
 
         // Show label only when month changes (each month ~4 weeks)
         if (weekMonth !== lastShownMonth) {
-          monthHtml += `<span style="display: inline-block; width: 21px; font-size: 9px;">${monthNames[weekMonth]}</span>`;
+          monthHtml += `<span style="width: 18px; font-size: 9px; white-space: nowrap;">${monthNames[weekMonth]}</span>`;
           lastShownMonth = weekMonth;
         } else {
-          monthHtml += `<span style="display: inline-block; width: 21px;"></span>`;
+          monthHtml += `<span style="width: 18px;"></span>`;
         }
       });
       monthLabelsEl.innerHTML = monthHtml;
