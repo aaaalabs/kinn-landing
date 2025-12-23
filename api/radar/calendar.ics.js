@@ -71,16 +71,16 @@ function generateICS(events) {
     'BEGIN:DAYLIGHT',
     'TZOFFSETFROM:+0100',
     'TZOFFSETTO:+0200',
-    'TZNAME:CEST',
-    'DTSTART:20240331T020000',
+    'DTSTART:19700329T020000',
     'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU',
+    'TZNAME:CEST',
     'END:DAYLIGHT',
     'BEGIN:STANDARD',
     'TZOFFSETFROM:+0200',
     'TZOFFSETTO:+0100',
-    'TZNAME:CET',
-    'DTSTART:20241027T030000',
+    'DTSTART:19701025T030000',
     'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU',
+    'TZNAME:CET',
     'END:STANDARD',
     'END:VTIMEZONE'
   ];
@@ -104,84 +104,79 @@ function generateVEvent(event) {
   const uid = `${event.id}@radar.kinn.at`;
   lines.push(`UID:${uid}`);
 
+  // Generate DTSTAMP (current time in UTC format)
+  const now = new Date();
+  const dtstamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  lines.push(`DTSTAMP:${dtstamp}`);
+
   // Generate timestamps
-  const dtstart = formatDateTime(event.date, event.time || '18:00');
-  const dtend = formatDateTime(event.date, event.endTime || addHours(event.time || '18:00', 2));
+  const startTime = event.time || '18:00';
+  const dtstart = formatDateTime(event.date, startTime);
+  const dtend = formatDateTime(event.date, event.endTime || addHours(startTime, 2));
 
   lines.push(`DTSTART;TZID=Europe/Vienna:${dtstart}`);
   lines.push(`DTEND;TZID=Europe/Vienna:${dtend}`);
-  lines.push(`DTSTAMP:${formatDateTime(new Date().toISOString().split('T')[0], new Date().toTimeString().split(' ')[0].substring(0, 5))}`);
 
-  // Add event details
-  const summary = `🤖 ${event.title}`;
-  lines.push(`SUMMARY:${escapeICS(summary)}`);
+  // Title without emoji (cleaner for calendar clients)
+  lines.push(`SUMMARY:${escapeICS(event.title)}`);
 
   // Build description
   const descriptionParts = [];
 
   if (event.description) {
-    descriptionParts.push(escapeICS(event.description));
+    descriptionParts.push(event.description);
     descriptionParts.push('');
   }
 
-  descriptionParts.push(`📍 Location: ${event.location || 'TBA'}`);
-
-  if (event.address) {
-    descriptionParts.push(`📮 Address: ${event.address}`);
+  if (event.location && event.location !== 'TBA' && event.location !== 'TBD') {
+    descriptionParts.push(`Ort: ${event.location}`);
   }
 
-  descriptionParts.push(`🏢 City: ${event.city || 'Innsbruck'}`);
-
-  if (event.language) {
-    const langMap = { 'de': 'Deutsch', 'en': 'English', 'mixed': 'DE/EN' };
-    descriptionParts.push(`🗣️ Language: ${langMap[event.language] || event.language}`);
+  if (event.city) {
+    descriptionParts.push(`Stadt: ${event.city}`);
   }
 
-  if (event.registrationUrl) {
+  if (event.registrationUrl || event.detailUrl) {
     descriptionParts.push('');
-    descriptionParts.push(`🔗 Register: ${event.registrationUrl}`);
-  }
-
-  if (event.tags && event.tags.length > 0) {
-    descriptionParts.push('');
-    descriptionParts.push(`🏷️ Tags: ${event.tags.join(', ')}`);
+    descriptionParts.push(`Details: ${event.registrationUrl || event.detailUrl}`);
   }
 
   descriptionParts.push('');
-  descriptionParts.push('✨ FREE EVENT - Part of KINN-RADAR');
-  descriptionParts.push('📅 Subscribe for all FREE AI events in Tyrol');
+  descriptionParts.push(`Quelle: ${event.source || 'KINN Radar'}`);
+  descriptionParts.push('via KINN Radar - kinn.at');
 
-  lines.push(`DESCRIPTION:${descriptionParts.map(escapeICS).join('\\n')}`);
+  lines.push(`DESCRIPTION:${escapeICS(descriptionParts.join('\\n'))}`);
 
   // Location
-  if (event.location) {
+  if (event.location && event.location !== 'TBA' && event.location !== 'TBD') {
     const location = event.address
       ? `${event.location}, ${event.address}, ${event.city || 'Innsbruck'}`
       : `${event.location}, ${event.city || 'Innsbruck'}`;
     lines.push(`LOCATION:${escapeICS(location)}`);
   }
 
-  // URL if available
-  if (event.registrationUrl) {
-    lines.push(`URL:${event.registrationUrl}`);
+  // URL - use detailUrl or registrationUrl
+  const eventUrl = event.detailUrl || event.registrationUrl;
+  if (eventUrl) {
+    lines.push(`URL:${eventUrl}`);
   }
 
+  // Organizer
+  lines.push('ORGANIZER;CN=KINN Radar:mailto:thomas@kinn.at');
+
   // Categories
-  const categories = event.tags || ['AI', 'Technology'];
-  lines.push(`CATEGORIES:${categories.join(',')}`);
+  lines.push('CATEGORIES:KI,AI,Networking,Tirol');
 
-  // Status and transparency
+  // Status
   lines.push('STATUS:CONFIRMED');
-  lines.push('TRANSP:OPAQUE');
+  lines.push('SEQUENCE:0');
 
-  // Classification
-  lines.push('CLASS:PUBLIC');
-
-  // Priority (normal)
-  lines.push('PRIORITY:5');
-
-  // Add source as comment
-  lines.push(`COMMENT:Source: ${event.source || 'Newsletter'}`);
+  // 24h Reminder (like KINN ICS)
+  lines.push('BEGIN:VALARM');
+  lines.push('TRIGGER:-PT24H');
+  lines.push('ACTION:DISPLAY');
+  lines.push(`DESCRIPTION:${escapeICS(event.title)} morgen`);
+  lines.push('END:VALARM');
 
   lines.push('END:VEVENT');
 
