@@ -1810,7 +1810,7 @@
           </div>
         </div> -->
 
-        <!-- NEW: KI Event Radar Calendar Widget (admin only for now) -->
+        <!-- KI Event Radar Calendar Widget -->
         <div id="radar-calendar-widget" class="card" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <h2 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin: 0;">
@@ -3073,18 +3073,10 @@
     let userRadarView = 'calendar';
 
     async function loadRadarEventsWidget() {
-      // Check if user is admin - only show widget for admin@libralab.ai
-      const isAdmin = userEmail === 'admin@libralab.ai';
       const widgetEl = document.getElementById('radar-calendar-widget');
-
       if (!widgetEl) return;
 
-      if (!isAdmin) {
-        widgetEl.style.display = 'none';
-        return;
-      }
-
-      // Show widget for admin
+      // Show widget for all users
       widgetEl.style.display = 'block';
       setUserRadarView('calendar');
     }
