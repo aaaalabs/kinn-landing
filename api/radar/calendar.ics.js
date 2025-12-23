@@ -21,11 +21,11 @@ export default async function handler(req, res) {
       const event = await kv.hgetall(`radar:event:${eventId}`);
 
       if (event && event.date) {
-        // Only include approved, future AI events for the ICS feed
+        // Only include approved, future events for the ICS feed
         const eventDate = new Date(event.date);
         const isApproved = isEventApproved(event);
 
-        if (isApproved && eventDate >= now && event.category === 'AI') {
+        if (isApproved && eventDate >= now) {
           events.push(event);
         }
       }

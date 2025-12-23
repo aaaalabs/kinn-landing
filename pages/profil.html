@@ -1816,9 +1816,14 @@
             <h2 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin: 0;">
               KI Event Radar Tirol
             </h2>
-            <span style="display: flex; gap: 0; align-items: center;">
-              <button onclick="setUserRadarView('calendar')" id="user-radar-view-calendar" style="padding: 5px 12px; border: 1px solid #e5e7eb; border-radius: 10px 0 0 10px; background: #5ED9A6; color: white; font-size: 0.7rem; cursor: pointer; font-weight: 500;">Kalender</button>
-              <button onclick="setUserRadarView('list')" id="user-radar-view-list" style="padding: 5px 12px; border: 1px solid #e5e7eb; border-left: none; border-radius: 0 10px 10px 0; background: white; color: #1F2937; font-size: 0.7rem; cursor: pointer; font-weight: 500;">Liste</button>
+            <span style="display: flex; gap: 8px; align-items: center;">
+              <button onclick="subscribeToRadarCalendar(event)" title="Alle KI Events abonnieren" style="padding: 4px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; color: #6B7280; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseenter="this.style.borderColor='#5ED9A6'; this.style.color='#5ED9A6';" onmouseleave="this.style.borderColor='#e5e7eb'; this.style.color='#6B7280';">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 21h-6a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v6" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M4 11h16" /><path d="M16 22l5 -5" /><path d="M21 21.5v-4.5h-4.5" /></svg>
+              </button>
+              <span style="display: flex; gap: 0; align-items: center;">
+                <button onclick="setUserRadarView('calendar')" id="user-radar-view-calendar" style="padding: 5px 12px; border: 1px solid #e5e7eb; border-radius: 10px 0 0 10px; background: #5ED9A6; color: white; font-size: 0.7rem; cursor: pointer; font-weight: 500;">Kalender</button>
+                <button onclick="setUserRadarView('list')" id="user-radar-view-list" style="padding: 5px 12px; border: 1px solid #e5e7eb; border-left: none; border-radius: 0 10px 10px 0; background: white; color: #1F2937; font-size: 0.7rem; cursor: pointer; font-weight: 500;">Liste</button>
+              </span>
             </span>
           </div>
 
@@ -3550,6 +3555,73 @@
           }, 3000);
         }
       }, 500);
+    }
+
+    /**
+     * Subscribe to RADAR calendar (ALL approved KI Events in Tirol)
+     * Same logic as subscribeToCalendar but with radar ICS endpoint
+     */
+    window.subscribeToRadarCalendar = function(event) {
+      const button = event?.target?.closest('button') || event?.currentTarget;
+      const icsUrl = 'https://kinn.at/api/radar/calendar.ics';
+      const userAgent = navigator.userAgent.toLowerCase();
+
+      const isChrome = /chrome|chromium|crios/.test(userAgent) && !/edg/.test(userAgent);
+      const isSafari = /safari/.test(userAgent) && !isChrome;
+      const isIOS = /iphone|ipad|ipod/.test(userAgent);
+      const isMac = /macintosh|mac os x/.test(userAgent);
+
+      console.log('[RADAR-CALENDAR] Subscribing to radar feed');
+
+      // Disable button temporarily
+      if (button) {
+        button.disabled = true;
+        button.style.opacity = '0.5';
+      }
+
+      const resetButton = () => {
+        if (button) {
+          button.disabled = false;
+          button.style.opacity = '1';
+        }
+      };
+
+      // Priority 1: Chrome → Google Calendar
+      if (isChrome) {
+        const webcalUrl = icsUrl.replace('https://', 'webcal://');
+        const googleCalUrl = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcalUrl)}`;
+        console.log('[RADAR-CALENDAR] Opening Google Calendar');
+
+        const newWindow = window.open(googleCalUrl, '_blank');
+
+        setTimeout(() => {
+          resetButton();
+          if (!newWindow || newWindow.closed) {
+            alert('Popup wurde blockiert! Bitte erlaube Popups für diese Seite.');
+          }
+        }, 2000);
+        return;
+      }
+
+      // Priority 2: Safari on iOS/macOS → webcal://
+      if (isSafari && (isIOS || isMac)) {
+        console.log('[RADAR-CALENDAR] Opening webcal:// for Safari');
+        window.location.href = icsUrl.replace('https://', 'webcal://');
+        setTimeout(resetButton, 3000);
+        return;
+      }
+
+      // Priority 3: Download .ics
+      console.log('[RADAR-CALENDAR] Downloading .ics file');
+      const link = document.createElement('a');
+      link.href = icsUrl;
+      link.download = 'kinn-radar-events.ics';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(resetButton, 1500);
     }
   </script>
   <!-- Luma Checkout Popup -->
