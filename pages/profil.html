@@ -3555,7 +3555,9 @@
      */
     window.subscribeToRadarCalendar = function(event) {
       const button = event?.target?.closest('button') || event?.currentTarget;
-      const icsUrl = 'https://kinn.at/api/radar/calendar.ics';
+      // Force refresh trick: append timestamp as anchor to bust Google Calendar cache
+      const refreshId = Date.now();
+      const icsUrl = `https://kinn.at/api/radar/calendar.ics#${refreshId}`;
       const userAgent = navigator.userAgent.toLowerCase();
 
       const isChrome = /chrome|chromium|crios/.test(userAgent) && !/edg/.test(userAgent);
@@ -3563,7 +3565,7 @@
       const isIOS = /iphone|ipad|ipod/.test(userAgent);
       const isMac = /macintosh|mac os x/.test(userAgent);
 
-      console.log('[RADAR-CALENDAR] Subscribing to radar feed');
+      console.log('[RADAR-CALENDAR] Subscribing to radar feed with refresh ID:', refreshId);
 
       // Disable button temporarily
       if (button) {
@@ -3582,7 +3584,7 @@
       if (isChrome) {
         const webcalUrl = icsUrl.replace('https://', 'webcal://');
         const googleCalUrl = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcalUrl)}`;
-        console.log('[RADAR-CALENDAR] Opening Google Calendar');
+        console.log('[RADAR-CALENDAR] Opening Google Calendar with cache-busting URL');
 
         const newWindow = window.open(googleCalUrl, '_blank');
 
