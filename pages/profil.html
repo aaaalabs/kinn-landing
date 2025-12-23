@@ -1655,11 +1655,6 @@
     function renderProfile() {
       // Tab Navigation + Content based on active tab
       content.innerHTML = `
-        <div id="avatarContainer" style="text-align: center;"></div>
-
-        <h1>Mein KINN Profil</h1>
-        <p class="subtitle">${userEmail || ''}</p>
-
         <!-- Tab Navigation -->
         <div class="tab-navigation">
           <button class="tab-button ${activeTab === 'dashboard' ? 'active' : ''}" onclick="switchTab('dashboard')">
@@ -1688,20 +1683,20 @@
         </div>
       `;
 
-      // Inject Gravatar avatar with initials fallback
-      const avatarContainer = document.getElementById('avatarContainer');
-      if (avatarContainer && userEmail) {
-        const userName = userProfile.identity?.name || (userEmail ? userEmail.split('@')[0] : 'User');
-        const avatar = createAvatarElement(userEmail, userName, 80);
-        avatarContainer.appendChild(avatar);
-      }
-
       // Initialize skill counter after rendering
       setTimeout(() => updateSkillCounter(), 0);
 
       // Initialize sticky search scroll listener and keyboard shortcuts
       if (activeTab === 'profil') {
         setTimeout(() => {
+          // Inject avatar in profile tab header
+          const profileTabAvatar = document.getElementById('profileTabAvatar');
+          if (profileTabAvatar && userEmail) {
+            const userName = userProfile.identity?.name || (userEmail ? userEmail.split('@')[0] : 'User');
+            const avatar = createAvatarElement(userEmail, userName, 56);
+            profileTabAvatar.appendChild(avatar);
+          }
+
           initializeStickySearch();
           initializeKeyboardShortcuts();
           applySkillFilters(); // Apply initial domain filter (Progressive Disclosure)
@@ -1942,8 +1937,18 @@
       const supply = userProfile.supply || {};
       const demand = userProfile.demand || {};
       const privacy = userProfile.preferences?.privacy || {};
+      const userName = identity.name || (userEmail ? userEmail.split('@')[0] : 'User');
 
       return `
+        <!-- Profile Header with Avatar -->
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.6); border-radius: 12px;">
+          <div id="profileTabAvatar" style="flex-shrink: 0;"></div>
+          <div style="text-align: left;">
+            <div style="font-weight: 600; font-size: 1.125rem; color: #2C3E50;">${userName}</div>
+            <div style="font-size: 0.875rem; color: #6B6B6B;">${userEmail || ''}</div>
+          </div>
+        </div>
+
         <div class="card">
           <h2>Zeit sparen beim Stammtisch</h2>
           <p>Füll dein Profil aus und wir können dich schon vorab mit passenden Leuten matchen.</p>
