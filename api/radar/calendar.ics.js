@@ -145,7 +145,7 @@ function generateVEvent(event) {
   descriptionParts.push(`Quelle: ${event.source || 'KINN Radar'}`);
   descriptionParts.push('via KINN Radar - kinn.at');
 
-  lines.push(`DESCRIPTION:${escapeICS(descriptionParts.join('\\n'))}`);
+  lines.push(`DESCRIPTION:${descriptionParts.map(p => escapeICS(p)).join('\\n')}`);
 
   // Location
   if (event.location && event.location !== 'TBA' && event.location !== 'TBD') {
