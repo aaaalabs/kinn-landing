@@ -60,8 +60,9 @@ function generateICS(events) {
     'PRODID:-//KINN//RADAR AI Events Tyrol//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    'X-WR-CALNAME:KINN-RADAR - Free AI Events Tyrol',
-    'X-WR-CALDESC:Every FREE AI/ML/Data Science Event in Tyrol - Auto-Updated',
+    'X-WR-CALNAME:KINN Radar',
+    'NAME:KINN Radar',
+    'X-WR-CALDESC:Alle KI Events in Tirol - automatisch aktualisiert',
     'X-WR-TIMEZONE:Europe/Vienna',
     'REFRESH-INTERVAL;VALUE=DURATION:PT4H',
     'X-PUBLISHED-TTL:PT4H',
@@ -92,8 +93,8 @@ function generateICS(events) {
 
   lines.push('END:VCALENDAR');
 
-  // Join with proper line endings
-  return lines.join('\\r\\n');
+  // Join with proper CRLF line endings (ICS standard)
+  return lines.join('\r\n');
 }
 
 function generateVEvent(event) {
