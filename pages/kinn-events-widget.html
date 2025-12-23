@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KINN Events</title>
+
+  <!-- Typography: Work Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Work Sans', system-ui, -apple-system, sans-serif;
+      background: transparent;
+      padding: 0;
+    }
+
+    .events-container {
+      display: flex;
+      gap: 1.25rem;
+      overflow-x: auto;
+      padding: 4px 4px 16px 4px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .events-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .event-card {
+      flex-shrink: 0;
+      width: 200px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .event-card-inner {
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .event-card-inner:hover {
+      transform: translateY(-4px);
+    }
+
+    .event-thumbnail {
+      width: 200px;
+      height: 200px;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      background: linear-gradient(135deg, #5ED9A6 0%, #3EB885 100%);
+      background-size: cover;
+      background-position: center;
+    }
+
+    .ticket-gradient {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 80px;
+      height: 80px;
+      background: radial-gradient(circle at top right, rgba(0,0,0,0.55) 0%, transparent 70%);
+    }
+
+    .ticket-icon {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      color: white;
+      opacity: 0.95;
+    }
+
+    .title-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 14px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    }
+
+    .event-title {
+      color: white;
+      font-weight: 600;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .event-title.short {
+      font-size: 1.25rem;
+    }
+
+    .event-title.medium {
+      font-size: 1rem;
+    }
+
+    .event-title.long {
+      font-size: 0.9375rem;
+    }
+
+    .event-meta {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 0.8125rem;
+      color: #6B7280;
+    }
+
+    .loading, .error, .empty {
+      color: #9CA3AF;
+      font-size: 0.875rem;
+      padding: 1rem;
+    }
+
+    .error {
+      color: #EF4444;
+    }
+  </style>
+</head>
+<body>
+  <div id="widget" class="events-container">
+    <div class="loading">Lade Events...</div>
+  </div>
+
+  <script>
+    // Hardcoded thumbnail URLs for KINN events (from Luma)
+    const KINN_THUMBNAILS = {
+      'pxedsia6': 'https://images.lumacdn.com/cdn-cgi/image/format=auto,fit=cover,dpr=2,background=white,quality=75,width=400,height=400/event-covers/h2/d7eab25e-698d-4f52-a180-574957824881.png',
+      'g09qnnud': 'https://images.lumacdn.com/cdn-cgi/image/format=auto,fit=cover,dpr=2,background=white,quality=75,width=400,height=400/event-covers/it/d147a818-b73e-48d4-a101-1f3dbdd3bc1b.jpg'
+    };
+
+    function getKinnThumbnail(detailUrl) {
+      if (!detailUrl) return null;
+      const match = detailUrl.match(/lu\.?ma\.?(?:com)?\/([a-z0-9]+)/i);
+      if (match && KINN_THUMBNAILS[match[1]]) {
+        return KINN_THUMBNAILS[match[1]];
+      }
+      return null;
+    }
+
+    function getTitleClass(title) {
+      if (title.length <= 12) return 'short';
+      if (title.length <= 20) return 'medium';
+      return 'long';
+    }
+
+    async function loadEvents() {
+      const container = document.getElementById('widget');
+
+      try {
+        const year = new Date().getFullYear();
+        const response = await fetch(`/api/radar/calendar?year=${year}`);
+        const data = await response.json();
+
+        // Filter only KINN events
+        const kinnEvents = [];
+        const today = new Date().toISOString().split('T')[0];
+
+        data.days.forEach(day => {
+          if (day.date >= today) {
+            day.events.forEach(event => {
+              if (event.source === 'KINN') {
+                kinnEvents.push({ ...event, date: day.date });
+              }
+            });
+          }
+        });
+
+        // Sort by date
+        kinnEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        if (kinnEvents.length === 0) {
+          container.innerHTML = '<div class="empty">Keine kommenden KINN Events</div>';
+          return;
+        }
+
+        // Render event cards
+        container.innerHTML = kinnEvents.map(event => {
+          const eventDate = new Date(event.date);
+          const dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+          const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+          const dateStr = `${dayNames[eventDate.getDay()]} ${eventDate.getDate()}. ${monthNames[eventDate.getMonth()]}`;
+
+          const thumbnailUrl = event.thumbnail || getKinnThumbnail(event.detailUrl);
+          const bgStyle = thumbnailUrl ? `background-image: url('${thumbnailUrl}');` : '';
+          const titleClass = getTitleClass(event.title);
+
+          return `
+            <a href="${event.detailUrl || '#'}" target="_blank" rel="noopener" class="event-card">
+              <div class="event-card-inner">
+                <div class="event-thumbnail" style="${bgStyle}">
+                  <div class="ticket-gradient"></div>
+                  <div class="ticket-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M15 5l0 2" /><path d="M15 11l0 2" /><path d="M15 17l0 2" />
+                      <path d="M5 5h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-3a2 2 0 0 0 0 -4v-3a2 2 0 0 1 2 -2" />
+                    </svg>
+                  </div>
+                  <div class="title-overlay">
+                    <div class="event-title ${titleClass}">${event.title}</div>
+                  </div>
+                </div>
+                <div class="event-meta">${dateStr} · ${event.time}</div>
+              </div>
+            </a>
+          `;
+        }).join('');
+
+      } catch (error) {
+        console.error('Error loading KINN events:', error);
+        container.innerHTML = '<div class="error">Fehler beim Laden</div>';
+      }
+    }
+
+    loadEvents();
+  </script>
+</body>
+</html>
