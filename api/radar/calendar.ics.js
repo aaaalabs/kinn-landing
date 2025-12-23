@@ -9,6 +9,26 @@ const kv = createClient({
 });
 
 export default async function handler(req, res) {
+  // Log request for debugging mobile issues
+  logger.debug('[RADAR ICS] Method:', req.method, 'User-Agent:', req.headers['user-agent']?.substring(0, 80));
+
+  // Accept GET, HEAD, and OPTIONS requests (mobile calendar apps need HEAD)
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+    return res.status(405).json({
+      error: 'Method not allowed',
+      message: 'Only GET, HEAD, and OPTIONS requests are accepted'
+    });
+  }
+
+  // Handle OPTIONS for CORS preflight (mobile browsers)
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.status(204).end();
+  }
+
   try {
     // Get all event IDs
     const eventIds = await kv.smembers('radar:events') || [];
@@ -39,17 +59,36 @@ export default async function handler(req, res) {
     // Generate ICS content
     const icsContent = generateICS(events);
 
-    // Set appropriate headers
+    // Set headers for calendar file (desktop + mobile compatible)
     res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
     res.setHeader('Content-Disposition', 'inline; filename="kinn-radar.ics"');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour (like KINN ICS)
 
+    // Mobile-friendly headers (matching KINN ICS)
+    res.setHeader('Access-Control-Allow-Origin', '*'); // CORS for mobile browsers
+    res.setHeader('Accept-Ranges', 'none'); // Prevent partial content requests
+    res.setHeader('Last-Modified', new Date().toUTCString()); // Cache validation
+
+    // HEAD request: return headers only (mobile calendar apps validate feeds this way)
+    if (req.method === 'HEAD') {
+      res.setHeader('Content-Length', Buffer.byteLength(icsContent, 'utf8').toString());
+      logger.debug('[RADAR ICS] HEAD request successful');
+      return res.status(200).end();
+    }
+
+    // GET request: return full iCal content
     return res.status(200).send(icsContent);
 
   } catch (error) {
     logger.error('[RADAR Calendar] Error generating ICS:', error);
-    return res.status(500).send('Error generating calendar feed');
+    // Return valid ICS structure even on error
+    return res.status(500).send(
+      'BEGIN:VCALENDAR\r\n' +
+      'VERSION:2.0\r\n' +
+      'PRODID:-//KINN//RADAR AI Events Tyrol//EN\r\n' +
+      'X-ERROR:Internal server error\r\n' +
+      'END:VCALENDAR\r\n'
+    );
   }
 }
 
