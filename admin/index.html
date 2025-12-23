@@ -556,7 +556,7 @@
         <!-- Kommende KINN Events Widget -->
         <div class="card" style="margin-bottom: 2rem; padding: 1.5rem;">
           <h3 style="font-size: 1rem; font-weight: 600; color: #1F2937; margin-bottom: 1rem;">Kommende KINN Events</h3>
-          <div id="kinn-events-widget" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <div id="kinn-events-widget" style="display: flex; gap: 1.25rem; overflow-x: auto; padding: 4px 4px 12px 4px; margin: -4px; -webkit-overflow-scrolling: touch;">
             <div style="color: #9CA3AF; font-size: 0.875rem;">Lade Events...</div>
           </div>
         </div>
@@ -1305,7 +1305,7 @@
           const eventDate = new Date(event.date);
           const dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
           const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
-          const dateStr = `${dayNames[eventDate.getDay()]}, ${eventDate.getDate()}. ${monthNames[eventDate.getMonth()]}`;
+          const dateStr = `${dayNames[eventDate.getDay()]} ${eventDate.getDate()}. ${monthNames[eventDate.getMonth()]}`;
 
           // Use thumbnail or generate a placeholder gradient
           const thumbnailUrl = event.thumbnail || getKinnThumbnail(event.detailUrl);
@@ -1314,28 +1314,27 @@
             : `background: linear-gradient(135deg, #5ED9A6 0%, #3EB885 100%);`;
 
           return `
-            <a href="${event.detailUrl || '#'}" target="_blank" rel="noopener" style="text-decoration: none; display: block;">
-              <div style="width: 140px; position: relative; cursor: pointer; transition: transform 0.2s ease;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='translateY(0)'">
+            <a href="${event.detailUrl || '#'}" target="_blank" rel="noopener" style="text-decoration: none; display: block; flex-shrink: 0;">
+              <div style="width: 180px; position: relative; cursor: pointer; transition: transform 0.2s ease;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='translateY(0)'">
                 <!-- 1:1 Thumbnail -->
-                <div style="width: 140px; height: 140px; border-radius: 12px; ${bgStyle} position: relative; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                <div style="width: 180px; height: 180px; border-radius: 14px; ${bgStyle} position: relative; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.12);">
                   <!-- Dark gradient overlay for ticket icon -->
-                  <div style="position: absolute; top: 0; right: 0; width: 60px; height: 60px; background: radial-gradient(circle at top right, rgba(0,0,0,0.6) 0%, transparent 70%);"></div>
+                  <div style="position: absolute; top: 0; right: 0; width: 70px; height: 70px; background: radial-gradient(circle at top right, rgba(0,0,0,0.6) 0%, transparent 70%);"></div>
                   <!-- Ticket Icon -->
-                  <div style="position: absolute; top: 8px; right: 8px; color: white; opacity: 0.9;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <div style="position: absolute; top: 10px; right: 10px; color: white; opacity: 0.9;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M15 5l0 2" /><path d="M15 11l0 2" /><path d="M15 17l0 2" />
                       <path d="M5 5h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-3a2 2 0 0 0 0 -4v-3a2 2 0 0 1 2 -2" />
                     </svg>
                   </div>
                   <!-- Event title overlay at bottom -->
-                  <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 10px; background: linear-gradient(transparent, rgba(0,0,0,0.7));">
-                    <div style="color: white; font-size: 0.75rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${event.title}</div>
+                  <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 12px; background: linear-gradient(transparent, rgba(0,0,0,0.75));">
+                    <div style="color: white; font-size: 0.875rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${event.title}</div>
                   </div>
                 </div>
-                <!-- Date below -->
-                <div style="text-align: center; margin-top: 8px;">
-                  <div style="font-size: 0.75rem; color: #6B7280;">${dateStr}</div>
-                  <div style="font-size: 0.6875rem; color: #9CA3AF;">${event.time} Uhr</div>
+                <!-- Single line: Date + Time -->
+                <div style="text-align: center; margin-top: 10px; font-size: 0.8125rem; color: #6B7280;">
+                  ${dateStr} · ${event.time}
                 </div>
               </div>
             </a>
