@@ -163,15 +163,22 @@
       const container = document.getElementById('widget');
 
       try {
-        const year = new Date().getFullYear();
-        const response = await fetch(`/api/radar/calendar?year=${year}`);
-        const data = await response.json();
+        // Fetch both current year and next year to catch events around year boundary
+        const currentYear = new Date().getFullYear();
+        const [res1, res2] = await Promise.all([
+          fetch(`/api/radar/calendar?year=${currentYear}`),
+          fetch(`/api/radar/calendar?year=${currentYear + 1}`)
+        ]);
+        const [data1, data2] = await Promise.all([res1.json(), res2.json()]);
+
+        // Combine days from both years
+        const allDays = [...(data1.days || []), ...(data2.days || [])];
 
         // Filter only KINN events
         const kinnEvents = [];
         const today = new Date().toISOString().split('T')[0];
 
-        data.days.forEach(day => {
+        allDays.forEach(day => {
           if (day.date >= today) {
             day.events.forEach(event => {
               if (event.source === 'KINN') {
