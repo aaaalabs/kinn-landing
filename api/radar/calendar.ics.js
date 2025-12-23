@@ -132,8 +132,54 @@ function generateICS(events) {
 
   lines.push('END:VCALENDAR');
 
-  // Join with proper CRLF line endings (ICS standard)
-  return lines.join('\r\n');
+  // Apply line folding (RFC 5545: max 75 octets per line)
+  // Then join with proper CRLF line endings
+  return lines.map(foldLine).join('\r\n');
+}
+
+/**
+ * Fold long lines according to RFC 5545
+ * Lines longer than 75 octets (bytes) must be folded with CRLF + space/tab
+ * @param {string} line - The line to fold
+ * @returns {string} - The folded line (may contain CRLF)
+ */
+function foldLine(line) {
+  const MAX_OCTETS = 75;
+
+  // Check byte length, not character length (UTF-8 chars can be multi-byte)
+  const bytes = Buffer.from(line, 'utf8');
+
+  if (bytes.length <= MAX_OCTETS) {
+    return line;
+  }
+
+  // Fold the line
+  const parts = [];
+  let currentLine = '';
+  let currentBytes = 0;
+
+  for (const char of line) {
+    const charBytes = Buffer.byteLength(char, 'utf8');
+
+    // For continuation lines, we have 74 bytes (75 - 1 for the leading space)
+    const maxForThisLine = parts.length === 0 ? MAX_OCTETS : MAX_OCTETS - 1;
+
+    if (currentBytes + charBytes > maxForThisLine) {
+      parts.push(currentLine);
+      currentLine = char;
+      currentBytes = charBytes;
+    } else {
+      currentLine += char;
+      currentBytes += charBytes;
+    }
+  }
+
+  if (currentLine) {
+    parts.push(currentLine);
+  }
+
+  // Join with CRLF + space (continuation marker)
+  return parts.join('\r\n ');
 }
 
 function generateVEvent(event) {
