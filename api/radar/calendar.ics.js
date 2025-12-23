@@ -37,15 +37,19 @@ export default async function handler(req, res) {
     const events = [];
     const now = new Date();
 
+    // 6-month limit (Google Calendar & Outlook don't sync events further ahead)
+    const sixMonthsFromNow = new Date(now);
+    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+
     for (const eventId of eventIds) {
       const event = await kv.hgetall(`radar:event:${eventId}`);
 
       if (event && event.date) {
-        // Only include approved, future events for the ICS feed
+        // Only include approved, future events within 6 months for the ICS feed
         const eventDate = new Date(event.date);
         const isApproved = isEventApproved(event);
 
-        if (isApproved && eventDate >= now) {
+        if (isApproved && eventDate >= now && eventDate <= sixMonthsFromNow) {
           events.push(event);
         }
       }
