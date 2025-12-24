@@ -1154,7 +1154,7 @@
 
           <label class="consent-check" style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.75rem; color: #6B6B6B; margin: 1rem 0; cursor: pointer;">
             <input type="checkbox" id="voiceConsent" onchange="state.voiceConsent = this.checked; render();" ${state.voiceConsent ? 'checked' : ''} style="margin-top: 2px;">
-            <span>Einverstanden mit Verarbeitung durch AssemblyAI (USA). <a href="/datenschutz" target="_blank" style="color: #5ED9A6;">Details</a></span>
+            <span>Einverstanden mit Verarbeitung durch AssemblyAI (USA). <a href="/pages/privacy.html#3.4" target="_blank" style="color: #5ED9A6;">Details</a></span>
           </label>
 
           ${state.error ? `<div class="error-box">${state.error}</div>` : ''}
