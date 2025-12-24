@@ -476,13 +476,14 @@ function renderRAUSReview() {
         </select>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <button onclick="setRAUSStep('${rausState.inputMode || 'intro'}')" style="background: none; border: none; color: #6B6B6B; font-size: 0.875rem; cursor: pointer; padding: 0.5rem; font-family: inherit;">&larr;</button>
-        <label style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.6875rem; color: #6B6B6B; cursor: pointer; flex: 1;">
-          <input type="checkbox" id="rausPrivacyConsent" onchange="rausState.privacyConsent = this.checked; renderRAUS();" ${rausState.privacyConsent ? 'checked' : ''} style="width: 14px; height: 14px; flex-shrink: 0;">
-          <span>Ich akzeptiere die <a href="/pages/privacy.html" target="_blank" style="color: #5ED9A6;">Datenschutzbestimmungen</a></span>
-        </label>
-        <button onclick="submitRAUSCase()" class="cta-button" style="padding: 0.5rem 1rem; font-size: 0.8125rem; white-space: nowrap; ${!rausState.privacyConsent ? 'opacity: 0.5;' : ''}">Einreichen</button>
+      <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #6B6B6B; cursor: pointer; margin-bottom: 0.75rem;">
+        <input type="checkbox" id="rausPrivacyConsent" onchange="rausState.privacyConsent = this.checked; renderRAUS();" ${rausState.privacyConsent ? 'checked' : ''} style="width: 16px; height: 16px; flex-shrink: 0;">
+        <span>Ich akzeptiere die <a href="/pages/privacy.html" target="_blank" style="color: #5ED9A6;">Datenschutzbestimmungen</a></span>
+      </label>
+
+      <div style="display: flex; gap: 0.75rem;">
+        <button onclick="setRAUSStep('${rausState.inputMode || 'intro'}')" style="background: none; border: 1px solid rgba(0,0,0,0.1); border-radius: 0.5rem; color: #6B6B6B; font-size: 0.875rem; cursor: pointer; padding: 0.625rem 1rem; font-family: inherit;">Zurück</button>
+        <button onclick="submitRAUSCase()" class="cta-button" style="flex: 1; padding: 0.625rem 1rem; font-size: 0.875rem; ${!rausState.privacyConsent ? 'opacity: 0.5;' : ''}">Einreichen</button>
       </div>
     </div>
     <style>@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }</style>
