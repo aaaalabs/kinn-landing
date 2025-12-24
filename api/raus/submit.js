@@ -47,15 +47,20 @@ export default async function handler(req, res) {
     });
 
     // 2. Persist to Redis for admin dashboard
+    // Schema v1: Pipeline-ready with status tracking
     await redis.lpush('raus:submissions', JSON.stringify({
+      v: 1,  // Schema version for future migrations
       id,
+      status: 'submitted',  // submitted → reviewed → verified → published
       extracted,
       transcript,
       region,
       visibility,
       inputMode,
       userEmail: userEmail || null,
-      submittedAt
+      submittedAt,
+      // Future fields (added during review):
+      // reviewedBy, reviewedAt, verifiedAt, publishedAt, adminNotes
     }));
 
     return res.status(200).json({ success: true, id });
