@@ -488,9 +488,9 @@ function renderRAUSReview() {
         </select>
       </div>
 
-      <label style="display: flex; align-items: center; gap: 0.625rem; font-size: 0.8125rem; color: #6B6B6B; cursor: pointer; margin-bottom: 1rem;">
-        <span style="width: 18px; height: 18px; border: 1.5px solid ${rausState.privacyConsent ? '#5ED9A6' : 'rgba(0,0,0,0.2)'}; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: ${rausState.privacyConsent ? '#5ED9A6' : 'white'}; transition: all 0.15s ease; flex-shrink: 0;">
-          ${rausState.privacyConsent ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+      <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #6B6B6B; cursor: pointer; margin-bottom: 1rem;">
+        <span style="width: 16px; height: 16px; border: 1.5px solid ${rausState.privacyConsent ? '#5ED9A6' : 'rgba(0,0,0,0.2)'}; border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${rausState.privacyConsent ? '#5ED9A6' : 'white'}; transition: all 0.15s ease; flex-shrink: 0;">
+          ${rausState.privacyConsent ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
         </span>
         <input type="checkbox" id="rausPrivacyConsent" onchange="rausState.privacyConsent = this.checked; renderRAUS();" ${rausState.privacyConsent ? 'checked' : ''} style="display: none;">
         <span>Ich akzeptiere die <a href="/pages/privacy.html" target="_blank" style="color: #5ED9A6; text-decoration: none;">Datenschutzbestimmungen</a></span>
