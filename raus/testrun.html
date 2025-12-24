@@ -799,7 +799,8 @@
       transcript: null,
       extracted: null,
       error: null,
-      processingStep: 0
+      processingStep: 0,
+      voiceConsent: false
     };
 
     let mediaRecorder = null;
@@ -820,7 +821,8 @@
         transcript: null,
         extracted: null,
         error: null,
-        processingStep: 0
+        processingStep: 0,
+        voiceConsent: false
       };
       document.getElementById('modalOverlay').classList.add('active');
       render();
@@ -884,6 +886,19 @@
         clearInterval(recordingInterval);
         recordingInterval = null;
       }
+    }
+
+    function toggleRecordingWithConsent() {
+      if (!state.voiceConsent && !state.isRecording) {
+        // Highlight checkbox
+        const checkbox = document.getElementById('voiceConsent');
+        if (checkbox) {
+          checkbox.parentElement.style.animation = 'shake 0.3s ease';
+          setTimeout(() => checkbox.parentElement.style.animation = '', 300);
+        }
+        return;
+      }
+      toggleRecording();
     }
 
     function toggleRecording() {
@@ -1116,38 +1131,18 @@
     }
 
     function renderVoiceConsent() {
-      return `
-        <div class="fade-in" style="text-align: center;">
-          <div style="width: 64px; height: 64px; margin: 0 auto 1.5rem; color: #5ED9A6;">${icons.mic}</div>
-          <h1>Bevor wir starten</h1>
-          <p class="subtitle" style="max-width: 320px; margin: 0 auto 1.5rem;">
-            Deine Stimme wird von AssemblyAI (USA) transkribiert und nach der Verarbeitung gelöscht.
-          </p>
-
-          <button class="btn btn-primary" onclick="selectInputMode('voice')" style="margin-bottom: 1rem;">
-            Einverstanden - Aufnahme starten
-          </button>
-
-          <p style="font-size: 0.8125rem; color: #6B6B6B; margin-bottom: 0.5rem;">
-            Lieber tippen? <button class="btn-link" onclick="selectInputMode('text')">Textmodus</button>
-          </p>
-
-          <p style="font-size: 0.6875rem; color: #999;">
-            <a href="/datenschutz" target="_blank" style="color: inherit;">Datenschutz</a>
-          </p>
-        </div>
-      `;
+      // Removed - voice now goes directly to renderVoice with inline consent
+      return renderVoice();
     }
 
     function renderVoice() {
       return `
         <div class="fade-in">
-          <div class="step-indicator">Schritt 1 von 2</div>
-          <h1>Erzähl uns von deinem KI Use Case</h1>
-          <p class="subtitle">Drück den Button und sprich einfach drauflos. 2 Minuten reichen.</p>
+          <h1>Sprich deinen Use Case ein</h1>
+          <p class="subtitle">Problem, Lösung, Ergebnis, Tools - 2 Minuten reichen.</p>
 
           <div class="voice-recorder">
-            <button class="record-button ${state.isRecording ? 'recording' : ''}" onclick="toggleRecording()">
+            <button class="record-button ${state.isRecording ? 'recording' : ''}" onclick="toggleRecordingWithConsent()" ${!state.voiceConsent && !state.isRecording ? 'style="opacity: 0.5;"' : ''}>
               ${state.isRecording ? icons.stop : icons.mic}
             </button>
 
@@ -1157,20 +1152,15 @@
             </div>
           </div>
 
-          <div class="voice-tips">
-            <div class="voice-tips-title">Was du erzählen kannst</div>
-            <ul>
-              <li>Was war das Problem vorher?</li>
-              <li>Wie funktioniert deine KI-Lösung?</li>
-              <li>Was hat sich messbar verbessert?</li>
-              <li>Welche Tools nutzt du?</li>
-            </ul>
-          </div>
+          <label class="consent-check" style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.75rem; color: #6B6B6B; margin: 1rem 0; cursor: pointer;">
+            <input type="checkbox" id="voiceConsent" onchange="state.voiceConsent = this.checked; render();" ${state.voiceConsent ? 'checked' : ''} style="margin-top: 2px;">
+            <span>Einverstanden mit Verarbeitung durch AssemblyAI (USA). <a href="/datenschutz" target="_blank" style="color: #5ED9A6;">Details</a></span>
+          </label>
 
           ${state.error ? `<div class="error-box">${state.error}</div>` : ''}
 
-          <button class="btn btn-text" onclick="setStep('intro')" style="margin-top: 1rem;">
-            &larr; Zurück
+          <button class="btn btn-text" onclick="setStep('intro')">
+            &larr; Zurück zum Text
           </button>
         </div>
       `;
