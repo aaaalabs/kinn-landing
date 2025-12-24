@@ -950,6 +950,13 @@
       return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
 
+    function updateSubmitButton() {
+      const btn = document.querySelector('.btn-primary[onclick="processText()"]');
+      if (btn) {
+        btn.disabled = state.textInput.length < 20;
+      }
+    }
+
     function updateCharCount() {
       const len = state.textInput.length;
       const tokens = Math.round(len / 4); // ~4 chars per token estimate
@@ -1090,7 +1097,8 @@
               placeholder="Erzähl uns von deinem Case...
 
 Was war das Problem vorher? Wie funktioniert die Lösung? Was hat sich verbessert? Welche Tools nutzt du?"
-              oninput="state.textInput = this.value; updateCharCount();"
+              oninput="state.textInput = this.value; updateCharCount(); updateSubmitButton();"
+              onpaste="setTimeout(() => { state.textInput = this.value; updateCharCount(); updateSubmitButton(); }, 0)"
             >${state.textInput}</textarea>
             <div class="context-bar" id="contextBar">
               <div class="context-bar-fill" style="width: ${Math.min(100, (state.textInput.length / 400) * 100)}%"></div>
