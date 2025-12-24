@@ -340,36 +340,40 @@ function renderRAUSIntro() {
         </div>
       </div>
 
-      <div style="display: flex; gap: 0.75rem; align-items: center;">
-        <button onclick="processRAUSTextFromIntro()" class="cta-button" style="flex: 1;">Analysieren lassen</button>
-        <button onclick="selectRAUSInputMode('voice')" style="background: none; border: 1px solid rgba(0,0,0,0.1); border-radius: 0.5rem; color: #6B6B6B; font-size: 0.8125rem; cursor: pointer; padding: 0.625rem 1rem; font-family: inherit; white-space: nowrap;">Lieber sprechen</button>
+      <div style="display: flex; gap: 0.75rem;">
+        <button onclick="processRAUSTextFromIntro()" class="cta-button" style="flex: 1; padding: 0.75rem 1.25rem; font-size: 0.875rem;">Analysieren lassen</button>
+        <button onclick="selectRAUSInputMode('voice')" style="background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 0.5rem; color: #6B6B6B; font-size: 0.875rem; cursor: pointer; padding: 0.75rem 1.25rem; font-family: inherit; white-space: nowrap; transition: all 0.15s ease;" onmouseenter="this.style.borderColor='rgba(0,0,0,0.15)'" onmouseleave="this.style.borderColor='rgba(0,0,0,0.08)'">Sprechen</button>
       </div>
     </div>
   `;
 }
 
 function renderRAUSVoice() {
+  const consentGiven = rausState.voiceConsent;
   return `
     <div style="animation: fadeIn 0.3s ease-out;">
       <h1 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.5rem;">Sprich deinen Use Case ein</h1>
       <p style="font-size: 0.875rem; color: #6B6B6B; margin-bottom: 1.25rem;">Problem, Lösung, Ergebnis, Tools - 2 Minuten reichen.</p>
 
       <div style="text-align: center; padding: 2rem 0;">
-        <button onclick="toggleRAUSRecordingWithConsent()" style="width: 80px; height: 80px; border-radius: 50%; border: none; background: ${rausState.isRecording ? '#ef4444' : '#5ED9A6'}; color: ${rausState.isRecording ? '#fff' : '#000'}; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto; transition: all 0.2s; ${!rausState.voiceConsent && !rausState.isRecording ? 'opacity: 0.5;' : ''}">
+        <button onclick="toggleRAUSRecordingWithConsent()" style="width: 80px; height: 80px; border-radius: 50%; border: none; background: ${rausState.isRecording ? '#ef4444' : consentGiven ? '#5ED9A6' : '#c8ece0'}; color: ${rausState.isRecording ? '#fff' : '#000'}; cursor: ${consentGiven || rausState.isRecording ? 'pointer' : 'not-allowed'}; display: flex; align-items: center; justify-content: center; margin: 0 auto; transition: all 0.2s;">
           ${rausState.isRecording ? rausIcons.stop : rausIcons.mic}
         </button>
         <div id="rausRecordTimer" style="font-size: 1.5rem; font-weight: 600; color: #2C3E50; margin-top: 1rem;">${formatRAUSTime(rausState.recordingTime)}</div>
         <div style="font-size: 0.75rem; color: #999; margin-top: 0.25rem;">${rausState.isRecording ? 'Klick zum Beenden' : 'Klick zum Starten'}</div>
       </div>
 
-      <label style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.75rem; color: #6B6B6B; margin: 1rem 0; cursor: pointer;">
-        <input type="checkbox" id="rausVoiceConsent" onchange="rausState.voiceConsent = this.checked; renderRAUS();" ${rausState.voiceConsent ? 'checked' : ''} style="margin-top: 2px;">
-        <span>Audio wird durch AssemblyAI (USA) transkribiert und innerhalb 24h gelöscht. <a href="/pages/privacy.html#3.4" target="_blank" style="color: #5ED9A6;">Details</a></span>
+      <label style="display: flex; align-items: flex-start; gap: 0.625rem; font-size: 0.8125rem; color: #6B6B6B; margin: 1rem 0; cursor: pointer;">
+        <span style="width: 18px; height: 18px; border: 1.5px solid ${consentGiven ? '#5ED9A6' : 'rgba(0,0,0,0.2)'}; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: ${consentGiven ? '#5ED9A6' : 'white'}; transition: all 0.15s ease; flex-shrink: 0; margin-top: 1px;">
+          ${consentGiven ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+        </span>
+        <input type="checkbox" id="rausVoiceConsent" onchange="rausState.voiceConsent = this.checked; renderRAUS();" ${consentGiven ? 'checked' : ''} style="display: none;">
+        <span>Audio wird durch AssemblyAI (USA) transkribiert und innerhalb 24h gelöscht. <a href="/pages/privacy.html#3.4" target="_blank" style="color: #5ED9A6; text-decoration: none;">Details</a></span>
       </label>
 
       ${rausState.error ? `<div style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; font-size: 0.875rem;">${rausState.error}</div>` : ''}
 
-      <button onclick="setRAUSStep('intro')" style="background: none; border: none; color: #6B6B6B; font-size: 0.875rem; cursor: pointer; padding: 0.5rem; font-family: inherit; margin-top: 1rem;">&larr; Zurück zum Text</button>
+      <button onclick="setRAUSStep('intro')" style="background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 0.5rem; color: #6B6B6B; font-size: 0.875rem; cursor: pointer; padding: 0.75rem 1.25rem; font-family: inherit; margin-top: 1rem; transition: all 0.15s ease;" onmouseenter="this.style.borderColor='rgba(0,0,0,0.15)'" onmouseleave="this.style.borderColor='rgba(0,0,0,0.08)'">Zurück zum Text</button>
     </div>
   `;
 }
@@ -457,27 +461,30 @@ function renderRAUSReview() {
         </div>
       </div>
 
-      <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
-        <select id="raus-select-region" style="flex: 1; padding: 0.5rem; border: 1px solid rgba(0,0,0,0.1); border-radius: 0.375rem; font-family: inherit; font-size: 0.8125rem; background: rgba(255,255,255,0.8); cursor: pointer;">
+      <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+        <select id="raus-select-region" style="flex: 1; padding: 0.625rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); border-radius: 0.5rem; font-family: inherit; font-size: 0.875rem; background: white; cursor: pointer; color: #2C3E50;">
           <option value="tirol" selected>Tirol</option>
           <option value="austria">Österreich</option>
           <option value="dach">DACH</option>
         </select>
-        <select id="raus-select-visibility" style="flex: 1; padding: 0.5rem; border: 1px solid rgba(0,0,0,0.1); border-radius: 0.375rem; font-family: inherit; font-size: 0.8125rem; background: rgba(255,255,255,0.8); cursor: pointer;">
+        <select id="raus-select-visibility" style="flex: 1; padding: 0.625rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); border-radius: 0.5rem; font-family: inherit; font-size: 0.875rem; background: white; cursor: pointer; color: #2C3E50;">
           <option value="full" selected>Öffentlich</option>
           <option value="anon">Anonymisiert</option>
           <option value="report">Nur Report</option>
         </select>
       </div>
 
-      <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #6B6B6B; cursor: pointer; margin-bottom: 0.75rem;">
-        <input type="checkbox" id="rausPrivacyConsent" onchange="rausState.privacyConsent = this.checked; renderRAUS();" ${rausState.privacyConsent ? 'checked' : ''} style="width: 16px; height: 16px; flex-shrink: 0;">
-        <span>Ich akzeptiere die <a href="/pages/privacy.html" target="_blank" style="color: #5ED9A6;">Datenschutzbestimmungen</a></span>
+      <label style="display: flex; align-items: center; gap: 0.625rem; font-size: 0.8125rem; color: #6B6B6B; cursor: pointer; margin-bottom: 1rem;">
+        <span style="width: 18px; height: 18px; border: 1.5px solid ${rausState.privacyConsent ? '#5ED9A6' : 'rgba(0,0,0,0.2)'}; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: ${rausState.privacyConsent ? '#5ED9A6' : 'white'}; transition: all 0.15s ease; flex-shrink: 0;">
+          ${rausState.privacyConsent ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+        </span>
+        <input type="checkbox" id="rausPrivacyConsent" onchange="rausState.privacyConsent = this.checked; renderRAUS();" ${rausState.privacyConsent ? 'checked' : ''} style="display: none;">
+        <span>Ich akzeptiere die <a href="/pages/privacy.html" target="_blank" style="color: #5ED9A6; text-decoration: none;">Datenschutzbestimmungen</a></span>
       </label>
 
       <div style="display: flex; gap: 0.75rem;">
-        <button onclick="setRAUSStep('${rausState.inputMode || 'intro'}')" style="background: none; border: 1px solid rgba(0,0,0,0.1); border-radius: 0.5rem; color: #6B6B6B; font-size: 0.875rem; cursor: pointer; padding: 0.625rem 1rem; font-family: inherit;">Zurück</button>
-        <button onclick="submitRAUSCase()" class="cta-button" style="flex: 1; padding: 0.625rem 1rem; font-size: 0.875rem; ${!rausState.privacyConsent ? 'opacity: 0.5;' : ''}">Einreichen</button>
+        <button onclick="setRAUSStep('${rausState.inputMode || 'intro'}')" style="background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 0.5rem; color: #6B6B6B; font-size: 0.875rem; cursor: pointer; padding: 0.75rem 1.25rem; font-family: inherit; transition: all 0.15s ease;" onmouseenter="this.style.borderColor='rgba(0,0,0,0.15)'" onmouseleave="this.style.borderColor='rgba(0,0,0,0.08)'">Zurück</button>
+        <button onclick="submitRAUSCase()" class="cta-button" style="flex: 1; padding: 0.75rem 1.25rem; font-size: 0.875rem; transition: all 0.15s ease; ${!rausState.privacyConsent ? 'background: #c8ece0; cursor: not-allowed;' : ''}">Einreichen</button>
       </div>
     </div>
     <style>@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }</style>
@@ -486,13 +493,13 @@ function renderRAUSReview() {
 
 function renderRAUSSuccess() {
   return `
-    <div style="animation: fadeIn 0.3s ease-out; text-align: center; padding: 1rem 0;">
-      <div style="color: #5ED9A6; margin-bottom: 1rem;">${rausIcons.confetti}</div>
+    <div style="animation: fadeIn 0.3s ease-out; text-align: center; padding: 2rem 0;">
+      <div style="color: #5ED9A6; margin-bottom: 1.5rem;">${rausIcons.confetti}</div>
       <h1 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.5rem;">Use Case eingereicht!</h1>
-      <p style="font-size: 0.875rem; color: #6B6B6B; margin: 1rem 0; line-height: 1.6;">
+      <p style="font-size: 0.875rem; color: #6B6B6B; margin: 1.25rem 0; line-height: 1.6;">
         Wir schauen uns deinen Case an und melden uns innerhalb von 1-2 Wochen.
       </p>
-      <button onclick="closeRAUSModal()" class="cta-button" style="width: 100%;">Fertig</button>
+      <button onclick="closeRAUSModal()" class="cta-button" style="width: 100%; padding: 0.75rem 1.25rem; font-size: 0.875rem;">Fertig</button>
     </div>
   `;
 }
