@@ -1822,22 +1822,20 @@
       const RAUS_WHITELIST = ['admin@libralab.ai'];
       const canAccessRAUS = RAUS_WHITELIST.includes(userEmail);
 
+      // Mobile-only minimal card (desktop uses floating teaser pill instead)
       const rausCard = canAccessRAUS ? `
-        <div class="card" style="background: linear-gradient(135deg, rgba(94,217,166,0.08) 0%, rgba(94,217,166,0.02) 100%); border: 1px solid rgba(94,217,166,0.2);">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-            <div>
-              <h3 style="font-size: 1rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.25rem;">
-                KI Praxis Report Tirol 2026
-              </h3>
-              <p style="font-size: 0.8125rem; color: #6B6B6B; margin: 0;">
-                Teile deinen Use Case mit der Community
-              </p>
-            </div>
-            <button onclick="openRAUSModal()" class="cta-button" style="padding: 0.5rem 1rem; font-size: 0.8125rem; white-space: nowrap;">
-              Einreichen
-            </button>
+        <div class="raus-mobile-card" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.06); border-radius: 0.75rem; margin-bottom: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="width: 8px; height: 8px; background: #5ED9A6; border-radius: 50%;"></span>
+            <span style="font-size: 0.8125rem; color: #2C3E50; font-weight: 500;">KI Report 2026</span>
           </div>
+          <button onclick="openRAUSModal()" style="background: none; border: none; color: #059669; font-size: 0.8125rem; font-weight: 500; cursor: pointer; font-family: inherit;">
+            Case teilen →
+          </button>
         </div>
+        <style>
+          @media (min-width: 768px) { .raus-mobile-card { display: none !important; } }
+        </style>
       ` : '';
 
       return `

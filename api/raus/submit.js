@@ -63,6 +63,9 @@ export default async function handler(req, res) {
       // reviewedBy, reviewedAt, verifiedAt, publishedAt, adminNotes
     }));
 
+    // 3. Increment total submissions counter (for teaser widget)
+    await redis.incr('raus:stats:total');
+
     return res.status(200).json({ success: true, id });
 
   } catch (error) {

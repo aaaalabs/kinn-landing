@@ -606,7 +606,7 @@ function injectRAUSModal() {
   modalDiv.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem; display: none;';
 
   modalDiv.innerHTML = `
-    <div style="background: #fff; border-radius: 1rem; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.15); animation: modalIn 0.3s ease-out; position: relative;">
+    <div class="raus-modal-content" style="background: #fff; border-radius: 1rem; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.15); animation: modalIn 0.3s ease-out; position: relative;">
       <button onclick="closeRAUSModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer; z-index: 10; line-height: 1; padding: 0.25rem; border-radius: 0.25rem;">&times;</button>
       <div id="rausWizardContent" style="padding: 1.5rem;"></div>
     </div>
@@ -618,6 +618,9 @@ function injectRAUSModal() {
   const style = document.createElement('style');
   style.textContent = `
     #rausModalOverlay.active { display: flex; }
+    .raus-modal-content { max-width: 100%; }
+    @media (min-width: 640px) { .raus-modal-content { max-width: 360px; } }
+    #rausModalOverlay .cta-button { width: 100%; max-width: none; margin: 0; }
     @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     .raus-prompt-box:hover { border-color: #5ED9A6; }
@@ -648,3 +651,200 @@ window.submitRAUSCase = submitRAUSCase;
 window.copyRAUSPrompt = copyRAUSPrompt;
 window.updateRAUSCharCount = updateRAUSCharCount;
 window.makeRAUSEditable = makeRAUSEditable;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RAUS TEASER WIDGET - "The Whisper"
+// Floating pill for progressive disclosure of KI Praxis Report
+// ═══════════════════════════════════════════════════════════════════════════
+
+const RAUS_GOAL = 50;
+let rausStats = { total: 0, verified: 0, goal: RAUS_GOAL, userSubmissions: 0 };
+
+function getTeaserContent(verified) {
+  if (verified === 0) {
+    return { collapsed: 'KI Report 2026', dotColor: '#5ED9A6', subtitle: 'Wir starten gerade', cta: 'Erster Case sein' };
+  } else if (verified < 10) {
+    return { collapsed: `KI Report · ${verified}`, dotColor: '#5ED9A6', subtitle: 'Echte Cases. Verifiziert.', cta: 'Deinen Case teilen' };
+  } else if (verified < 40) {
+    return { collapsed: `KI Report · ${verified}`, dotColor: '#5ED9A6', subtitle: `${verified} Tiroler KI-Cases dokumentiert`, cta: 'Deiner fehlt noch' };
+  } else if (verified < RAUS_GOAL) {
+    const remaining = RAUS_GOAL - verified;
+    return { collapsed: `KI Report · ${verified}`, dotColor: '#F59E0B', subtitle: `Fast komplett! Noch ${remaining} Plätze`, cta: 'Letzte Chance' };
+  } else {
+    return { collapsed: `KI Report · ${verified} ✓`, dotColor: null, subtitle: 'Report komplett!', cta: 'Bald verfügbar' };
+  }
+}
+
+async function fetchRAUSStats() {
+  try {
+    const email = window.userEmail || '';
+    const res = await fetch(`/api/raus/stats${email ? `?email=${encodeURIComponent(email)}` : ''}`);
+    if (res.ok) {
+      rausStats = await res.json();
+      renderRAUSTeaser();
+    }
+  } catch (e) {
+    console.warn('[RAUS] Stats fetch failed:', e);
+  }
+}
+
+function renderRAUSTeaser() {
+  const teaser = document.getElementById('rausTeaserPill');
+  if (!teaser) return;
+
+  const content = getTeaserContent(rausStats.verified);
+  const progress = Math.min(100, (rausStats.verified / RAUS_GOAL) * 100);
+
+  teaser.innerHTML = `
+    <div class="raus-teaser-collapsed">
+      <span class="raus-teaser-text">${content.collapsed}</span>
+      ${content.dotColor ? `<span class="raus-teaser-dot" style="background: ${content.dotColor};"></span>` : ''}
+    </div>
+    <div class="raus-teaser-expanded">
+      <div class="raus-teaser-title">KI Praxis Report 2026</div>
+      <div class="raus-teaser-progress">
+        <div class="raus-teaser-progress-bar" style="width: ${progress}%;"></div>
+      </div>
+      <div class="raus-teaser-subtitle">${rausStats.verified} verifiziert · Ziel: ${RAUS_GOAL}</div>
+      <div class="raus-teaser-cta">${content.cta} →</div>
+    </div>
+  `;
+}
+
+// Whitelist for RAUS access (same as in profil.html)
+const RAUS_WHITELIST = ['admin@libralab.ai'];
+
+function shouldShowTeaser() {
+  // Only show on profil.html
+  if (!window.location.pathname.includes('profil')) return false;
+  // Only for whitelisted users
+  if (!window.userEmail || !RAUS_WHITELIST.includes(window.userEmail)) return false;
+  // Check deadline
+  if (new Date() > new Date('2026-03-31')) return false;
+  // Check dismiss
+  if (localStorage.getItem('raus_teaser_dismissed') === 'true') return false;
+  // Check screen size (hide on mobile)
+  if (window.innerWidth < 768) return false;
+  return true;
+}
+
+function injectRAUSTeaser() {
+  if (!shouldShowTeaser()) return;
+  if (document.getElementById('rausTeaserPill')) return;
+
+  const teaser = document.createElement('button');
+  teaser.id = 'rausTeaserPill';
+  teaser.className = 'raus-teaser';
+  teaser.setAttribute('aria-label', 'KI Praxis Report 2026 - Klicken zum Einreichen');
+  teaser.onclick = () => openRAUSModal();
+  document.body.appendChild(teaser);
+
+  // Inject teaser styles
+  const style = document.createElement('style');
+  style.id = 'raus-teaser-styles';
+  style.textContent = `
+    .raus-teaser {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 50;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 9999px;
+      padding: 0.5rem 0.875rem;
+      cursor: pointer;
+      font-family: 'Work Sans', sans-serif;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .raus-teaser:hover {
+      border-radius: 1rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      padding: 1rem;
+    }
+    .raus-teaser-collapsed {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: opacity 0.2s ease;
+    }
+    .raus-teaser:hover .raus-teaser-collapsed {
+      opacity: 0;
+      position: absolute;
+      pointer-events: none;
+    }
+    .raus-teaser-text {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #2C3E50;
+      white-space: nowrap;
+    }
+    .raus-teaser-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: raus-pulse 3s ease-in-out infinite;
+    }
+    @keyframes raus-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.15); }
+    }
+    .raus-teaser-expanded {
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: all 0.25s ease;
+      min-width: 180px;
+    }
+    .raus-teaser:hover .raus-teaser-expanded {
+      opacity: 1;
+      max-height: 120px;
+    }
+    .raus-teaser-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #2C3E50;
+      margin-bottom: 0.5rem;
+    }
+    .raus-teaser-progress {
+      height: 4px;
+      background: #E5E7EB;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 0.375rem;
+    }
+    .raus-teaser-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #5ED9A6 0%, #3EB885 100%);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+    .raus-teaser-subtitle {
+      font-size: 0.6875rem;
+      color: #6B7280;
+      margin-bottom: 0.625rem;
+    }
+    .raus-teaser-cta {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #059669;
+    }
+    @media (max-width: 767px) {
+      .raus-teaser { display: none; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Initial render with default values, then fetch real stats
+  renderRAUSTeaser();
+  fetchRAUSStats();
+}
+
+// Run teaser injection after modal (delayed slightly for DOM to be ready)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(injectRAUSTeaser, 100));
+} else {
+  setTimeout(injectRAUSTeaser, 100);
+}
