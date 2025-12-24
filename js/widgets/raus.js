@@ -502,8 +502,8 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Inject modal HTML and styles when script loads
-(function injectRAUSModal() {
+// Inject modal HTML and styles when DOM is ready
+function injectRAUSModal() {
   // Only inject if not already present
   if (document.getElementById('rausModalOverlay')) return;
 
@@ -534,4 +534,11 @@ document.addEventListener('keydown', (e) => {
     .raus-char-indicator.good span:first-child { color: #059669; }
   `;
   document.head.appendChild(style);
-})();
+}
+
+// Run injection when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', injectRAUSModal);
+} else {
+  injectRAUSModal();
+}
