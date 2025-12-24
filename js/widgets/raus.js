@@ -349,7 +349,7 @@ function renderRAUSVoice() {
 
       <label style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.75rem; color: #6B6B6B; margin: 1rem 0; cursor: pointer;">
         <input type="checkbox" id="rausVoiceConsent" onchange="rausState.voiceConsent = this.checked; renderRAUS();" ${rausState.voiceConsent ? 'checked' : ''} style="margin-top: 2px;">
-        <span>Einverstanden mit Verarbeitung durch AssemblyAI (USA). <a href="/pages/privacy.html#3.4" target="_blank" style="color: #5ED9A6;">Details</a></span>
+        <span>Audio wird durch AssemblyAI (USA) transkribiert und innerhalb 24h gelöscht. <a href="/pages/privacy.html#3.4" target="_blank" style="color: #5ED9A6;">Details</a></span>
       </label>
 
       ${rausState.error ? `<div style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; font-size: 0.875rem;">${rausState.error}</div>` : ''}
