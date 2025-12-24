@@ -879,7 +879,16 @@
     }
 
     async function processText() {
-      if (state.textInput.length < 20) return;
+      // Get current textarea value (in case state wasn't updated)
+      const textarea = document.getElementById('textInput');
+      if (textarea) {
+        state.textInput = textarea.value;
+      }
+
+      if (state.textInput.length < 20) {
+        alert('Bitte mindestens 20 Zeichen eingeben.');
+        return;
+      }
 
       state.step = 'processing';
       state.processingStep = 1;
@@ -1111,7 +1120,7 @@ Was war das Problem vorher? Wie funktioniert die Lösung? Was hat sich verbesser
 
           <div class="btn-row">
             <button class="btn btn-text" onclick="setStep('intro')">&larr; Zurück</button>
-            <button class="btn btn-primary" onclick="processText()" ${state.textInput.length < 20 ? 'disabled' : ''}>
+            <button class="btn btn-primary" id="submitTextBtn" onclick="processText()">
               KI analysieren lassen ${icons.sparkles}
             </button>
           </div>
