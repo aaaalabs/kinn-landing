@@ -263,11 +263,14 @@ async function submitRAUSCase() {
     return;
   }
 
+  // Start with state data (already updated by makeRAUSEditable)
   const data = { ...rausState.extracted };
 
+  // Override with any visible input values (for missing fields that user filled in)
   ['headline', 'problem', 'solution', 'result', 'tools'].forEach(key => {
     const input = document.getElementById(`raus-input-${key}`);
-    if (input?.value?.trim()) {
+    // Only use input if it's a visible input (not hidden) and has value
+    if (input && input.type !== 'hidden' && input.value?.trim()) {
       data[key] = key === 'tools' ? input.value.split(',').map(t => t.trim()) : input.value.trim();
     }
   });
@@ -406,18 +409,30 @@ function renderRAUSReview() {
   const renderCard = (key, label, placeholder, isTextarea = false) => {
     const value = data[key] || '';
     const isMissing = !value;
-    const bgStyle = isMissing ? 'background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.25);' : 'background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.04);';
-    const inputBorder = isMissing ? 'border: 1px solid rgba(251,191,36,0.4);' : 'border: 1px solid transparent; background: transparent;';
-    const inputFocusClass = isMissing ? '' : 'raus-stealth-input';
 
-    return `
-      <div class="raus-review-card ${isMissing ? 'missing' : ''}" style="${bgStyle} border-radius: 0.375rem; padding: 0.5rem 0.625rem; margin-bottom: 0.5rem;">
-        <div style="font-size: 0.625rem; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.25rem;">
-          ${label}${isMissing ? ` <span style="color: #d97706;">${rausIcons.alertTriangle}</span>` : ''}
+    // Missing: show input with warning border
+    // Filled: show as text, clicking replaces with input
+    if (isMissing) {
+      return `
+        <div class="raus-review-card missing" style="background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.25); border-radius: 0.375rem; padding: 0.5rem 0.625rem; margin-bottom: 0.5rem;">
+          <div style="font-size: 0.625rem; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.25rem;">
+            ${label} <span style="color: #d97706;">${rausIcons.alertTriangle}</span>
+          </div>
+          ${isTextarea
+            ? `<textarea class="raus-review-card-input" placeholder="${placeholder}" id="raus-input-${key}" style="width: 100%; min-height: 40px; padding: 0.375rem 0.5rem; border: 1px solid rgba(251,191,36,0.4); border-radius: 0.25rem; font-family: inherit; font-size: 0.8125rem; resize: vertical; color: #2C3E50; line-height: 1.4;"></textarea>`
+            : `<input type="text" class="raus-review-card-input" placeholder="${placeholder}" id="raus-input-${key}" style="width: 100%; padding: 0.375rem 0.5rem; border: 1px solid rgba(251,191,36,0.4); border-radius: 0.25rem; font-family: inherit; font-size: 0.8125rem; color: #2C3E50;">`}
         </div>
-        ${isTextarea
-          ? `<textarea class="raus-review-card-input ${inputFocusClass}" placeholder="${placeholder}" id="raus-input-${key}" style="width: 100%; min-height: 40px; padding: 0.375rem 0.5rem; ${inputBorder} border-radius: 0.25rem; font-family: inherit; font-size: 0.8125rem; resize: vertical; color: #2C3E50; line-height: 1.4;">${value}</textarea>`
-          : `<input type="text" class="raus-review-card-input ${inputFocusClass}" placeholder="${placeholder}" id="raus-input-${key}" value="${value.replace(/"/g, '&quot;')}" style="width: 100%; padding: 0.375rem 0.5rem; ${inputBorder} border-radius: 0.25rem; font-family: inherit; font-size: 0.8125rem; color: #2C3E50; ${key === 'headline' ? 'font-weight: 600;' : ''}">`}
+      `;
+    }
+
+    // Filled: show as editable text span (click to edit)
+    return `
+      <div class="raus-review-card" style="border-radius: 0.375rem; padding: 0.375rem 0.5rem; margin-bottom: 0.375rem;">
+        <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+          <span style="font-size: 0.625rem; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap;">${label}</span>
+          <span class="raus-editable" data-key="${key}" data-textarea="${isTextarea}" onclick="makeRAUSEditable(this)" style="flex: 1; font-size: 0.8125rem; color: #2C3E50; cursor: text; padding: 0.125rem 0; border-bottom: 1px dashed transparent; ${key === 'headline' ? 'font-weight: 600;' : ''}" onmouseenter="this.style.borderColor='rgba(0,0,0,0.15)'" onmouseleave="this.style.borderColor='transparent'">${value}</span>
+        </div>
+        <input type="hidden" id="raus-input-${key}" value="${value.replace(/"/g, '&quot;')}">
       </div>
     `;
   };
@@ -461,15 +476,13 @@ function renderRAUSReview() {
         </select>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <label style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.6875rem; color: #6B6B6B; cursor: pointer;">
-          <input type="checkbox" id="rausPrivacyConsent" onchange="rausState.privacyConsent = this.checked; renderRAUS();" ${rausState.privacyConsent ? 'checked' : ''} style="width: 14px; height: 14px;">
-          <a href="/pages/privacy.html" target="_blank" style="color: #5ED9A6;">Datenschutz</a>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <button onclick="setRAUSStep('${rausState.inputMode || 'intro'}')" style="background: none; border: none; color: #6B6B6B; font-size: 0.875rem; cursor: pointer; padding: 0.5rem; font-family: inherit;">&larr;</button>
+        <label style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.6875rem; color: #6B6B6B; cursor: pointer; flex: 1;">
+          <input type="checkbox" id="rausPrivacyConsent" onchange="rausState.privacyConsent = this.checked; renderRAUS();" ${rausState.privacyConsent ? 'checked' : ''} style="width: 14px; height: 14px; flex-shrink: 0;">
+          <span>Ich akzeptiere die <a href="/pages/privacy.html" target="_blank" style="color: #5ED9A6;">Datenschutzbestimmungen</a></span>
         </label>
-        <div style="flex: 1; display: flex; gap: 0.5rem;">
-          <button onclick="setRAUSStep('${rausState.inputMode || 'intro'}')" style="background: none; border: none; color: #6B6B6B; font-size: 0.8125rem; cursor: pointer; padding: 0.375rem; font-family: inherit;">&larr;</button>
-          <button onclick="submitRAUSCase()" class="cta-button" style="flex: 1; padding: 0.625rem 1rem; font-size: 0.8125rem; ${!rausState.privacyConsent ? 'opacity: 0.5;' : ''}">Einreichen</button>
-        </div>
+        <button onclick="submitRAUSCase()" class="cta-button" style="padding: 0.5rem 1rem; font-size: 0.8125rem; white-space: nowrap; ${!rausState.privacyConsent ? 'opacity: 0.5;' : ''}">Einreichen</button>
       </div>
     </div>
     <style>@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }</style>
@@ -487,6 +500,45 @@ function renderRAUSSuccess() {
       <button onclick="closeRAUSModal()" class="cta-button" style="width: 100%;">Fertig</button>
     </div>
   `;
+}
+
+function makeRAUSEditable(span) {
+  const key = span.dataset.key;
+  const isTextarea = span.dataset.textarea === 'true';
+  const currentValue = span.textContent;
+  const hiddenInput = document.getElementById(`raus-input-${key}`);
+
+  // Replace span with input
+  const input = isTextarea
+    ? document.createElement('textarea')
+    : document.createElement('input');
+
+  input.value = currentValue;
+  input.id = `raus-input-${key}`;
+  input.style.cssText = `
+    width: 100%; padding: 0.375rem 0.5rem; border: 1px solid #5ED9A6;
+    border-radius: 0.25rem; font-family: inherit; font-size: 0.8125rem;
+    color: #2C3E50; outline: none; box-shadow: 0 0 0 2px rgba(94,217,166,0.15);
+    ${isTextarea ? 'min-height: 60px; resize: vertical; line-height: 1.4;' : ''}
+    ${key === 'headline' ? 'font-weight: 600;' : ''}
+  `;
+
+  // Replace the whole card content
+  const card = span.closest('.raus-review-card');
+  const label = card.querySelector('span').textContent;
+  card.innerHTML = `
+    <div style="font-size: 0.625rem; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.25rem;">${label}</div>
+  `;
+  card.appendChild(input);
+  card.style.cssText = 'background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.04); border-radius: 0.375rem; padding: 0.5rem 0.625rem; margin-bottom: 0.5rem;';
+
+  input.focus();
+  input.select();
+
+  // On blur, update state and re-render as text
+  input.addEventListener('blur', () => {
+    rausState.extracted[key] = input.value.trim();
+  });
 }
 
 function renderRAUS() {
@@ -557,3 +609,14 @@ if (document.readyState === 'loading') {
 } else {
   injectRAUSModal();
 }
+
+// Expose functions to global scope for onclick handlers
+window.openRAUSModal = openRAUSModal;
+window.closeRAUSModal = closeRAUSModal;
+window.setRAUSStep = setRAUSStep;
+window.startRAUSVoice = startRAUSVoice;
+window.processRAUSText = processRAUSText;
+window.submitRAUSCase = submitRAUSCase;
+window.copyRAUSPrompt = copyRAUSPrompt;
+window.updateRAUSCharCount = updateRAUSCharCount;
+window.makeRAUSEditable = makeRAUSEditable;
