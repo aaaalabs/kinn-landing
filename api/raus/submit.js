@@ -41,6 +41,7 @@ export default async function handler(req, res) {
     await resend.emails.send({
       from: 'KINN:RAUS <noreply@kinn.at>',
       to: adminEmail,
+      replyTo: userEmail || undefined,
       subject: `RAUS: ${extracted.headline || 'Neuer Use Case'}`,
       html: buildEmailHtml({ extracted, transcript, region, visibility, inputMode, id, timestamp, userEmail })
     });
