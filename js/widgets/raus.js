@@ -341,7 +341,7 @@ function renderRAUSIntro() {
       </div>
 
       <div style="display: flex; gap: 0.75rem;">
-        <button onclick="processRAUSTextFromIntro()" class="cta-button" style="flex: 1; padding: 0.75rem 1.25rem; font-size: 0.875rem;">Analysieren lassen</button>
+        <button onclick="processRAUSTextFromIntro()" class="cta-button" style="flex: 1; padding: 0.75rem 1.25rem; font-size: 0.875rem; border-radius: 0.5rem;">Analysieren lassen</button>
         <button onclick="selectRAUSInputMode('voice')" style="background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 0.5rem; color: #6B6B6B; font-size: 0.875rem; cursor: pointer; padding: 0.75rem 1.25rem; font-family: inherit; white-space: nowrap; transition: all 0.15s ease;" onmouseenter="this.style.borderColor='rgba(0,0,0,0.15)'" onmouseleave="this.style.borderColor='rgba(0,0,0,0.08)'">Sprechen</button>
       </div>
     </div>
@@ -484,7 +484,7 @@ function renderRAUSReview() {
 
       <div style="display: flex; gap: 0.75rem;">
         <button onclick="setRAUSStep('${rausState.inputMode || 'intro'}')" style="background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 0.5rem; color: #6B6B6B; font-size: 0.875rem; cursor: pointer; padding: 0.75rem 1.25rem; font-family: inherit; transition: all 0.15s ease;" onmouseenter="this.style.borderColor='rgba(0,0,0,0.15)'" onmouseleave="this.style.borderColor='rgba(0,0,0,0.08)'">Zurück</button>
-        <button onclick="submitRAUSCase()" class="cta-button" style="flex: 1; padding: 0.75rem 1.25rem; font-size: 0.875rem; transition: all 0.15s ease; ${!rausState.privacyConsent ? 'background: #c8ece0; cursor: not-allowed;' : ''}">Einreichen</button>
+        <button onclick="submitRAUSCase()" class="cta-button" style="flex: 1; padding: 0.75rem 1.25rem; font-size: 0.875rem; border-radius: 0.5rem; transition: all 0.15s ease; ${!rausState.privacyConsent ? 'background: #c8ece0; cursor: not-allowed;' : ''}">Einreichen</button>
       </div>
     </div>
     <style>@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }</style>
@@ -499,7 +499,7 @@ function renderRAUSSuccess() {
       <p style="font-size: 0.875rem; color: #6B6B6B; margin: 1.25rem 0; line-height: 1.6;">
         Wir schauen uns deinen Case an und melden uns innerhalb von 1-2 Wochen.
       </p>
-      <button onclick="closeRAUSModal()" class="cta-button" style="width: 100%; padding: 0.75rem 1.25rem; font-size: 0.875rem;">Fertig</button>
+      <button onclick="closeRAUSModal()" class="cta-button" style="width: 100%; padding: 0.75rem 1.25rem; font-size: 0.875rem; border-radius: 0.5rem;">Fertig</button>
     </div>
   `;
 }
