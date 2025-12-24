@@ -2,14 +2,17 @@
  * POST /api/raus/submit
  *
  * Submits a use case and sends notification email
+ * Also persists to Redis for future admin dashboard
  *
- * Request: { extracted, transcript, region, visibility, inputMode }
+ * Request: { extracted, transcript, region, visibility, inputMode, userEmail? }
  * Response: { success: true, id }
  */
 
 import { Resend } from 'resend';
+import { Redis } from '@upstash/redis';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const redis = Redis.fromEnv();
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -20,7 +23,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { extracted, transcript, region, visibility, inputMode } = req.body;
+    const { extracted, transcript, region, visibility, inputMode, userEmail } = req.body;
 
     if (!extracted) {
       return res.status(400).json({ error: 'Missing extracted data' });
@@ -28,14 +31,28 @@ export default async function handler(req, res) {
 
     const id = `raus-${Date.now()}`;
     const timestamp = new Date().toLocaleString('de-AT', { timeZone: 'Europe/Vienna' });
+    const submittedAt = new Date().toISOString();
 
-    // Send notification email
+    // 1. Send notification email
+    const adminEmail = process.env.RAUS_ADMIN_EMAIL || 'admin@libralab.ai';
     await resend.emails.send({
       from: 'KINN:RAUS <noreply@kinn.at>',
-      to: 'admin@libralab.ai',
+      to: adminEmail,
       subject: `RAUS: ${extracted.headline || 'Neuer Use Case'}`,
-      html: buildEmailHtml({ extracted, transcript, region, visibility, inputMode, id, timestamp })
+      html: buildEmailHtml({ extracted, transcript, region, visibility, inputMode, id, timestamp, userEmail })
     });
+
+    // 2. Persist to Redis for admin dashboard
+    await redis.lpush('raus:submissions', JSON.stringify({
+      id,
+      extracted,
+      transcript,
+      region,
+      visibility,
+      inputMode,
+      userEmail: userEmail || null,
+      submittedAt
+    }));
 
     return res.status(200).json({ success: true, id });
 
@@ -45,7 +62,7 @@ export default async function handler(req, res) {
   }
 }
 
-function buildEmailHtml({ extracted, transcript, region, visibility, inputMode, id, timestamp }) {
+function buildEmailHtml({ extracted, transcript, region, visibility, inputMode, id, timestamp, userEmail }) {
   const e = extracted;
   const tools = Array.isArray(e.tools) ? e.tools.join(', ') : (e.tools || '—');
 
@@ -71,7 +88,7 @@ function buildEmailHtml({ extracted, transcript, region, visibility, inputMode, 
 <body>
   <div class="header">
     <h1>KINN:RAUS Use Case</h1>
-    <div class="meta">${timestamp} | ${inputMode === 'voice' ? 'Voice' : 'Text'} | ${region} | ${visibility}</div>
+    <div class="meta">${timestamp} | ${inputMode === 'voice' ? 'Voice' : 'Text'} | ${region} | ${visibility}${userEmail ? ` | ${userEmail}` : ''}</div>
   </div>
 
   <div class="headline">${e.headline || '—'}</div>

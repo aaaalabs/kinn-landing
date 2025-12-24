@@ -1031,6 +1031,10 @@
                       style="margin-left: 0.5rem; padding: 4px 10px; font-size: 0.75rem; background: #5ED9A6;">
                 Health Check
               </button>
+              <button class="btn btn-small" onclick="runUpdateLocations()"
+                      style="margin-left: 0.5rem; padding: 4px 10px; font-size: 0.75rem; background: #6B6B6B; color: white;">
+                Fix Locations
+              </button>
               <span id="radar-health-status" style="margin-left: 0.5rem; font-size: 0.75rem; color: #6B6B6B;"></span>
             </div>
 
@@ -2546,6 +2550,35 @@
           const eventsCount = data.events?.total || 0;
           const sourcesCount = data.sources?.active || 0;
           statusEl.innerHTML = `<span style="color: #22c55e;">OK</span> - ${eventsCount} events, ${sourcesCount} sources`;
+        } else {
+          statusEl.innerHTML = `<span style="color: #ef4444;">Error ${res.status}</span>`;
+        }
+      } catch (error) {
+        statusEl.innerHTML = `<span style="color: #ef4444;">Connection failed</span>`;
+      }
+    }
+
+    // Update missing locations (one-time fix)
+    async function runUpdateLocations() {
+      const statusEl = document.getElementById('radar-health-status');
+      statusEl.textContent = 'Updating locations...';
+      statusEl.style.color = '#6B6B6B';
+
+      try {
+        const res = await fetch('/api/admin/update-locations', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${adminPassword}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          statusEl.innerHTML = `<span style="color: #22c55e;">Updated ${data.updates?.length || 0} locations</span>`;
+          if (data.updates?.length > 0) {
+            loadRadarEvents(); // Refresh the event list
+          }
         } else {
           statusEl.innerHTML = `<span style="color: #ef4444;">Error ${res.status}</span>`;
         }

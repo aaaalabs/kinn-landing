@@ -220,11 +220,11 @@ export const SOURCE_CONFIGS = {
 
   'Engineering Kiosk Alps': {
     url: 'https://engineeringkiosk.dev/meetup/alps/',
-    active: false,
+    active: true,
     extraction: {
       method: 'custom',
       instructions: `
-        Engineering Kiosk Alps - ONLY SHOWS NEXT SINGLE EVENT!
+        Engineering Kiosk Alps - Tech community meetups!
 
         Pattern on page:
         - "Next Meetup @ ???" or venue name
@@ -233,10 +233,10 @@ export const SOURCE_CONFIGS = {
         - Location: Sometimes "???" if not yet determined
         - All events are FREE tech meetups
 
-        NOTE: This is NOT an event list - just ONE upcoming event
-        Limited value for aggregation (only 1 event at a time)
+        NOTE: This page shows only ONE upcoming event at a time.
+        Extract the next scheduled meetup.
       `,
-      singleEventOnly: true,  // Only shows next event
+      singleEventOnly: true,
       maxChars: 15000
     }
   },
