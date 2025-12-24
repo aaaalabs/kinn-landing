@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KINN:RAUS 2.0 - Tell, Don't Fill</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 
   <!-- Typography: Work Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -574,6 +575,21 @@
       color: #3A3A3A;
     }
 
+    .btn-link {
+      background: none;
+      border: none;
+      color: #5ED9A6;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .btn-link:hover {
+      text-decoration: underline;
+    }
+
     .btn-row {
       display: flex;
       gap: 0.75rem;
@@ -941,7 +957,7 @@
           <p class="subtitle">Erzähl uns von deiner KI-Lösung - so wie es für dich am einfachsten ist.</p>
 
           <div class="input-mode-cards">
-            <button class="input-mode-card recommended" onclick="selectInputMode('voice')">
+            <button class="input-mode-card recommended" onclick="selectInputMode('voiceConsent')">
               <span class="mode-badge">Empfohlen</span>
               <span class="mode-icon">${icons.mic}</span>
               <span class="mode-title">Aufnehmen</span>
@@ -957,6 +973,30 @@
 
           <p style="font-size: 0.75rem; color: #999; text-align: center;">
             In beiden Fällen extrahiert unsere KI automatisch die Struktur.
+          </p>
+        </div>
+      `;
+    }
+
+    function renderVoiceConsent() {
+      return `
+        <div class="fade-in" style="text-align: center;">
+          <div style="width: 64px; height: 64px; margin: 0 auto 1.5rem; color: #5ED9A6;">${icons.mic}</div>
+          <h1>Bevor wir starten</h1>
+          <p class="subtitle" style="max-width: 320px; margin: 0 auto 1.5rem;">
+            Deine Stimme wird von AssemblyAI (USA) transkribiert und nach der Verarbeitung gelöscht.
+          </p>
+
+          <button class="btn btn-primary" onclick="selectInputMode('voice')" style="margin-bottom: 1rem;">
+            Einverstanden - Aufnahme starten
+          </button>
+
+          <p style="font-size: 0.8125rem; color: #6B6B6B; margin-bottom: 0.5rem;">
+            Lieber tippen? <button class="btn-link" onclick="selectInputMode('text')">Textmodus</button>
+          </p>
+
+          <p style="font-size: 0.6875rem; color: #999;">
+            <a href="/datenschutz" target="_blank" style="color: inherit;">Datenschutz</a>
           </p>
         </div>
       `;
@@ -1204,6 +1244,7 @@ Was war das Problem vorher? Wie funktioniert die Lösung? Was hat sich verbesser
 
       const renderers = {
         intro: renderIntro,
+        voiceConsent: renderVoiceConsent,
         voice: renderVoice,
         text: renderText,
         processing: renderProcessing,

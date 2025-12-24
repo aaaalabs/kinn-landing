@@ -76,6 +76,15 @@
   ],
   "headers": [
     {
+      "source": "/raus/(.*)",
+      "headers": [
+        {
+          "key": "Permissions-Policy",
+          "value": "microphone=(self)"
+        }
+      ]
+    },
+    {
       "source": "/lade/:id/images/(.*)",
       "headers": [
         {
