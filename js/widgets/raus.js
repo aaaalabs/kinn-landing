@@ -322,7 +322,7 @@ function renderRAUSIntro() {
     <div style="animation: fadeIn 0.3s ease-out;">
       <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.5rem;">KI Praxis Report Tirol 2026</div>
       <h1 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.5rem;">Teile deinen Use Case</h1>
-      <p style="font-size: 0.875rem; color: #6B6B6B; margin-bottom: 1.25rem;">Frag deine KI und kopier die Antwort hier rein.</p>
+      <p style="font-size: 0.875rem; color: #6B6B6B; margin-bottom: 1.25rem;">Frag deine KI und kopier die Antwort rein.</p>
 
       <div class="raus-prompt-box" onclick="copyRAUSPrompt()" style="background: linear-gradient(135deg, rgba(94,217,166,0.08) 0%, rgba(94,217,166,0.02) 100%); border: 1px solid rgba(94,217,166,0.3); border-radius: 0.75rem; padding: 1rem; cursor: pointer; margin-bottom: 1rem; transition: all 0.2s;">
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
