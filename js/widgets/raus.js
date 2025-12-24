@@ -468,10 +468,10 @@ function renderRAUSReview() {
         ${renderCard('result', 'Ergebnis', 'Was hat sich messbar verbessert?', true)}
 
         <div class="raus-review-card ${!data.tools?.length ? 'missing' : ''}" style="background: ${!data.tools?.length ? 'rgba(251,191,36,0.06)' : 'rgba(255,255,255,0.5)'}; border: 1px solid ${!data.tools?.length ? 'rgba(251,191,36,0.25)' : 'rgba(0,0,0,0.04)'}; border-radius: 0.375rem; padding: 0.5rem 0.625rem;">
-          <div style="font-size: 0.625rem; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.25rem;">Tools ${!data.tools?.length ? '<span style="color: #d97706;">' + rausIcons.alertTriangle + '</span>' : ''}</div>
+          <div id="raus-tools-label" style="font-size: 0.625rem; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.25rem;">Tools ${!data.tools?.length ? '<span style="color: #d97706;">' + rausIcons.alertTriangle + '</span> <span style="font-weight: 400; color: #6B6B6B; text-transform: none; letter-spacing: 0;">(trenne mit Beistrich)</span>' : ''}</div>
           ${data.tools?.length
             ? `<div class="raus-editable" data-key="tools" onclick="makeRAUSEditable(this)" style="display: flex; flex-wrap: wrap; gap: 0.375rem; cursor: text; padding: 0.125rem 0; border-bottom: 1px dashed transparent;" onmouseenter="this.style.borderColor='rgba(0,0,0,0.1)'" onmouseleave="this.style.borderColor='transparent'">${data.tools.map(t => `<span style="font-size: 0.75rem; background: rgba(94,217,166,0.15); color: #059669; padding: 0.25rem 0.625rem; border-radius: 1rem; font-weight: 500;">${t}</span>`).join('')}</div><input type="hidden" id="raus-input-tools" value="${data.tools.join(', ')}">`
-            : `<input type="text" class="raus-review-card-input" placeholder="z.B. Claude, GPT-4..." id="raus-input-tools" onblur="saveRAUSField('tools', this.value)" style="width: 100%; padding: 0.375rem 0.5rem; border: 1px solid rgba(251,191,36,0.4); border-radius: 0.25rem; font-family: inherit; font-size: 0.8125rem;">`}
+            : `<input type="text" class="raus-review-card-input" placeholder="z.B. Claude, GPT-4..." id="raus-input-tools" onfocus="updateToolsLabel(false)" onblur="if(this.value.trim()){saveRAUSField('tools', this.value)}else{updateToolsLabel(true)}" style="width: 100%; padding: 0.375rem 0.5rem; border: 1px solid rgba(251,191,36,0.4); border-radius: 0.25rem; font-family: inherit; font-size: 0.8125rem;">`}
         </div>
       </div>
 
@@ -543,13 +543,9 @@ function makeRAUSEditable(el) {
 
   el.replaceWith(input);
 
-  // For tools: show hint in the label
+  // For tools: show hint in the label (without warning icon since field has value)
   if (key === 'tools') {
-    const card = input.closest('.raus-review-card');
-    const label = card?.querySelector('div');
-    if (label) {
-      label.innerHTML = 'Tools <span style="font-weight: 400; color: #6B6B6B; text-transform: none; letter-spacing: 0;">(trenne mit Beistrich)</span>';
-    }
+    updateToolsLabel(false);
   }
 
   input.focus();
@@ -567,6 +563,17 @@ function makeRAUSEditable(el) {
     // Re-render the review to show updated text
     renderRAUS();
   });
+}
+
+// Update tools label hint visibility
+function updateToolsLabel(showHint) {
+  const label = document.getElementById('raus-tools-label');
+  if (!label) return;
+  if (showHint) {
+    label.innerHTML = 'Tools <span style="color: #d97706;">' + rausIcons.alertTriangle + '</span> <span style="font-weight: 400; color: #6B6B6B; text-transform: none; letter-spacing: 0;">(trenne mit Beistrich)</span>';
+  } else {
+    label.innerHTML = 'Tools <span style="font-weight: 400; color: #6B6B6B; text-transform: none; letter-spacing: 0;">(trenne mit Beistrich)</span>';
+  }
 }
 
 // Save field from missing-input onblur and re-render
