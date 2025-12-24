@@ -482,9 +482,9 @@ function renderRAUSReview() {
         <span>Ich akzeptiere die <a href="/pages/privacy.html" target="_blank" style="color: #5ED9A6; text-decoration: none;">Datenschutzbestimmungen</a></span>
       </label>
 
-      <div style="display: flex; gap: 0.75rem;">
-        <button onclick="setRAUSStep('${rausState.inputMode || 'intro'}')" style="background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 0.5rem; color: #6B6B6B; font-size: 0.875rem; cursor: pointer; padding: 0.75rem 1.25rem; font-family: inherit; transition: all 0.15s ease;" onmouseenter="this.style.borderColor='rgba(0,0,0,0.15)'" onmouseleave="this.style.borderColor='rgba(0,0,0,0.08)'">Zurück</button>
-        <button onclick="submitRAUSCase()" class="cta-button" style="flex: 1; padding: 0.75rem 1.25rem; font-size: 0.875rem; border-radius: 0.5rem; transition: all 0.15s ease; ${!rausState.privacyConsent ? 'background: #c8ece0; cursor: not-allowed;' : ''}">Einreichen</button>
+      <div style="display: flex; gap: 0.75rem; align-items: stretch;">
+        <button onclick="setRAUSStep('${rausState.inputMode || 'intro'}')" style="display: inline-flex; align-items: center; justify-content: center; background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 0.5rem; color: #6B6B6B; font-size: 0.875rem; font-weight: 500; cursor: pointer; padding: 0.75rem 1.25rem; font-family: inherit; transition: all 0.15s ease;" onmouseenter="this.style.borderColor='rgba(0,0,0,0.15)'" onmouseleave="this.style.borderColor='rgba(0,0,0,0.08)'">Zurück</button>
+        <button onclick="submitRAUSCase()" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; background: ${rausState.privacyConsent ? '#5ED9A6' : '#c8ece0'}; border: none; border-radius: 0.5rem; color: #000; font-size: 0.875rem; font-weight: 500; cursor: ${rausState.privacyConsent ? 'pointer' : 'not-allowed'}; padding: 0.75rem 1.25rem; font-family: inherit; transition: all 0.15s ease;">Einreichen</button>
       </div>
     </div>
     <style>@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }</style>
@@ -520,7 +520,7 @@ function makeRAUSEditable(el) {
 
   input.value = currentValue;
   input.style.cssText = `
-    width: 100%; padding: 0.25rem 0.375rem; border: 1px solid #5ED9A6;
+    width: 100%; padding: 0.375rem 0.5rem; border: 1px solid #5ED9A6;
     border-radius: 0.25rem; font-family: inherit; font-size: 0.8125rem;
     color: #2C3E50; outline: none; box-shadow: 0 0 0 2px rgba(94,217,166,0.15);
     ${isTextarea ? 'min-height: 50px; resize: vertical; line-height: 1.4;' : ''}
@@ -528,6 +528,16 @@ function makeRAUSEditable(el) {
   `;
 
   el.replaceWith(input);
+
+  // For tools: show hint in the label
+  if (key === 'tools') {
+    const card = input.closest('.raus-review-card');
+    const label = card?.querySelector('div');
+    if (label) {
+      label.innerHTML = 'Tools <span style="font-weight: 400; color: #6B6B6B; text-transform: none; letter-spacing: 0;">(trenne mit Beistrich)</span>';
+    }
+  }
+
   input.focus();
   input.select();
 
@@ -596,7 +606,7 @@ function injectRAUSModal() {
   modalDiv.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem; display: none;';
 
   modalDiv.innerHTML = `
-    <div style="background: #fff; border-radius: 1rem; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.15); animation: modalIn 0.3s ease-out; position: relative;">
+    <div style="background: #fff; border-radius: 1rem; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.15); animation: modalIn 0.3s ease-out; position: relative;">
       <button onclick="closeRAUSModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer; z-index: 10; line-height: 1; padding: 0.25rem; border-radius: 0.25rem;">&times;</button>
       <div id="rausWizardContent" style="padding: 1.5rem;"></div>
     </div>
