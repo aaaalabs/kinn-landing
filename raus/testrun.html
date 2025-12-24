@@ -752,8 +752,8 @@
   <!-- Entry -->
   <div style="max-width: 480px; margin: 0 auto; padding: 3rem 0; text-align: center;">
     <div style="background: rgba(255,255,255,0.8); border-radius: 1rem; padding: 2rem; border: 1px solid rgba(0,0,0,0.06);">
-      <h2 style="font-size: 1.25rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.5rem;">KINN:RAUS 2.0</h2>
-      <p style="color: #6B6B6B; margin-bottom: 1.5rem; font-size: 0.875rem;">"Tell, Don't Fill" - Sprich statt tippen</p>
+      <h2 style="font-size: 1.25rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.5rem;">KINN:RAUS</h2>
+      <p style="color: #6B6B6B; margin-bottom: 1.5rem; font-size: 0.875rem;">KI Praxis Report Tirol 2026</p>
       <button class="btn btn-primary" onclick="openModal()">
         Use Case einreichen
       </button>
@@ -926,6 +926,11 @@
       }
     }
 
+    async function processTextFromIntro() {
+      state.inputMode = 'text';
+      await processText();
+    }
+
     async function processText() {
       // Get current textarea value (in case state wasn't updated)
       const textarea = document.getElementById('textInput');
@@ -1068,29 +1073,43 @@
     // RENDERERS
     // ==========================================================================
     function renderIntro() {
+      // Text-First: Skip mode selection, go straight to text input
       return `
         <div class="fade-in">
           <div class="step-indicator">KI Praxis Report Tirol 2026</div>
-          <h1>Wie möchtest du deinen Use Case teilen?</h1>
-          <p class="subtitle">Erzähl uns von deiner KI-Lösung - so wie es für dich am einfachsten ist.</p>
+          <h1>Teile deinen Use Case</h1>
+          <p class="subtitle">Frag deine KI und kopier die Antwort hier rein.</p>
 
-          <div class="input-mode-cards">
-            <button class="input-mode-card recommended" onclick="selectInputMode('voiceConsent')">
-              <span class="mode-badge">Empfohlen</span>
-              <span class="mode-icon">${icons.mic}</span>
-              <span class="mode-title">Aufnehmen</span>
-              <span class="mode-desc">2 Min sprechen</span>
-            </button>
-
-            <button class="input-mode-card" onclick="selectInputMode('text')">
-              <span class="mode-icon">${icons.keyboard}</span>
-              <span class="mode-title">Schreiben</span>
-              <span class="mode-desc">Freitext eingeben</span>
-            </button>
+          <div class="prompt-box" onclick="copyPrompt()">
+            <div class="prompt-content">
+              <div class="prompt-icon">${icons.sparkles}</div>
+              <div class="prompt-text">Prompt kopieren</div>
+            </div>
+            <div class="prompt-preview">Problem → Lösung → Ergebnis → Tools</div>
           </div>
 
+          <div class="text-input-area">
+            <textarea
+              id="textInput"
+              placeholder="Antwort hier einfügen..."
+              oninput="state.textInput = this.value; updateCharCount();"
+              onpaste="setTimeout(() => { state.textInput = this.value; updateCharCount(); }, 0)"
+            >${state.textInput}</textarea>
+            <div class="context-bar" id="contextBar">
+              <div class="context-bar-fill" style="width: ${Math.min(100, (state.textInput.length / 50000) * 100)}%"></div>
+            </div>
+            <div class="char-indicator ${state.textInput.length >= 20 ? 'good' : ''}" id="charIndicator">
+              <span>${state.textInput.length >= 20 ? '✓ Bereit' : 'Mind. 20 Zeichen'}</span>
+              <span>${state.textInput.length > 500 ? '~' + Math.round(state.textInput.length / 4) + ' tokens' : state.textInput.length + ' Zeichen'}</span>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" onclick="processTextFromIntro()" style="margin-bottom: 1rem;">
+            Analysieren lassen
+          </button>
+
           <p style="font-size: 0.75rem; color: #999; text-align: center;">
-            In beiden Fällen extrahiert unsere KI automatisch die Struktur.
+            <button class="btn-link" onclick="selectInputMode('voiceConsent')" style="color: #999;">Lieber sprechen?</button>
           </p>
         </div>
       `;
