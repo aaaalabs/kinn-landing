@@ -34,7 +34,8 @@ let rausState = {
   extracted: null,
   error: null,
   processingStep: 0,
-  voiceConsent: false
+  voiceConsent: false,
+  privacyConsent: false
 };
 
 let rausMediaRecorder = null;
@@ -53,7 +54,8 @@ function openRAUSModal() {
     extracted: null,
     error: null,
     processingStep: 0,
-    voiceConsent: false
+    voiceConsent: false,
+    privacyConsent: false
   };
   const modal = document.getElementById('rausModalOverlay');
   modal.style.display = 'flex';
@@ -250,6 +252,17 @@ function updateRAUSCharCount() {
 }
 
 async function submitRAUSCase() {
+  // Check privacy consent first
+  if (!rausState.privacyConsent) {
+    const checkbox = document.getElementById('rausPrivacyConsent');
+    if (checkbox) {
+      checkbox.parentElement.style.color = '#dc2626';
+      checkbox.focus();
+      setTimeout(() => { checkbox.parentElement.style.color = '#6B6B6B'; }, 2000);
+    }
+    return;
+  }
+
   const data = { ...rausState.extracted };
 
   ['headline', 'problem', 'solution', 'result', 'tools'].forEach(key => {
@@ -459,9 +472,14 @@ function renderRAUSReview() {
         </div>
       </div>
 
+      <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #6B6B6B; margin-bottom: 0.75rem; cursor: pointer;">
+        <input type="checkbox" id="rausPrivacyConsent" onchange="rausState.privacyConsent = this.checked; renderRAUS();" ${rausState.privacyConsent ? 'checked' : ''}>
+        <span><a href="/pages/privacy.html" target="_blank" style="color: #5ED9A6;">Datenschutz</a> akzeptiert</span>
+      </label>
+
       <div style="display: flex; gap: 0.75rem;">
         <button onclick="setRAUSStep('${rausState.inputMode || 'intro'}')" style="background: none; border: none; color: #6B6B6B; font-size: 0.875rem; cursor: pointer; padding: 0.5rem; font-family: inherit;">&larr; Neu</button>
-        <button onclick="submitRAUSCase()" class="cta-button" style="flex: 1;">Einreichen</button>
+        <button onclick="submitRAUSCase()" class="cta-button" style="flex: 1; ${!rausState.privacyConsent ? 'opacity: 0.5;' : ''}">Einreichen</button>
       </div>
     </div>
     <style>@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }</style>
