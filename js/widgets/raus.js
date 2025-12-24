@@ -458,7 +458,7 @@ function renderRAUSReview() {
         <div class="raus-review-card ${!data.tools?.length ? 'missing' : ''}" style="background: ${!data.tools?.length ? 'rgba(251,191,36,0.06)' : 'rgba(255,255,255,0.5)'}; border: 1px solid ${!data.tools?.length ? 'rgba(251,191,36,0.25)' : 'rgba(0,0,0,0.04)'}; border-radius: 0.375rem; padding: 0.5rem 0.625rem;">
           <div style="font-size: 0.625rem; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.25rem;">Tools ${!data.tools?.length ? '<span style="color: #d97706;">' + rausIcons.alertTriangle + '</span>' : ''}</div>
           ${data.tools?.length
-            ? `<div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">${data.tools.map(t => `<span style="font-size: 0.6875rem; background: rgba(94,217,166,0.12); color: #059669; padding: 0.125rem 0.5rem; border-radius: 0.75rem; font-weight: 500;">${t}</span>`).join('')}</div>`
+            ? `<span class="raus-editable" data-key="tools" onclick="makeRAUSEditable(this)" style="font-size: 0.8125rem; color: #2C3E50; cursor: text; padding: 0.125rem 0; border-bottom: 1px dashed transparent;" onmouseenter="this.style.borderColor='rgba(0,0,0,0.15)'" onmouseleave="this.style.borderColor='transparent'">${data.tools.join(', ')}</span><input type="hidden" id="raus-input-tools" value="${data.tools.join(', ')}">`
             : `<input type="text" class="raus-review-card-input" placeholder="z.B. Claude, GPT-4..." id="raus-input-tools" style="width: 100%; padding: 0.375rem 0.5rem; border: 1px solid rgba(251,191,36,0.4); border-radius: 0.25rem; font-family: inherit; font-size: 0.8125rem;">`}
         </div>
       </div>
@@ -506,38 +506,36 @@ function makeRAUSEditable(span) {
   const key = span.dataset.key;
   const isTextarea = span.dataset.textarea === 'true';
   const currentValue = span.textContent;
-  const hiddenInput = document.getElementById(`raus-input-${key}`);
 
-  // Replace span with input
+  // Replace span with input inline
   const input = isTextarea
     ? document.createElement('textarea')
     : document.createElement('input');
 
   input.value = currentValue;
-  input.id = `raus-input-${key}`;
   input.style.cssText = `
-    width: 100%; padding: 0.375rem 0.5rem; border: 1px solid #5ED9A6;
+    width: 100%; padding: 0.25rem 0.375rem; border: 1px solid #5ED9A6;
     border-radius: 0.25rem; font-family: inherit; font-size: 0.8125rem;
     color: #2C3E50; outline: none; box-shadow: 0 0 0 2px rgba(94,217,166,0.15);
-    ${isTextarea ? 'min-height: 60px; resize: vertical; line-height: 1.4;' : ''}
+    ${isTextarea ? 'min-height: 50px; resize: vertical; line-height: 1.4;' : ''}
     ${key === 'headline' ? 'font-weight: 600;' : ''}
   `;
 
-  // Replace the whole card content
-  const card = span.closest('.raus-review-card');
-  const label = card.querySelector('span').textContent;
-  card.innerHTML = `
-    <div style="font-size: 0.625rem; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.25rem;">${label}</div>
-  `;
-  card.appendChild(input);
-  card.style.cssText = 'background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.04); border-radius: 0.375rem; padding: 0.5rem 0.625rem; margin-bottom: 0.5rem;';
-
+  span.replaceWith(input);
   input.focus();
   input.select();
 
-  // On blur, update state and re-render as text
+  // On blur, update state and restore as text
   input.addEventListener('blur', () => {
-    rausState.extracted[key] = input.value.trim();
+    const newValue = input.value.trim();
+    // Update state
+    if (key === 'tools') {
+      rausState.extracted[key] = newValue.split(',').map(t => t.trim()).filter(Boolean);
+    } else {
+      rausState.extracted[key] = newValue;
+    }
+    // Re-render the review to show updated text
+    renderRAUS();
   });
 }
 
