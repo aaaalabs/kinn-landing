@@ -439,14 +439,9 @@ function renderRAUSReview() {
 
   return `
     <div style="animation: fadeIn 0.3s ease-out;">
-      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem;">
-        <div>
-          <div style="font-size: 0.6875rem; color: #999; text-transform: uppercase; letter-spacing: 0.03em;">Review</div>
-          <div style="font-size: 0.9375rem; font-weight: 600; color: #2C3E50;">${hasMissing ? 'Details ergänzen' : 'Passt das?'}</div>
-        </div>
-        <div style="font-size: 0.6875rem; color: #6B6B6B; display: flex; align-items: center; gap: 0.375rem;">
-          Konfidenz: <span style="color: ${(data.confidence || 0) >= 0.8 ? '#5ED9A6' : '#d97706'}; font-weight: 500;">${Math.round((data.confidence || 0) * 100)}%</span>
-        </div>
+      <div style="margin-bottom: 0.75rem;">
+        <div style="font-size: 0.6875rem; color: #999; text-transform: uppercase; letter-spacing: 0.03em;">Review</div>
+        <div style="font-size: 0.9375rem; font-weight: 600; color: #2C3E50;">${hasMissing ? 'Details ergänzen' : 'Passt das?'}</div>
       </div>
 
       <div style="margin-bottom: 0.75rem;">
