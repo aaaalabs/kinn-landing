@@ -1402,9 +1402,9 @@
 
     const content = document.getElementById('content');
 
-    // State
+    // State (userEmail exposed globally for RAUS widget)
     let userProfile = null;
-    let userEmail = tokenEmail;
+    window.userEmail = tokenEmail;
     let isSaving = false;
 
     // Determine active tab from URL hash (default: dashboard)
@@ -1556,7 +1556,7 @@
         try {
           const cached = JSON.parse(cachedData);
           userProfile = cached.profile || {};
-          userEmail = cached.email;
+          window.userEmail = cached.email;
           window.addEventListener('hashchange', handleHashChange);
           renderProfile();
           console.log('[PROFILE] Instant render from cache');
@@ -1597,7 +1597,7 @@
         // Only re-render if data changed (or first load)
         if (hasChanged || !cachedData) {
           userProfile = freshProfile;
-          userEmail = email;
+          window.userEmail = email;
 
           if (email && token) {
             saveSession(token, email);
