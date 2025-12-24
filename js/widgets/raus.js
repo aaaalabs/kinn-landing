@@ -55,12 +55,16 @@ function openRAUSModal() {
     processingStep: 0,
     voiceConsent: false
   };
-  document.getElementById('rausModalOverlay').classList.add('active');
+  const modal = document.getElementById('rausModalOverlay');
+  modal.style.display = 'flex';
+  modal.classList.add('active');
   renderRAUS();
 }
 
 function closeRAUSModal() {
-  document.getElementById('rausModalOverlay').classList.remove('active');
+  const modal = document.getElementById('rausModalOverlay');
+  modal.style.display = 'none';
+  modal.classList.remove('active');
   stopRAUSRecording();
 }
 
@@ -512,7 +516,7 @@ function injectRAUSModal() {
   modalDiv.id = 'rausModalOverlay';
   modalDiv.className = 'modal-overlay';
   modalDiv.onclick = function(e) { if (e.target === this) closeRAUSModal(); };
-  modalDiv.style.cssText = 'display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;';
+  modalDiv.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem; display: none;';
 
   modalDiv.innerHTML = `
     <div style="background: #fff; border-radius: 1rem; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.15); animation: modalIn 0.3s ease-out; position: relative;">
