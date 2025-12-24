@@ -404,23 +404,20 @@ function renderRAUSReview() {
   const hasMissing = !data.solution || !data.result;
 
   const renderCard = (key, label, placeholder, isTextarea = false) => {
-    const value = data[key];
-    if (!value) {
-      return `
-        <div class="raus-review-card missing" style="background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.3); border-radius: 0.5rem; padding: 0.875rem 1rem; margin-bottom: 0.75rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.375rem;">
-            <span style="font-size: 0.6875rem; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.04em;">${label} <span style="color: #d97706; margin-left: 0.5rem;">${rausIcons.alertTriangle} Bitte ergänzen</span></span>
-          </div>
-          ${isTextarea
-            ? `<textarea class="raus-review-card-input" placeholder="${placeholder}" id="raus-input-${key}" style="width: 100%; min-height: 60px; padding: 0.625rem 0.75rem; border: 1px solid rgba(251,191,36,0.5); border-radius: 0.375rem; font-family: inherit; font-size: 0.875rem; resize: vertical;"></textarea>`
-            : `<input type="text" class="raus-review-card-input" placeholder="${placeholder}" id="raus-input-${key}" style="width: 100%; padding: 0.625rem 0.75rem; border: 1px solid rgba(251,191,36,0.5); border-radius: 0.375rem; font-family: inherit; font-size: 0.875rem;">`}
-        </div>
-      `;
-    }
+    const value = data[key] || '';
+    const isMissing = !value;
+    const bgStyle = isMissing ? 'background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.3);' : 'background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.06);';
+    const inputBorder = isMissing ? 'border: 1px solid rgba(251,191,36,0.5);' : 'border: 1px solid transparent; background: transparent;';
+    const inputFocusClass = isMissing ? '' : 'raus-stealth-input';
+
     return `
-      <div class="raus-review-card" style="background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.06); border-radius: 0.5rem; padding: 0.875rem 1rem; margin-bottom: 0.75rem;">
-        <div style="font-size: 0.6875rem; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.375rem;">${label}</div>
-        <div style="font-size: 0.9375rem; color: #2C3E50; line-height: 1.5; ${key === 'headline' ? 'font-weight: 600;' : ''}">${value}</div>
+      <div class="raus-review-card ${isMissing ? 'missing' : ''}" style="${bgStyle} border-radius: 0.5rem; padding: 0.875rem 1rem; margin-bottom: 0.75rem;">
+        <div style="font-size: 0.6875rem; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.375rem;">
+          ${label}${isMissing ? ` <span style="color: #d97706; margin-left: 0.5rem;">${rausIcons.alertTriangle} Bitte ergänzen</span>` : ''}
+        </div>
+        ${isTextarea
+          ? `<textarea class="raus-review-card-input ${inputFocusClass}" placeholder="${placeholder}" id="raus-input-${key}" style="width: 100%; min-height: 60px; padding: 0.5rem 0.625rem; ${inputBorder} border-radius: 0.375rem; font-family: inherit; font-size: 0.9375rem; resize: vertical; color: #2C3E50; line-height: 1.5;">${value}</textarea>`
+          : `<input type="text" class="raus-review-card-input ${inputFocusClass}" placeholder="${placeholder}" id="raus-input-${key}" value="${value.replace(/"/g, '&quot;')}" style="width: 100%; padding: 0.5rem 0.625rem; ${inputBorder} border-radius: 0.375rem; font-family: inherit; font-size: 0.9375rem; color: #2C3E50; ${key === 'headline' ? 'font-weight: 600;' : ''}">`}
       </div>
     `;
   };
@@ -554,6 +551,9 @@ function injectRAUSModal() {
     .raus-prompt-box:hover { border-color: #5ED9A6; }
     .raus-prompt-box.copied { background: rgba(94,217,166,0.15); }
     .raus-char-indicator.good span:first-child { color: #059669; }
+    .raus-stealth-input { cursor: text; transition: all 0.15s ease; }
+    .raus-stealth-input:hover { background: rgba(0,0,0,0.02) !important; border-color: rgba(0,0,0,0.1) !important; }
+    .raus-stealth-input:focus { background: white !important; border-color: #5ED9A6 !important; outline: none; box-shadow: 0 0 0 2px rgba(94,217,166,0.15); }
   `;
   document.head.appendChild(style);
 }
