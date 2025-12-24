@@ -329,7 +329,15 @@ function renderRAUSIntro() {
           <span style="color: #5ED9A6;">${rausIcons.sparkles}</span>
           <span class="raus-prompt-text" style="font-weight: 600; color: #2C3E50; font-size: 0.875rem;">Prompt kopieren</span>
         </div>
-        <div style="font-size: 0.75rem; color: #6B6B6B;">Problem - Lösung - Ergebnis - Tools</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.25rem;">
+          <span style="font-size: 0.6875rem; color: #4F46E5;">Problem</span>
+          <span style="font-size: 0.6875rem; color: #6B6B6B;">-</span>
+          <span style="font-size: 0.6875rem; color: #059669;">Lösung</span>
+          <span style="font-size: 0.6875rem; color: #6B6B6B;">-</span>
+          <span style="font-size: 0.6875rem; color: #D97706;">Ergebnis</span>
+          <span style="font-size: 0.6875rem; color: #6B6B6B;">-</span>
+          <span style="font-size: 0.6875rem; color: #9333EA;">Tools</span>
+        </div>
       </div>
 
       <div style="margin-bottom: 1rem;">
@@ -353,7 +361,13 @@ function renderRAUSVoice() {
   return `
     <div style="animation: fadeIn 0.3s ease-out;">
       <h1 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.5rem;">Sprich deinen Use Case ein</h1>
-      <p style="font-size: 0.875rem; color: #6B6B6B; margin-bottom: 1.25rem;">Problem, Lösung, Ergebnis, Tools - 2 Minuten reichen.</p>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.375rem; margin-bottom: 1rem;">
+        <span style="padding: 0.25rem 0.625rem; background: rgba(99,102,241,0.1); color: #4F46E5; border-radius: 1rem; font-size: 0.75rem; font-weight: 500;">Problem</span>
+        <span style="padding: 0.25rem 0.625rem; background: rgba(94,217,166,0.15); color: #059669; border-radius: 1rem; font-size: 0.75rem; font-weight: 500;">Lösung</span>
+        <span style="padding: 0.25rem 0.625rem; background: rgba(245,158,11,0.12); color: #D97706; border-radius: 1rem; font-size: 0.75rem; font-weight: 500;">Ergebnis</span>
+        <span style="padding: 0.25rem 0.625rem; background: rgba(168,85,247,0.1); color: #9333EA; border-radius: 1rem; font-size: 0.75rem; font-weight: 500;">Tools</span>
+      </div>
+      <p style="font-size: 0.8125rem; color: #6B6B6B; margin-bottom: 1rem;">2 Minuten reichen.</p>
 
       <div style="text-align: center; padding: 2rem 0;">
         <button onclick="toggleRAUSRecordingWithConsent()" style="width: 80px; height: 80px; border-radius: 50%; border: none; background: ${rausState.isRecording ? '#ef4444' : consentGiven ? '#5ED9A6' : '#c8ece0'}; color: ${rausState.isRecording ? '#fff' : '#000'}; cursor: ${consentGiven || rausState.isRecording ? 'pointer' : 'not-allowed'}; display: flex; align-items: center; justify-content: center; margin: 0 auto; transition: all 0.2s;">
