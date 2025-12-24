@@ -340,10 +340,10 @@ function renderRAUSIntro() {
         </div>
       </div>
 
-      <div style="display: flex; gap: 0.75rem;">
-        <button onclick="processRAUSTextFromIntro()" class="cta-button" style="flex: 1; padding: 0.75rem 1.25rem; font-size: 0.875rem; border-radius: 0.5rem;">Analysieren lassen</button>
-        <button onclick="selectRAUSInputMode('voice')" style="background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 0.5rem; color: #6B6B6B; font-size: 0.875rem; cursor: pointer; padding: 0.75rem 1.25rem; font-family: inherit; white-space: nowrap; transition: all 0.15s ease;" onmouseenter="this.style.borderColor='rgba(0,0,0,0.15)'" onmouseleave="this.style.borderColor='rgba(0,0,0,0.08)'">Sprechen</button>
-      </div>
+      <button onclick="processRAUSTextFromIntro()" class="cta-button" style="width: 100%; padding: 0.75rem 1.25rem; font-size: 0.875rem; border-radius: 0.5rem;">Analysieren lassen</button>
+      <p style="text-align: center; margin-top: 0.75rem;">
+        <button onclick="selectRAUSInputMode('voice')" style="background: none; border: none; color: #6B6B6B; font-size: 0.8125rem; cursor: pointer; font-family: inherit; text-decoration: underline; text-decoration-color: rgba(0,0,0,0.2); text-underline-offset: 2px;" onmouseenter="this.style.color='#2C3E50'" onmouseleave="this.style.color='#6B6B6B'">Lieber sprechen?</button>
+      </p>
     </div>
   `;
 }
