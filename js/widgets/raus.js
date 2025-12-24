@@ -340,11 +340,10 @@ function renderRAUSIntro() {
         </div>
       </div>
 
-      <button onclick="processRAUSTextFromIntro()" class="cta-button" style="width: 100%; margin-bottom: 1rem;">Analysieren lassen</button>
-
-      <p style="font-size: 0.75rem; color: #999; text-align: center;">
-        <button onclick="selectRAUSInputMode('voice')" style="background: none; border: none; color: #999; font-size: 0.75rem; cursor: pointer; font-family: inherit;">Lieber sprechen?</button>
-      </p>
+      <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <button onclick="processRAUSTextFromIntro()" class="cta-button" style="flex: 1;">Analysieren lassen</button>
+        <button onclick="selectRAUSInputMode('voice')" style="background: none; border: 1px solid rgba(0,0,0,0.1); border-radius: 0.5rem; color: #6B6B6B; font-size: 0.8125rem; cursor: pointer; padding: 0.625rem 1rem; font-family: inherit; white-space: nowrap;">Lieber sprechen</button>
+      </div>
     </div>
   `;
 }
