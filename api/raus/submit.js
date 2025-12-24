@@ -12,7 +12,10 @@ import { Resend } from 'resend';
 import { Redis } from '@upstash/redis';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const redis = Redis.fromEnv();
+const redis = new Redis({
+  url: process.env.KINNST_KV_REST_API_URL,
+  token: process.env.KINNST_KV_REST_API_TOKEN,
+});
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

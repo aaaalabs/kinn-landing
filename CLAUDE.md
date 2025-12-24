@@ -292,13 +292,17 @@ Event {
 ## Environment Variables
 
 ```bash
-# Redis (Upstash)
-KV_REST_API_URL=...
-KV_REST_API_TOKEN=...
+# Redis (Upstash) - IMPORTANT: Use KINNST_ prefix!
+KINNST_KV_REST_API_URL=https://...upstash.io
+KINNST_KV_REST_API_TOKEN=...
 
 # Email (Resend)
 RESEND_API_KEY=...
 SENDER_EMAIL="KINN <thomas@kinn.at>"
+
+# AI APIs (for RAUS)
+GROQ_API_KEY=...
+ASSEMBLYAI_API_KEY=...
 
 # JWT
 JWT_SECRET=...
@@ -309,6 +313,15 @@ ADMIN_PASSWORD_HASH=...
 
 # Base URL
 BASE_URL="https://kinn.at"
+```
+
+**IMPORTANT:** Do NOT use `Redis.fromEnv()` - it looks for `UPSTASH_REDIS_*` vars.
+Always use explicit config:
+```javascript
+const redis = new Redis({
+  url: process.env.KINNST_KV_REST_API_URL,
+  token: process.env.KINNST_KV_REST_API_TOKEN,
+});
 ```
 
 ## Development Workflow

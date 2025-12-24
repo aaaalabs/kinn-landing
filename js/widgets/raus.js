@@ -614,7 +614,7 @@ if (document.readyState === 'loading') {
 window.openRAUSModal = openRAUSModal;
 window.closeRAUSModal = closeRAUSModal;
 window.setRAUSStep = setRAUSStep;
-window.startRAUSVoice = startRAUSVoice;
+window.startRAUSRecording = startRAUSRecording;
 window.processRAUSText = processRAUSText;
 window.submitRAUSCase = submitRAUSCase;
 window.copyRAUSPrompt = copyRAUSPrompt;
