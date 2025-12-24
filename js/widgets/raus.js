@@ -660,18 +660,23 @@ window.makeRAUSEditable = makeRAUSEditable;
 const RAUS_GOAL = 50;
 let rausStats = { total: 0, verified: 0, goal: RAUS_GOAL, userSubmissions: 0 };
 
-function getTeaserContent(verified) {
-  if (verified === 0) {
-    return { collapsed: 'KI Report 2026', dotColor: '#5ED9A6', subtitle: 'Wir starten gerade', cta: 'Erster Case sein' };
-  } else if (verified < 10) {
-    return { collapsed: `KI Report · ${verified}`, dotColor: '#5ED9A6', subtitle: 'Echte Cases. Verifiziert.', cta: 'Deinen Case teilen' };
-  } else if (verified < 40) {
-    return { collapsed: `KI Report · ${verified}`, dotColor: '#5ED9A6', subtitle: `${verified} Tiroler KI-Cases dokumentiert`, cta: 'Deiner fehlt noch' };
-  } else if (verified < RAUS_GOAL) {
-    const remaining = RAUS_GOAL - verified;
-    return { collapsed: `KI Report · ${verified}`, dotColor: '#F59E0B', subtitle: `Fast komplett! Noch ${remaining} Plätze`, cta: 'Letzte Chance' };
+function getTeaserContent(total, verified) {
+  // Use verified count once we have any verified, otherwise show total submitted
+  const hasVerified = verified > 0;
+  const count = hasVerified ? verified : total;
+  const countLabel = hasVerified ? 'verifiziert' : 'eingereicht';
+
+  if (count === 0) {
+    return { collapsed: 'KI Report 2026', dotColor: '#5ED9A6', subtitle: 'Wir starten gerade', cta: 'Erster Case sein', countLabel };
+  } else if (count < 10) {
+    return { collapsed: `KI Report · ${count}`, dotColor: '#5ED9A6', subtitle: hasVerified ? 'Echte Cases. Verifiziert.' : `${count} Cases ${countLabel}`, cta: 'Deinen Case teilen', countLabel };
+  } else if (count < 40) {
+    return { collapsed: `KI Report · ${count}`, dotColor: '#5ED9A6', subtitle: `${count} Tiroler KI-Cases ${countLabel}`, cta: 'Deiner fehlt noch', countLabel };
+  } else if (count < RAUS_GOAL) {
+    const remaining = RAUS_GOAL - count;
+    return { collapsed: `KI Report · ${count}`, dotColor: '#F59E0B', subtitle: `Fast komplett! Noch ${remaining} Plätze`, cta: 'Letzte Chance', countLabel };
   } else {
-    return { collapsed: `KI Report · ${verified} ✓`, dotColor: null, subtitle: 'Report komplett!', cta: 'Bald verfügbar' };
+    return { collapsed: `KI Report · ${count} ✓`, dotColor: null, subtitle: 'Report komplett!', cta: 'Bald verfügbar', countLabel };
   }
 }
 
@@ -692,8 +697,9 @@ function renderRAUSTeaser() {
   const teaser = document.getElementById('rausTeaserPill');
   if (!teaser) return;
 
-  const content = getTeaserContent(rausStats.verified);
-  const progress = Math.min(100, (rausStats.verified / RAUS_GOAL) * 100);
+  const content = getTeaserContent(rausStats.total, rausStats.verified);
+  const displayCount = rausStats.verified > 0 ? rausStats.verified : rausStats.total;
+  const progress = Math.min(100, (displayCount / RAUS_GOAL) * 100);
 
   teaser.innerHTML = `
     <div class="raus-teaser-collapsed">
@@ -705,7 +711,7 @@ function renderRAUSTeaser() {
       <div class="raus-teaser-progress">
         <div class="raus-teaser-progress-bar" style="width: ${progress}%;"></div>
       </div>
-      <div class="raus-teaser-subtitle">${rausStats.verified} verifiziert · Ziel: ${RAUS_GOAL}</div>
+      <div class="raus-teaser-subtitle">${displayCount} ${content.countLabel} · Ziel: ${RAUS_GOAL}</div>
       <div class="raus-teaser-cta">${content.cta} →</div>
     </div>
   `;
@@ -792,15 +798,15 @@ function injectRAUSTeaser() {
       50% { opacity: 0.6; transform: scale(1.15); }
     }
     .raus-teaser-expanded {
+      display: none;
       opacity: 0;
-      max-height: 0;
       overflow: hidden;
-      transition: all 0.25s ease;
-      min-width: 180px;
+      transition: opacity 0.25s ease;
     }
     .raus-teaser:hover .raus-teaser-expanded {
+      display: block;
       opacity: 1;
-      max-height: 120px;
+      min-width: 180px;
     }
     .raus-teaser-title {
       font-size: 0.875rem;
