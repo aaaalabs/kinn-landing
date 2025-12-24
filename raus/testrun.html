@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KINN:RAUS 2.0 - Tell, Don't Fill</title>
+
+  <!-- Typography: Work Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Work Sans', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(180deg, #ffffff 0%, #fafcfb 100%);
+      color: #3A3A3A;
+      line-height: 1.618;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(94,217,166,0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(94,217,166,0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 1rem;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+      animation: modalIn 0.3s ease-out;
+      position: relative;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #999;
+      cursor: pointer;
+      z-index: 10;
+      line-height: 1;
+      padding: 0.25rem;
+      border-radius: 0.25rem;
+    }
+
+    .modal-close:hover {
+      color: #333;
+      background: rgba(0,0,0,0.05);
+    }
+
+    .modal-content {
+      padding: 1.5rem;
+    }
+
+    /* Typography */
+    h1 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #2C3E50;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 0.875rem;
+      color: #6B6B6B;
+      margin-bottom: 1.25rem;
+      line-height: 1.5;
+    }
+
+    .step-indicator {
+      font-size: 0.75rem;
+      color: #999;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    /* Icons */
+    .icon {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    /* Input Mode Selection */
+    .input-mode-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-mode-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1.25rem 1rem;
+      background: rgba(255, 255, 255, 0.8);
+      border: 2px solid rgba(0, 0, 0, 0.08);
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .input-mode-card:hover {
+      border-color: #5ED9A6;
+      background: rgba(94, 217, 166, 0.05);
+    }
+
+    .input-mode-card.recommended {
+      border-color: rgba(94, 217, 166, 0.5);
+      background: rgba(94, 217, 166, 0.05);
+    }
+
+    .input-mode-card .mode-icon {
+      width: 32px;
+      height: 32px;
+      color: #2C3E50;
+    }
+
+    .input-mode-card .mode-title {
+      font-weight: 600;
+      color: #2C3E50;
+      font-size: 0.9375rem;
+    }
+
+    .input-mode-card .mode-desc {
+      font-size: 0.75rem;
+      color: #6B6B6B;
+    }
+
+    .input-mode-card .mode-badge {
+      font-size: 0.625rem;
+      background: #5ED9A6;
+      color: #000;
+      padding: 0.125rem 0.5rem;
+      border-radius: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    /* Voice Recording */
+    .voice-recorder {
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+
+    .record-button {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #5ED9A6 0%, #4EC995 100%);
+      color: #000;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 8px 24px rgba(94, 217, 166, 0.3);
+    }
+
+    .record-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 32px rgba(94, 217, 166, 0.4);
+    }
+
+    .record-button.recording {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      animation: pulse 1.5s infinite;
+      box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .record-button .icon {
+      width: 40px;
+      height: 40px;
+    }
+
+    .record-timer {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #2C3E50;
+      margin-bottom: 0.5rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .record-hint {
+      font-size: 0.8125rem;
+      color: #6B6B6B;
+    }
+
+    .voice-tips {
+      background: rgba(0, 0, 0, 0.02);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-top: 1.5rem;
+      text-align: left;
+    }
+
+    .voice-tips-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 0.5rem;
+    }
+
+    .voice-tips ul {
+      font-size: 0.8125rem;
+      color: #6B6B6B;
+      padding-left: 1.25rem;
+      margin: 0;
+    }
+
+    .voice-tips li {
+      margin-bottom: 0.25rem;
+    }
+
+    /* Text Input */
+    .text-input-area {
+      margin-bottom: 1.25rem;
+    }
+
+    .text-input-area textarea {
+      width: 100%;
+      min-height: 180px;
+      padding: 1rem;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 0.5rem;
+      font-family: 'Work Sans', sans-serif;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      resize: vertical;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .text-input-area textarea:focus {
+      outline: none;
+      border-color: #5ED9A6;
+      box-shadow: 0 0 0 3px rgba(94, 217, 166, 0.15);
+    }
+
+    .text-input-area textarea::placeholder {
+      color: #999;
+    }
+
+    .char-indicator {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #999;
+      margin-top: 0.375rem;
+    }
+
+    .char-indicator.good {
+      color: #5ED9A6;
+    }
+
+    /* Processing State */
+    .processing {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+
+    .processing-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(94, 217, 166, 0.2);
+      border-top-color: #5ED9A6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1.5rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .processing-steps {
+      text-align: left;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+
+    .processing-step {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+      font-size: 0.875rem;
+      color: #6B6B6B;
+    }
+
+    .processing-step.done {
+      color: #059669;
+    }
+
+    .processing-step.active {
+      color: #2C3E50;
+      font-weight: 500;
+    }
+
+    .processing-step .step-icon {
+      width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* Review Screen */
+    .review-section {
+      margin-bottom: 1.25rem;
+    }
+
+    .review-card {
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 0.5rem;
+      padding: 0.875rem 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .review-card.missing {
+      background: rgba(251, 191, 36, 0.08);
+      border-color: rgba(251, 191, 36, 0.3);
+    }
+
+    .review-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.375rem;
+    }
+
+    .review-card-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .review-card-label .missing-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      color: #d97706;
+      margin-left: 0.5rem;
+      font-weight: 600;
+    }
+
+    .review-card-edit {
+      font-size: 0.75rem;
+      color: #5ED9A6;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .review-card-edit:hover {
+      text-decoration: underline;
+    }
+
+    .review-card-content {
+      font-size: 0.9375rem;
+      color: #2C3E50;
+      line-height: 1.5;
+    }
+
+    .review-card-content.headline {
+      font-weight: 600;
+    }
+
+    .review-card-input {
+      width: 100%;
+      padding: 0.625rem 0.75rem;
+      border: 1px solid rgba(251, 191, 36, 0.5);
+      border-radius: 0.375rem;
+      font-family: 'Work Sans', sans-serif;
+      font-size: 0.875rem;
+      background: rgba(255, 255, 255, 0.8);
+      transition: all 0.2s ease;
+    }
+
+    .review-card-input:focus {
+      outline: none;
+      border-color: #5ED9A6;
+      box-shadow: 0 0 0 3px rgba(94, 217, 166, 0.15);
+    }
+
+    textarea.review-card-input {
+      min-height: 60px;
+      resize: vertical;
+    }
+
+    .review-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+    }
+
+    .review-tool-tag {
+      font-size: 0.75rem;
+      background: rgba(94, 217, 166, 0.15);
+      color: #059669;
+      padding: 0.25rem 0.625rem;
+      border-radius: 1rem;
+      font-weight: 500;
+    }
+
+    .confidence-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: #6B6B6B;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .confidence-bar {
+      flex: 1;
+      height: 4px;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .confidence-fill {
+      height: 100%;
+      background: #5ED9A6;
+      border-radius: 2px;
+    }
+
+    /* Qualify Section */
+    .qualify-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .qualify-field label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #2C3E50;
+      margin-bottom: 0.375rem;
+    }
+
+    .qualify-field select {
+      width: 100%;
+      padding: 0.625rem 0.75rem;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 0.5rem;
+      font-family: 'Work Sans', sans-serif;
+      font-size: 0.875rem;
+      background: rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+    }
+
+    .qualify-field select:focus {
+      outline: none;
+      border-color: #5ED9A6;
+    }
+
+    /* Buttons */
+    .btn {
+      font-family: 'Work Sans', sans-serif;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.875rem 1.5rem;
+      border-radius: 0.5rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: #5ED9A6;
+      color: #000;
+    }
+
+    .btn-primary:hover {
+      background: #4EC995;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(94, 217, 166, 0.3);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-text {
+      background: none;
+      color: #6B6B6B;
+      padding: 0.5rem;
+      width: auto;
+    }
+
+    .btn-text:hover {
+      color: #3A3A3A;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .btn-row .btn {
+      flex: 1;
+    }
+
+    .btn-row .btn-text {
+      flex: 0;
+    }
+
+    /* Success */
+    .success-screen {
+      text-align: center;
+      padding: 1rem 0;
+    }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      color: #5ED9A6;
+      margin: 0 auto 1rem;
+    }
+
+    .success-message {
+      font-size: 0.875rem;
+      color: #6B6B6B;
+      margin: 1rem 0;
+      line-height: 1.6;
+    }
+
+    /* Error */
+    .error-box {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-top: 1rem;
+      font-size: 0.875rem;
+    }
+
+    /* Transcript */
+    .transcript-box {
+      background: rgba(0,0,0,0.02);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-top: 1rem;
+      font-size: 0.8125rem;
+      color: #6B6B6B;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .transcript-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #999;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Animations */
+    .fade-in {
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      .modal {
+        max-height: 100vh;
+        border-radius: 1rem 1rem 0 0;
+        margin-top: auto;
+      }
+      .input-mode-cards { grid-template-columns: 1fr; }
+      .qualify-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Entry -->
+  <div style="max-width: 480px; margin: 0 auto; padding: 3rem 0; text-align: center;">
+    <div style="background: rgba(255,255,255,0.8); border-radius: 1rem; padding: 2rem; border: 1px solid rgba(0,0,0,0.06);">
+      <h2 style="font-size: 1.25rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.5rem;">KINN:RAUS 2.0</h2>
+      <p style="color: #6B6B6B; margin-bottom: 1.5rem; font-size: 0.875rem;">"Tell, Don't Fill" - Sprich statt tippen</p>
+      <button class="btn btn-primary" onclick="openModal()">
+        Use Case einreichen
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="if(event.target === this) closeModal()">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <div class="modal-content" id="wizardContent"></div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================================================
+    // API KEYS - loaded via serverless endpoint (keys stay server-side)
+    // ==========================================================================
+    // Keys are not exposed to client - all API calls go through /api/raus/*
+
+    // ==========================================================================
+    // ICONS
+    // ==========================================================================
+    const icons = {
+      mic: '<svg class="icon" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 2m0 3a3 3 0 0 1 3 -3h0a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3h0a3 3 0 0 1 -3 -3z"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M8 21l8 0"/><path d="M12 17l0 4"/></svg>',
+      keyboard: '<svg class="icon" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M2 6m0 2a2 2 0 0 1 2 -2h16a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-16a2 2 0 0 1 -2 -2z"/><path d="M6 10l0 .01"/><path d="M10 10l0 .01"/><path d="M14 10l0 .01"/><path d="M18 10l0 .01"/><path d="M6 14l0 .01"/><path d="M18 14l0 .01"/><path d="M10 14l4 0"/></svg>',
+      stop: '<svg class="icon" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 5m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2z" fill="currentColor"/></svg>',
+      check: '<svg class="icon" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10"/></svg>',
+      sparkles: '<svg class="icon" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6z"/></svg>',
+      confetti: '<svg class="icon" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 5h2"/><path d="M5 4v2"/><path d="M11.5 4l-.5 2"/><path d="M18 5h2"/><path d="M19 4v2"/><path d="M15 9l-1 1"/><path d="M18 13l2 -.5"/><path d="M18 19h2"/><path d="M19 18v2"/><path d="M14 16.518l-6.518 -6.518l-4.39 9.58a1 1 0 0 0 1.329 1.329l9.579 -4.39z"/></svg>',
+      alertTriangle: '<svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></svg>',
+    };
+
+    // ==========================================================================
+    // STATE
+    // ==========================================================================
+    let state = {
+      step: 'intro',
+      inputMode: null,
+      isRecording: false,
+      recordingTime: 0,
+      textInput: '',
+      transcript: null,
+      extracted: null,
+      error: null,
+      processingStep: 0
+    };
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordingInterval = null;
+
+    // ==========================================================================
+    // MODAL
+    // ==========================================================================
+    function openModal() {
+      // Reset state
+      state = {
+        step: 'intro',
+        inputMode: null,
+        isRecording: false,
+        recordingTime: 0,
+        textInput: '',
+        transcript: null,
+        extracted: null,
+        error: null,
+        processingStep: 0
+      };
+      document.getElementById('modalOverlay').classList.add('active');
+      render();
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+      stopRecording();
+    }
+
+    function setStep(step) {
+      state.step = step;
+      render();
+    }
+
+    function selectInputMode(mode) {
+      state.inputMode = mode;
+      setStep(mode);
+    }
+
+    // ==========================================================================
+    // VOICE RECORDING
+    // ==========================================================================
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          processAudio(audioBlob);
+        };
+
+        mediaRecorder.start();
+        state.isRecording = true;
+        state.recordingTime = 0;
+        recordingInterval = setInterval(() => {
+          state.recordingTime++;
+          // Only update timer text, not full re-render
+          const timerEl = document.getElementById('recordTimer');
+          if (timerEl) timerEl.textContent = formatTime(state.recordingTime);
+        }, 1000);
+        render();
+
+      } catch (err) {
+        state.error = 'Mikrofon-Zugriff verweigert: ' + err.message;
+        render();
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && state.isRecording) {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+        state.isRecording = false;
+        clearInterval(recordingInterval);
+        recordingInterval = null;
+      }
+    }
+
+    function toggleRecording() {
+      if (state.isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+
+    // ==========================================================================
+    // PIPELINE: Audio/Text → Serverless API → Review
+    // ==========================================================================
+    async function processAudio(audioBlob) {
+      state.step = 'processing';
+      state.processingStep = 1;
+      state.error = null;
+      render();
+
+      try {
+        // Single API call handles upload, transcription, and extraction
+        state.processingStep = 2;
+        render();
+
+        const result = await processVoiceWithAPI(audioBlob);
+        state.transcript = result.transcript;
+        state.extracted = result.extracted;
+
+        state.processingStep = 3;
+        render();
+
+        // Brief delay to show completion
+        await new Promise(r => setTimeout(r, 300));
+        setStep('review');
+
+      } catch (err) {
+        console.error(err);
+        state.error = err.message;
+        render();
+      }
+    }
+
+    async function processText() {
+      if (state.textInput.length < 50) return;
+
+      state.step = 'processing';
+      state.processingStep = 1;
+      state.transcript = state.textInput;
+      state.error = null;
+      render();
+
+      try {
+        state.processingStep = 3;
+        render();
+
+        const result = await processTextWithAPI(state.textInput);
+        state.extracted = result.extracted;
+
+        // Brief delay to show completion
+        await new Promise(r => setTimeout(r, 300));
+        setStep('review');
+
+      } catch (err) {
+        console.error(err);
+        state.error = err.message;
+        render();
+      }
+    }
+
+    // ==========================================================================
+    // API CALLS (via serverless endpoints - keys stay server-side)
+    // ==========================================================================
+    async function processVoiceWithAPI(audioBlob) {
+      // Upload audio and get transcription + extraction in one call
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'recording.webm');
+
+      const response = await fetch('/api/raus/process-voice', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Verarbeitung fehlgeschlagen');
+      }
+
+      return response.json();
+    }
+
+    async function processTextWithAPI(text) {
+      const response = await fetch('/api/raus/process-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Extraktion fehlgeschlagen');
+      }
+
+      return response.json();
+    }
+
+    // ==========================================================================
+    // HELPERS
+    // ==========================================================================
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateCharCount() {
+      const indicator = document.getElementById('charIndicator');
+      if (indicator) {
+        indicator.className = 'char-indicator ' + (state.textInput.length > 100 ? 'good' : '');
+        indicator.innerHTML = `
+          <span>${state.textInput.length > 100 ? '✓ Genug Details' : 'Mind. 100 Zeichen'}</span>
+          <span>${state.textInput.length} Zeichen</span>
+        `;
+      }
+    }
+
+    // ==========================================================================
+    // RENDERERS
+    // ==========================================================================
+    function renderIntro() {
+      return `
+        <div class="fade-in">
+          <div class="step-indicator">KI Praxis Report Tirol 2026</div>
+          <h1>Wie möchtest du deinen Use Case teilen?</h1>
+          <p class="subtitle">Erzähl uns von deiner KI-Lösung - so wie es für dich am einfachsten ist.</p>
+
+          <div class="input-mode-cards">
+            <button class="input-mode-card recommended" onclick="selectInputMode('voice')">
+              <span class="mode-badge">Empfohlen</span>
+              <span class="mode-icon">${icons.mic}</span>
+              <span class="mode-title">Aufnehmen</span>
+              <span class="mode-desc">2 Min sprechen</span>
+            </button>
+
+            <button class="input-mode-card" onclick="selectInputMode('text')">
+              <span class="mode-icon">${icons.keyboard}</span>
+              <span class="mode-title">Schreiben</span>
+              <span class="mode-desc">Freitext eingeben</span>
+            </button>
+          </div>
+
+          <p style="font-size: 0.75rem; color: #999; text-align: center;">
+            In beiden Fällen extrahiert unsere KI automatisch die Struktur.
+          </p>
+        </div>
+      `;
+    }
+
+    function renderVoice() {
+      return `
+        <div class="fade-in">
+          <div class="step-indicator">Schritt 1 von 2</div>
+          <h1>Erzähl uns von deinem KI Use Case</h1>
+          <p class="subtitle">Drück den Button und sprich einfach drauflos. 2 Minuten reichen.</p>
+
+          <div class="voice-recorder">
+            <button class="record-button ${state.isRecording ? 'recording' : ''}" onclick="toggleRecording()">
+              ${state.isRecording ? icons.stop : icons.mic}
+            </button>
+
+            <div class="record-timer" id="recordTimer">${formatTime(state.recordingTime)}</div>
+            <div class="record-hint">
+              ${state.isRecording ? 'Klick zum Beenden' : 'Klick zum Starten'}
+            </div>
+          </div>
+
+          <div class="voice-tips">
+            <div class="voice-tips-title">Was du erzählen kannst</div>
+            <ul>
+              <li>Was war das Problem vorher?</li>
+              <li>Wie funktioniert deine KI-Lösung?</li>
+              <li>Was hat sich messbar verbessert?</li>
+              <li>Welche Tools nutzt du?</li>
+            </ul>
+          </div>
+
+          ${state.error ? `<div class="error-box">${state.error}</div>` : ''}
+
+          <button class="btn btn-text" onclick="setStep('intro')" style="margin-top: 1rem;">
+            &larr; Zurück
+          </button>
+        </div>
+      `;
+    }
+
+    function renderText() {
+      return `
+        <div class="fade-in">
+          <div class="step-indicator">Schritt 1 von 2</div>
+          <h1>Beschreib deinen KI Use Case</h1>
+          <p class="subtitle">Schreib einfach drauflos - unsere KI extrahiert die Struktur automatisch.</p>
+
+          <div class="text-input-area">
+            <textarea
+              id="textInput"
+              placeholder="Erzähl uns von deinem Case...
+
+Was war das Problem vorher? Wie funktioniert die Lösung? Was hat sich verbessert? Welche Tools nutzt du?"
+              oninput="state.textInput = this.value; updateCharCount();"
+            >${state.textInput}</textarea>
+            <div class="char-indicator ${state.textInput.length > 100 ? 'good' : ''}" id="charIndicator">
+              <span>${state.textInput.length > 100 ? '✓ Genug Details' : 'Mind. 100 Zeichen'}</span>
+              <span>${state.textInput.length} Zeichen</span>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-text" onclick="setStep('intro')">&larr; Zurück</button>
+            <button class="btn btn-primary" onclick="processText()" ${state.textInput.length < 50 ? 'disabled' : ''}>
+              KI analysieren lassen ${icons.sparkles}
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProcessing() {
+      const steps = [
+        { label: state.inputMode === 'voice' ? 'Audio hochladen' : 'Text empfangen', done: state.processingStep >= 1 },
+        { label: 'Transkribieren...', done: state.processingStep >= 2, active: state.processingStep === 2, skip: state.inputMode === 'text' },
+        { label: 'KI extrahiert Struktur...', done: state.processingStep >= 3, active: state.processingStep === 3 }
+      ].filter(s => !s.skip);
+
+      return `
+        <div class="fade-in processing">
+          <div class="processing-spinner"></div>
+          <h1>KI analysiert deinen Input...</h1>
+
+          <div class="processing-steps">
+            ${steps.map(s => `
+              <div class="processing-step ${s.done ? 'done' : ''} ${s.active ? 'active' : ''}">
+                <span class="step-icon">${s.done ? '✓' : s.active ? '◐' : '○'}</span>
+                <span>${s.label}</span>
+              </div>
+            `).join('')}
+          </div>
+
+          ${state.error ? `<div class="error-box">${state.error}</div>` : ''}
+        </div>
+      `;
+    }
+
+    function renderReview() {
+      const data = state.extracted || {};
+      const hasMissing = !data.solution || !data.result;
+
+      const renderCard = (key, label, placeholder, isTextarea = false) => {
+        const value = data[key];
+        if (!value) {
+          return `
+            <div class="review-card missing">
+              <div class="review-card-header">
+                <span class="review-card-label">${label} <span class="missing-badge">${icons.alertTriangle} Bitte ergänzen</span></span>
+              </div>
+              ${isTextarea
+                ? `<textarea class="review-card-input" placeholder="${placeholder}" id="input-${key}"></textarea>`
+                : `<input type="text" class="review-card-input" placeholder="${placeholder}" id="input-${key}">`}
+            </div>
+          `;
+        }
+        return `
+          <div class="review-card">
+            <div class="review-card-header">
+              <span class="review-card-label">${label}</span>
+            </div>
+            <div class="review-card-content ${key === 'headline' ? 'headline' : ''}">${value}</div>
+          </div>
+        `;
+      };
+
+      return `
+        <div class="fade-in">
+          <div class="step-indicator">Schritt 2 von 2 - Review</div>
+          <h1>${hasMissing ? 'Fast geschafft! Uns fehlen noch Details.' : 'Passt das so?'}</h1>
+          <p class="subtitle">${hasMissing ? 'Bitte ergänze die fehlenden Felder.' : 'Unsere KI hat folgende Informationen extrahiert:'}</p>
+
+          <div class="review-section">
+            ${renderCard('headline', 'Headline', 'Use Case in einem Satz...')}
+            ${renderCard('problem', 'Problem', 'Was war das Problem vorher?', true)}
+            ${renderCard('solution', 'Lösung', 'Wie funktioniert die KI-Lösung?', true)}
+            ${renderCard('result', 'Ergebnis', 'Was hat sich messbar verbessert?', true)}
+
+            <div class="review-card ${!data.tools?.length ? 'missing' : ''}">
+              <div class="review-card-header">
+                <span class="review-card-label">KI-Tools ${!data.tools?.length ? '<span class="missing-badge">' + icons.alertTriangle + ' Bitte ergänzen</span>' : ''}</span>
+              </div>
+              ${data.tools?.length
+                ? `<div class="review-tools">${data.tools.map(t => `<span class="review-tool-tag">${t}</span>`).join('')}</div>`
+                : `<input type="text" class="review-card-input" placeholder="z.B. Claude, GPT-4, Custom ML..." id="input-tools">`}
+            </div>
+
+            <div class="confidence-indicator">
+              <span>KI-Konfidenz:</span>
+              <div class="confidence-bar">
+                <div class="confidence-fill" style="width: ${(data.confidence || 0) * 100}%"></div>
+              </div>
+              <span>${Math.round((data.confidence || 0) * 100)}%</span>
+            </div>
+          </div>
+
+          ${state.transcript ? `
+            <div class="transcript-box">
+              <div class="transcript-label">Original Transkript</div>
+              ${state.transcript}
+            </div>
+          ` : ''}
+
+          <div class="qualify-grid">
+            <div class="qualify-field">
+              <label>Region</label>
+              <select id="select-region">
+                <option value="tirol" selected>Tirol</option>
+                <option value="austria">Österreich</option>
+                <option value="dach">DACH</option>
+              </select>
+            </div>
+            <div class="qualify-field">
+              <label>Sichtbarkeit</label>
+              <select id="select-visibility">
+                <option value="full" selected>Öffentlich</option>
+                <option value="anon">Anonymisiert</option>
+                <option value="report">Nur Report</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-text" onclick="setStep('${state.inputMode || 'intro'}')">&larr; Neu</button>
+            <button class="btn btn-primary" onclick="submitCase()">Einreichen</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function submitCase() {
+      // Collect any manually filled fields
+      const data = { ...state.extracted };
+
+      ['headline', 'problem', 'solution', 'result', 'tools'].forEach(key => {
+        const input = document.getElementById(`input-${key}`);
+        if (input?.value?.trim()) {
+          data[key] = key === 'tools' ? input.value.split(',').map(t => t.trim()) : input.value.trim();
+        }
+      });
+
+      // Validate required fields
+      if (!data.solution || !data.result) {
+        document.querySelectorAll('.review-card.missing .review-card-input').forEach(el => {
+          if (!el.value?.trim()) {
+            el.style.borderColor = '#ef4444';
+            el.style.animation = 'shake 0.3s ease';
+          }
+        });
+        return;
+      }
+
+      // Store final data
+      state.extracted = data;
+      state.region = document.getElementById('select-region')?.value || 'tirol';
+      state.visibility = document.getElementById('select-visibility')?.value || 'full';
+
+      // In production: POST to /api/raus/submit
+      console.log('Submitting:', { ...state.extracted, region: state.region, visibility: state.visibility, transcript: state.transcript });
+
+      setStep('success');
+    }
+
+    function renderSuccess() {
+      return `
+        <div class="fade-in success-screen">
+          <div class="success-icon">${icons.confetti}</div>
+          <h1>Use Case eingereicht!</h1>
+          <p class="success-message">
+            Wir schauen uns deinen Case an und melden uns innerhalb von 1-2 Wochen.
+            ${state.inputMode === 'voice' ? '<br><br>Deine Voice-Note hilft uns bei der Podcast-Vorbereitung!' : ''}
+          </p>
+          <button class="btn btn-primary" onclick="closeModal()">Fertig</button>
+        </div>
+      `;
+    }
+
+    // ==========================================================================
+    // MAIN RENDER
+    // ==========================================================================
+    function render() {
+      const content = document.getElementById('wizardContent');
+      if (!content) return;
+
+      const renderers = {
+        intro: renderIntro,
+        voice: renderVoice,
+        text: renderText,
+        processing: renderProcessing,
+        review: renderReview,
+        success: renderSuccess
+      };
+
+      content.innerHTML = (renderers[state.step] || renderIntro)();
+    }
+
+    // Keyboard
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Init
+    render();
+  </script>
+</body>
+</html>
