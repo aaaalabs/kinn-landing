@@ -864,7 +864,7 @@
     }
 
     async function processText() {
-      if (state.textInput.length < 50) return;
+      if (state.textInput.length < 20) return;
 
       state.step = 'processing';
       state.processingStep = 1;
@@ -938,9 +938,9 @@
     function updateCharCount() {
       const indicator = document.getElementById('charIndicator');
       if (indicator) {
-        indicator.className = 'char-indicator ' + (state.textInput.length > 100 ? 'good' : '');
+        indicator.className = 'char-indicator ' + (state.textInput.length >= 20 ? 'good' : '');
         indicator.innerHTML = `
-          <span>${state.textInput.length > 100 ? '✓ Genug Details' : 'Mind. 100 Zeichen'}</span>
+          <span>${state.textInput.length >= 20 ? '✓ Bereit' : 'Mind. 20 Zeichen'}</span>
           <span>${state.textInput.length} Zeichen</span>
         `;
       }
@@ -1054,15 +1054,15 @@
 Was war das Problem vorher? Wie funktioniert die Lösung? Was hat sich verbessert? Welche Tools nutzt du?"
               oninput="state.textInput = this.value; updateCharCount();"
             >${state.textInput}</textarea>
-            <div class="char-indicator ${state.textInput.length > 100 ? 'good' : ''}" id="charIndicator">
-              <span>${state.textInput.length > 100 ? '✓ Genug Details' : 'Mind. 100 Zeichen'}</span>
+            <div class="char-indicator ${state.textInput.length >= 20 ? 'good' : ''}" id="charIndicator">
+              <span>${state.textInput.length >= 20 ? '✓ Bereit' : 'Mind. 20 Zeichen'}</span>
               <span>${state.textInput.length} Zeichen</span>
             </div>
           </div>
 
           <div class="btn-row">
             <button class="btn btn-text" onclick="setStep('intro')">&larr; Zurück</button>
-            <button class="btn btn-primary" onclick="processText()" ${state.textInput.length < 50 ? 'disabled' : ''}>
+            <button class="btn btn-primary" onclick="processText()" ${state.textInput.length < 20 ? 'disabled' : ''}>
               KI analysieren lassen ${icons.sparkles}
             </button>
           </div>
