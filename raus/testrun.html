@@ -1229,7 +1229,7 @@ Was war das Problem vorher? Wie funktioniert die Lösung? Was hat sich verbesser
       `;
     }
 
-    function submitCase() {
+    async function submitCase() {
       // Collect any manually filled fields
       const data = { ...state.extracted };
 
@@ -1256,10 +1256,31 @@ Was war das Problem vorher? Wie funktioniert die Lösung? Was hat sich verbesser
       state.region = document.getElementById('select-region')?.value || 'tirol';
       state.visibility = document.getElementById('select-visibility')?.value || 'full';
 
-      // In production: POST to /api/raus/submit
-      console.log('Submitting:', { ...state.extracted, region: state.region, visibility: state.visibility, transcript: state.transcript });
+      // Submit to API
+      try {
+        const response = await fetch('/api/raus/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            extracted: state.extracted,
+            transcript: state.transcript,
+            region: state.region,
+            visibility: state.visibility,
+            inputMode: state.inputMode
+          })
+        });
 
-      setStep('success');
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Einreichung fehlgeschlagen');
+        }
+
+        setStep('success');
+      } catch (err) {
+        console.error('Submit error:', err);
+        state.error = err.message;
+        render();
+      }
     }
 
     function renderSuccess() {
