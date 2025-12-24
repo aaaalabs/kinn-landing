@@ -308,6 +308,21 @@
       color: #999;
     }
 
+    .context-bar {
+      height: 3px;
+      background: rgba(0, 0, 0, 0.06);
+      border-radius: 2px;
+      margin-top: 0.5rem;
+      overflow: hidden;
+    }
+
+    .context-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #5ED9A6 0%, #4EC995 100%);
+      border-radius: 2px;
+      transition: width 0.15s ease;
+    }
+
     .char-indicator {
       display: flex;
       justify-content: space-between;
@@ -936,12 +951,35 @@
     }
 
     function updateCharCount() {
+      const len = state.textInput.length;
+      const tokens = Math.round(len / 4); // ~4 chars per token estimate
+      const maxContext = 131072; // Groq llama-3.3-70b context window
+      const displayMax = 50000; // Visual max for bar (realistic use case limit)
+
+      // Update context bar
+      const bar = document.getElementById('contextBar');
+      if (bar) {
+        const fill = bar.querySelector('.context-bar-fill');
+        const percent = Math.min(100, (len / displayMax) * 100);
+        fill.style.width = percent + '%';
+        // Color gradient: green → yellow → red
+        if (percent > 80) {
+          fill.style.background = 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)';
+        } else if (percent > 95) {
+          fill.style.background = 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)';
+        } else {
+          fill.style.background = 'linear-gradient(90deg, #5ED9A6 0%, #4EC995 100%)';
+        }
+      }
+
+      // Update char indicator
       const indicator = document.getElementById('charIndicator');
       if (indicator) {
-        indicator.className = 'char-indicator ' + (state.textInput.length >= 20 ? 'good' : '');
+        indicator.className = 'char-indicator ' + (len >= 20 ? 'good' : '');
+        const rightText = len > 500 ? `~${tokens} tokens` : `${len} Zeichen`;
         indicator.innerHTML = `
-          <span>${state.textInput.length >= 20 ? '✓ Bereit' : 'Mind. 20 Zeichen'}</span>
-          <span>${state.textInput.length} Zeichen</span>
+          <span>${len >= 20 ? '✓ Bereit' : 'Mind. 20 Zeichen'}</span>
+          <span>${rightText}</span>
         `;
       }
     }
@@ -1054,9 +1092,12 @@
 Was war das Problem vorher? Wie funktioniert die Lösung? Was hat sich verbessert? Welche Tools nutzt du?"
               oninput="state.textInput = this.value; updateCharCount();"
             >${state.textInput}</textarea>
+            <div class="context-bar" id="contextBar">
+              <div class="context-bar-fill" style="width: ${Math.min(100, (state.textInput.length / 400) * 100)}%"></div>
+            </div>
             <div class="char-indicator ${state.textInput.length >= 20 ? 'good' : ''}" id="charIndicator">
               <span>${state.textInput.length >= 20 ? '✓ Bereit' : 'Mind. 20 Zeichen'}</span>
-              <span>${state.textInput.length} Zeichen</span>
+              <span>${state.textInput.length > 400 ? Math.round(state.textInput.length / 4) + ' tokens' : state.textInput.length + ' Zeichen'}</span>
             </div>
           </div>
 
