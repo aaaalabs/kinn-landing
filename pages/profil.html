@@ -1818,12 +1818,8 @@
       // Subtle profile hint (disabled for now)
       const profileHint = '';
 
-      // RAUS feature only for whitelisted users
-      const RAUS_WHITELIST = ['admin@libralab.ai'];
-      const canAccessRAUS = RAUS_WHITELIST.includes(userEmail);
-
       // Mobile-only minimal card (desktop uses floating teaser pill instead)
-      const rausCard = canAccessRAUS ? `
+      const rausCard = `
         <div class="raus-mobile-card" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.06); border-radius: 0.75rem; margin-bottom: 1rem;">
           <div style="display: flex; align-items: center; gap: 0.5rem;">
             <span style="width: 8px; height: 8px; background: #5ED9A6; border-radius: 50%;"></span>
@@ -1836,7 +1832,7 @@
         <style>
           @media (min-width: 768px) { .raus-mobile-card { display: none !important; } }
         </style>
-      ` : '';
+      `;
 
       return `
         ${welcomeCard}

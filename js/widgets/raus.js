@@ -738,14 +738,10 @@ function renderRAUSTeaser() {
   `;
 }
 
-// Whitelist for RAUS access (same as in profil.html)
-const RAUS_WHITELIST = ['admin@libralab.ai'];
-
 function shouldShowTeaser() {
-  // Only show on profil.html
+  // Only show on profil.html for logged-in users
   if (!window.location.pathname.includes('profil')) return false;
-  // Only for whitelisted users
-  if (!window.userEmail || !RAUS_WHITELIST.includes(window.userEmail)) return false;
+  if (!window.userEmail) return false;
   // Check deadline
   if (new Date() > new Date('2026-03-31')) return false;
   // Check dismiss
