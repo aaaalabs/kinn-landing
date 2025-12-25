@@ -65,17 +65,15 @@ async function handleGet(req, res) {
       .map(s => typeof s === 'string' ? JSON.parse(s) : s)
       .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
 
-    // Get stats
-    const [total, verified] = await Promise.all([
-      redis.get('raus:stats:total'),
-      redis.get('raus:stats:verified')
-    ]);
+    // Calculate stats from actual submissions (more reliable than counters)
+    const total = parsed.length;
+    const verified = parsed.filter(s => s.status === 'verified' || s.status === 'published').length;
 
     return res.status(200).json({
       submissions: parsed,
       stats: {
-        total: parseInt(total) || 0,
-        verified: parseInt(verified) || 0,
+        total,
+        verified,
         goal: 50
       }
     });
