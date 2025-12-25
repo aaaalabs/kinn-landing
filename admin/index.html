@@ -545,6 +545,7 @@
         <button class="tab" onclick="switchTab('newsletter')">Newsletter</button>
         <button class="tab" onclick="switchTab('tokenlinks')">Token Links</button>
         <button class="tab" onclick="switchTab('spotlights')">Spotlights</button>
+        <button class="tab" onclick="switchTab('raus')">RAUS <span id="raus-pending-badge" class="badge" style="display:none;"></span></button>
         <button class="tab" onclick="logout()" style="margin-left: auto;">Logout</button>
       </div>
 
@@ -1053,6 +1054,51 @@
           </div>
         </details>
       </div>
+
+      <!-- RAUS Tab -->
+      <div id="raus-tab" class="tab-content">
+        <!-- Progress Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h2 style="font-weight: 400; margin: 0;">KI Praxis Report Pipeline</h2>
+          <button onclick="loadRAUSPipeline()" style="padding: 0.5rem 1rem; background: white; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; font-size: 0.875rem;">Aktualisieren</button>
+        </div>
+
+        <!-- Stats Bar -->
+        <div id="raus-stats-bar" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+          <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1rem; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.75rem; font-weight: 600; color: #166534;" id="raus-stat-verified">0</div>
+            <div style="font-size: 0.75rem; color: #6B6B6B;">Verifiziert</div>
+          </div>
+          <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1rem; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.75rem; font-weight: 600; color: #92400e;" id="raus-stat-pending">0</div>
+            <div style="font-size: 0.75rem; color: #6B6B6B;">Offen</div>
+          </div>
+          <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 1rem; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.75rem; font-weight: 600; color: #1e40af;" id="raus-stat-total">0</div>
+            <div style="font-size: 0.75rem; color: #6B6B6B;">Gesamt</div>
+          </div>
+          <div style="background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); padding: 1rem; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.75rem; font-weight: 600; color: #6b21a8;" id="raus-stat-goal">50</div>
+            <div style="font-size: 0.75rem; color: #6B6B6B;">Ziel</div>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div style="margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #6B6B6B; margin-bottom: 0.5rem;">
+            <span id="raus-progress-label">0 von 50 verifiziert</span>
+            <span id="raus-progress-percent">0%</span>
+          </div>
+          <div style="background: #e5e7eb; border-radius: 9999px; height: 8px; overflow: hidden;">
+            <div id="raus-progress-bar" style="background: linear-gradient(90deg, #5ED9A6, #10B981); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+          </div>
+        </div>
+
+        <!-- Submissions List -->
+        <div id="raus-submissions-list" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div style="text-align: center; color: #9CA3AF; padding: 2rem;">Lade Cases...</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1262,6 +1308,8 @@
       } else if (tabName === 'events') {
         loadEventLinks();
         loadTechLinks();
+      } else if (tabName === 'raus') {
+        loadRAUSPipeline();
       }
     }
 
@@ -3379,6 +3427,187 @@
 
       // Scroll detail into view
       detailEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // === RAUS Pipeline ===
+
+    let rausSubmissions = [];
+
+    async function loadRAUSPipeline() {
+      const listContainer = document.getElementById('raus-submissions-list');
+      listContainer.innerHTML = '<div style="text-align: center; color: #9CA3AF; padding: 2rem;">Lade Cases...</div>';
+
+      try {
+        const data = await apiCall('/raus');
+        rausSubmissions = data.submissions || [];
+
+        // Update stats
+        document.getElementById('raus-stat-verified').textContent = data.stats.verified;
+        document.getElementById('raus-stat-pending').textContent = rausSubmissions.filter(s => s.status === 'submitted').length;
+        document.getElementById('raus-stat-total').textContent = data.stats.total;
+        document.getElementById('raus-stat-goal').textContent = data.stats.goal;
+
+        // Update progress bar
+        const percent = Math.round((data.stats.verified / data.stats.goal) * 100);
+        document.getElementById('raus-progress-label').textContent = `${data.stats.verified} von ${data.stats.goal} verifiziert`;
+        document.getElementById('raus-progress-percent').textContent = `${percent}%`;
+        document.getElementById('raus-progress-bar').style.width = `${percent}%`;
+
+        // Update pending badge
+        const pendingCount = rausSubmissions.filter(s => s.status === 'submitted').length;
+        const badge = document.getElementById('raus-pending-badge');
+        if (pendingCount > 0) {
+          badge.textContent = pendingCount;
+          badge.style.display = 'inline-block';
+        } else {
+          badge.style.display = 'none';
+        }
+
+        // Render submissions
+        if (rausSubmissions.length === 0) {
+          listContainer.innerHTML = '<div style="text-align: center; color: #9CA3AF; padding: 2rem;">Noch keine Cases eingereicht.</div>';
+          return;
+        }
+
+        listContainer.innerHTML = rausSubmissions.map(s => renderRAUSCard(s)).join('');
+
+      } catch (error) {
+        console.error('[RAUS] Load error:', error);
+        listContainer.innerHTML = `<div style="text-align: center; color: #EF4444; padding: 2rem;">Fehler: ${error.message}</div>`;
+      }
+    }
+
+    function renderRAUSCard(s) {
+      const e = s.extracted || {};
+      const tools = Array.isArray(e.tools) ? e.tools : [];
+      const date = new Date(s.submittedAt).toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+      const statusColors = {
+        submitted: { bg: '#FEF3C7', text: '#92400E', label: 'Neu' },
+        reviewed: { bg: '#DBEAFE', text: '#1E40AF', label: 'In Review' },
+        verified: { bg: '#D1FAE5', text: '#065F46', label: 'Verifiziert' },
+        rejected: { bg: '#FEE2E2', text: '#991B1B', label: 'Abgelehnt' },
+        published: { bg: '#E9D5FF', text: '#6B21A8', label: 'Publiziert' }
+      };
+      const status = statusColors[s.status] || statusColors.submitted;
+
+      return `
+        <div class="raus-card" style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
+          <!-- Header -->
+          <div onclick="toggleRAUSDetail('${s.id}')" style="padding: 1rem 1.25rem; cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-weight: 600; color: #1F2937; margin-bottom: 0.5rem; line-height: 1.4;">${e.headline || 'Ohne Titel'}</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.375rem;">
+                ${tools.slice(0, 4).map(t => `<span style="font-size: 0.6875rem; background: rgba(94,217,166,0.15); color: #059669; padding: 0.125rem 0.5rem; border-radius: 1rem;">${t}</span>`).join('')}
+                ${tools.length > 4 ? `<span style="font-size: 0.6875rem; color: #9CA3AF;">+${tools.length - 4}</span>` : ''}
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.375rem; flex-shrink: 0;">
+              <span style="font-size: 0.6875rem; background: ${status.bg}; color: ${status.text}; padding: 0.25rem 0.625rem; border-radius: 1rem; font-weight: 500;">${status.label}</span>
+              <span style="font-size: 0.6875rem; color: #9CA3AF;">${date}</span>
+            </div>
+          </div>
+
+          <!-- Expandable Detail -->
+          <div id="raus-detail-${s.id}" style="display: none; border-top: 1px solid #e5e7eb; padding: 1.25rem; background: #FAFAFA;">
+            <div style="display: grid; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <div style="font-size: 0.625rem; font-weight: 600; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.25rem;">Problem</div>
+                <div style="font-size: 0.875rem; color: #374151;">${e.problem || '—'}</div>
+              </div>
+              <div>
+                <div style="font-size: 0.625rem; font-weight: 600; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.25rem;">Lösung</div>
+                <div style="font-size: 0.875rem; color: #374151;">${e.solution || '—'}</div>
+              </div>
+              <div>
+                <div style="font-size: 0.625rem; font-weight: 600; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.25rem;">Ergebnis</div>
+                <div style="font-size: 0.875rem; color: #374151;">${e.result || '—'}</div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; font-size: 0.75rem; color: #6B6B6B; margin-bottom: 1rem; padding-top: 0.75rem; border-top: 1px solid #e5e7eb;">
+              <span>Branche: ${e.industry || '—'}</span>
+              <span>Region: ${s.region || '—'}</span>
+              <span>Input: ${s.inputMode === 'voice' ? 'Sprache' : 'Text'}</span>
+              <span>Sichtbarkeit: ${s.visibility || 'full'}</span>
+              ${s.userEmail ? `<span>Von: ${s.userEmail}</span>` : ''}
+            </div>
+
+            <!-- Actions -->
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              ${s.status === 'submitted' ? `
+                ${s.userEmail ? `<button onclick="sendRAUSEmail('${s.id}', 'verification')" style="padding: 0.5rem 1rem; background: #FEF3C7; border: none; border-radius: 6px; color: #92400E; font-size: 0.8125rem; cursor: pointer; font-weight: 500;">Verifizierung anfragen</button>` : ''}
+                <button onclick="updateRAUSStatus('${s.id}', 'reviewed')" style="padding: 0.5rem 1rem; background: #DBEAFE; border: none; border-radius: 6px; color: #1E40AF; font-size: 0.8125rem; cursor: pointer; font-weight: 500;">In Review (ohne Email)</button>
+              ` : ''}
+              ${s.status === 'reviewed' ? `
+                <button onclick="verifyAndNotify('${s.id}')" style="padding: 0.5rem 1rem; background: #D1FAE5; border: none; border-radius: 6px; color: #065F46; font-size: 0.8125rem; cursor: pointer; font-weight: 500;">Verifizieren + Notify</button>
+                <button onclick="rejectAndNotify('${s.id}')" style="padding: 0.5rem 1rem; background: #FEE2E2; border: none; border-radius: 6px; color: #991B1B; font-size: 0.8125rem; cursor: pointer; font-weight: 500;">Ablehnen + Notify</button>
+              ` : ''}
+              ${s.status === 'verified' ? `
+                <button onclick="updateRAUSStatus('${s.id}', 'published')" style="padding: 0.5rem 1rem; background: #E9D5FF; border: none; border-radius: 6px; color: #6B21A8; font-size: 0.8125rem; cursor: pointer; font-weight: 500;">Publizieren</button>
+              ` : ''}
+              ${s.status === 'rejected' ? `
+                <button onclick="updateRAUSStatus('${s.id}', 'submitted')" style="padding: 0.5rem 1rem; background: white; border: 1px solid #e5e7eb; border-radius: 6px; color: #6B6B6B; font-size: 0.8125rem; cursor: pointer;">Zurücksetzen</button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleRAUSDetail(id) {
+      const detail = document.getElementById(`raus-detail-${id}`);
+      if (detail) {
+        detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+      }
+    }
+
+    async function updateRAUSStatus(id, status) {
+      try {
+        await apiCall('/raus', 'PUT', { id, status });
+        showMessage('Status aktualisiert', 'success');
+        loadRAUSPipeline();
+      } catch (error) {
+        showMessage('Fehler: ' + error.message, 'error');
+      }
+    }
+
+    async function sendRAUSEmail(id, type) {
+      const submission = rausSubmissions.find(s => s.id === id);
+      if (!submission || !submission.userEmail) {
+        showMessage('Keine Email-Adresse vorhanden', 'error');
+        return;
+      }
+
+      try {
+        await apiCall('/raus-email', 'POST', { id, type });
+        showMessage('Email gesendet', 'success');
+
+        // Update status based on email type
+        if (type === 'verification') {
+          updateRAUSStatus(id, 'reviewed');
+        }
+      } catch (error) {
+        showMessage('Email-Fehler: ' + error.message, 'error');
+      }
+    }
+
+    async function verifyAndNotify(id) {
+      try {
+        await updateRAUSStatus(id, 'verified');
+        await sendRAUSEmail(id, 'verified');
+      } catch (error) {
+        showMessage('Fehler: ' + error.message, 'error');
+      }
+    }
+
+    async function rejectAndNotify(id) {
+      try {
+        await updateRAUSStatus(id, 'rejected');
+        await sendRAUSEmail(id, 'rejected');
+      } catch (error) {
+        showMessage('Fehler: ' + error.message, 'error');
+      }
     }
   </script>
 
