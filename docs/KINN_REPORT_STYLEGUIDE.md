@@ -41,32 +41,50 @@ Visueller Standard für Print & Digital. Ziel: PM-Magazin-Niveau.
 
 ## 2. Typografie
 
-### Font Family
+### Font Families
 
-**Work Sans** — alle Gewichte
+**Montserrat** — Headlines, Logo, Display
 
 ```
-Light     300
 Regular   400
-Medium    500
 SemiBold  600
 Bold      700
+ExtraBold 800  ← KINN Logo
 Black     900
 ```
 
+**Futura** — Body Text, UI (schmaler als Montserrat)
+
+```
+Book      400
+Medium    500
+Bold      700
+```
+
+### Verwendung
+
+| Kontext | Font |
+|---------|------|
+| KINN Logo | Montserrat ExtraBold |
+| Display Headlines | Montserrat Bold/Black |
+| Section Headers | Montserrat SemiBold |
+| Body Text | Futura Book |
+| Captions | Futura Medium |
+| Data/Numbers | Montserrat SemiBold |
+
 ### Hierarchie (Print A4)
 
-| Element | Gewicht | Größe | Zeilenabstand | Farbe |
-|---------|---------|-------|---------------|-------|
-| Display | 900 Black | 48–72pt | 1.1 | Charcoal |
-| H1 | 700 Bold | 32–40pt | 1.2 | Charcoal |
-| H2 | 600 SemiBold | 24–28pt | 1.25 | Charcoal |
-| H3 | 600 SemiBold | 18–20pt | 1.3 | Charcoal |
-| Body | 400 Regular | 10–11pt | 1.5 | Charcoal |
-| Body Small | 400 Regular | 9pt | 1.4 | Warm Grey |
-| Caption | 500 Medium | 8pt | 1.3 | Warm Grey |
-| Label/Tag | 600 SemiBold | 7–8pt | 1.2 | varies |
-| Big Number | 900 Black | 64–96pt | 1.0 | Bold Mint |
+| Element | Font | Gewicht | Größe | Zeilenabstand | Farbe |
+|---------|------|---------|-------|---------------|-------|
+| Display | Montserrat | Black 900 | 48–72pt | 1.1 | Charcoal |
+| H1 | Montserrat | Bold 700 | 32–40pt | 1.2 | Charcoal |
+| H2 | Montserrat | SemiBold 600 | 24–28pt | 1.25 | Charcoal |
+| H3 | Montserrat | SemiBold 600 | 18–20pt | 1.3 | Charcoal |
+| Body | Futura | Book 400 | 10–11pt | 1.5 | Charcoal |
+| Body Small | Futura | Book 400 | 9pt | 1.4 | Warm Grey |
+| Caption | Futura | Medium 500 | 8pt | 1.3 | Warm Grey |
+| Label/Tag | Montserrat | SemiBold 600 | 7–8pt | 1.2 | varies |
+| Big Number | Montserrat | Black 900 | 64–96pt | 1.0 | Bold Mint |
 
 ### Typografie-Regeln
 
