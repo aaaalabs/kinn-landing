@@ -1,6 +1,8 @@
 # KINN KI Praxis Report 2026 — Brand Styleguide
 
-Visueller Standard für Print & Digital. Ziel: PM-Magazin-Niveau.
+Visueller Rahmen für Print & Digital. Ziel: PM-Magazin-Niveau.
+
+Dieses Dokument definiert die Markenidentität — nicht das Layout. Gestaltungsspielraum für innovatives Design ist ausdrücklich erwünscht.
 
 ---
 
@@ -8,34 +10,34 @@ Visueller Standard für Print & Digital. Ziel: PM-Magazin-Niveau.
 
 ### Primär
 
-| Name | Hex | RGB | Verwendung |
-|------|-----|-----|------------|
-| Bold Mint | `#5ED9A6` | 94, 217, 166 | CTAs, Akzente, Highlights, Chart Primary |
-| Charcoal | `#2C3E50` | 44, 62, 80 | Headlines, Body Text, Icons |
-| Clean White | `#FFFFFF` | 255, 255, 255 | Backgrounds, Weißraum |
+| Name | Hex | Verwendung |
+|------|-----|------------|
+| Bold Mint | `#5ED9A6` | Akzente, Highlights, Chart Primary |
+| Charcoal | `#2C3E50` | Headlines, Body Text, Icons |
+| Clean White | `#FFFFFF` | Backgrounds, Weißraum |
 
 ### Sekundär
 
-| Name | Hex | RGB | Verwendung |
-|------|-----|-----|------------|
-| Mountain Blue | `#4A90E2` | 74, 144, 226 | Chart Secondary, Infografiken, Links |
-| Sage Green | `#E0EEE9` | 224, 238, 233 | Hintergrundflächen, Callout Boxes |
-| Warm Grey | `#6B6B6B` | 107, 107, 107 | Captions, Secondary Text |
+| Name | Hex | Verwendung |
+|------|-----|------------|
+| Mountain Blue | `#4A90E2` | Infografiken, Daten-Visualisierung |
+| Sage Green | `#E0EEE9` | Hintergrundflächen, Subtle Accents |
+| Warm Grey | `#6B6B6B` | Secondary Text, Captions |
 
-### Daten & Status
+### Daten-Farben
 
 | Name | Hex | Verwendung |
 |------|-----|------------|
-| Amber | `#F59E0B` | Warnungen, Highlights, Attention |
-| Success Green | `#059669` | Positive Werte, Verifiziert |
-| Neutral Grey | `#E5E7EB` | Grids, Achsen, Trennlinien |
+| Amber | `#F59E0B` | Warnungen, Attention |
+| Success Green | `#059669` | Positive Werte |
+| Neutral Grey | `#E5E7EB` | Grids, Achsen |
 
-### Farbregeln
+### Prinzipien
 
-- Max. 3 Farben pro Seite (+ Grautöne)
-- Bold Mint nur für 1 Akzent pro Spread
-- Keine Farbverläufe außer in Hero-Elementen
-- Charts: Mint → Blue → Amber Hierarchie
+- Zurückhaltung: Max. 2-3 Farben pro Spread
+- Bold Mint sparsam als Akzent einsetzen
+- Weißraum als "Farbe" verstehen
+- Keine Verläufe in Textflächen
 
 ---
 
@@ -43,448 +45,207 @@ Visueller Standard für Print & Digital. Ziel: PM-Magazin-Niveau.
 
 ### Font Families
 
-**Montserrat** — Headlines, Logo, Display
+**Montserrat** — Headlines, Logo, Display, Zahlen
+- KINN Logo: ExtraBold 800
+- Headlines: Bold 700 / Black 900
+- Labels/Tags: SemiBold 600
 
-```
-Regular   400
-SemiBold  600
-Bold      700
-ExtraBold 800  ← KINN Logo
-Black     900
-```
+**Futura** — Fließtext, UI-Elemente (schmaler, bessere Lesbarkeit)
+- Body: Book 400
+- Captions: Medium 500
 
-**Futura** — Body Text, UI (schmaler als Montserrat)
+### Prinzipien
 
-```
-Book      400
-Medium    500
-Bold      700
-```
-
-### Verwendung
-
-| Kontext | Font |
-|---------|------|
-| KINN Logo | Montserrat ExtraBold |
-| Display Headlines | Montserrat Bold/Black |
-| Section Headers | Montserrat SemiBold |
-| Body Text | Futura Book |
-| Captions | Futura Medium |
-| Data/Numbers | Montserrat SemiBold |
-
-### Hierarchie (Print A4)
-
-| Element | Font | Gewicht | Größe | Zeilenabstand | Farbe |
-|---------|------|---------|-------|---------------|-------|
-| Display | Montserrat | Black 900 | 48–72pt | 1.1 | Charcoal |
-| H1 | Montserrat | Bold 700 | 32–40pt | 1.2 | Charcoal |
-| H2 | Montserrat | SemiBold 600 | 24–28pt | 1.25 | Charcoal |
-| H3 | Montserrat | SemiBold 600 | 18–20pt | 1.3 | Charcoal |
-| Body | Futura | Book 400 | 10–11pt | 1.5 | Charcoal |
-| Body Small | Futura | Book 400 | 9pt | 1.4 | Warm Grey |
-| Caption | Futura | Medium 500 | 8pt | 1.3 | Warm Grey |
-| Label/Tag | Montserrat | SemiBold 600 | 7–8pt | 1.2 | varies |
-| Big Number | Montserrat | Black 900 | 64–96pt | 1.0 | Bold Mint |
-
-### Typografie-Regeln
-
-- Zeilenlänge: 65–75 Zeichen (Body)
-- Keine Unterstreichungen (außer Links digital)
-- ALL CAPS nur für Tags/Labels (max. 2 Worte)
-- Zahlen: Tabular Figures in Tabellen
+- Klare Hierarchie durch Gewicht und Größe
+- Großzügige Zeilenabstände für Lesbarkeit
+- ALL CAPS nur für kurze Labels
+- Zahlen in Infografiken: Montserrat für Prägnanz
 
 ---
 
-## 3. Layout Grid
+## 3. Layout-Philosophie
 
-### Print (A4: 210 × 297mm)
+### Grundsätze
 
-```
-Margins:
-  Außen: 20mm
-  Innen: 25mm (Bindung)
-  Oben:  20mm
-  Unten: 25mm
+- **Weißraum ist aktiv** — Seiten atmen lassen, nicht füllen
+- **Asymmetrie erlaubt** — Spannung durch ungleiche Verteilung
+- **Modulares Denken** — Inhalte in flexible Blöcke gliedern
+- **Tiefe erzeugen** — Durch Überlappungen, Layering, Kontraste
 
-Spalten: 12
-Gutter:  4mm
-Baseline: 12pt
-```
+### Seitencharaktere
 
-### Seitentypen
+Der Report braucht visuelle Abwechslung:
+- **Ruhige Seiten** — Text-fokussiert, viel Weißraum
+- **Laute Seiten** — Infografik-Dominanz, wenig Text
+- **Hero-Momente** — Vollflächige Visuals, Chapter Openers
+- **Zitat-Inseln** — Einzelne starke Aussagen
 
-| Typ | Beschreibung |
-|-----|--------------|
-| Cover | Hero-Visual, Titel, Jahr, Key Metric |
-| Chapter Opener | Full-Bleed Bild/Illustration, Kapitel-Titel |
-| Data Spread | Infografik-fokussiert, wenig Text |
-| Case Study | 2-Spalten, Sidebar für Metrics |
-| Quote Page | Hero-Zitat, minimalistisch |
-| Index/TOC | Klare Struktur, Seitenzahlen rechts |
+### Flexibilität
 
-### Weißraum
-
-- Minimum 20% Weißraum pro Seite
-- Abstand zwischen Elementen: min. 8mm
-- Keine "vollen" Seiten — atmen lassen
+Kein starres Grid vorgegeben. Designer soll:
+- Unkonventionelle Platzierungen erkunden
+- Mit Skalierung spielen (übergroße Zahlen, kleine Details)
+- Blicklenkung durch Kontraste schaffen
 
 ---
 
-## 4. Illustration Style
+## 4. Illustration & Bildsprache
 
-### Stil: Geometric Flat
+### Stil-Richtung
 
-- Clean, reduziert, skalierbar
-- Keine realistischen Darstellungen
-- Abstrakte Formen für komplexe Konzepte
+- Reduziert und abstrakt, nicht illustrativ-realistisch
+- Geometrische Formen bevorzugt
+- Flat Design (keine 3D-Effekte, keine Schatten)
+- Konsistente Strichstärke wenn Line Art
 
-### Spezifikationen
+### Thematische Motive
 
-| Attribut | Wert |
-|----------|------|
-| Strichstärke | 1.5–2px |
-| Ecken | Rounded (4px Radius) |
-| Perspektive | Flat (keine Isometrie) |
-| Schatten | Keine (oder sehr subtle, 10% opacity) |
-| Farbflächen | Solid, keine Verläufe |
+| Konzept | Visuelle Ideen |
+|---------|----------------|
+| KI/AI | Netzwerke, verbundene Nodes, Synapsen |
+| Daten | Abstrakte Muster, Punkte, Flows |
+| Automatisierung | Prozess-Flows, Kreisläufe |
+| Mensch + Maschine | Überlappung, Symbiose |
+| Tirol | Bergsilhouetten (subtil, nicht kitschig) |
 
 ### Menschen-Darstellung
 
-- Abstrakt/Silhouette
-- Keine Gesichtsdetails
+- Abstrakt oder silhouettenhaft
+- Keine detaillierten Gesichter
 - Geschlechtsneutral wo möglich
-- Proportionen: leicht stilisiert (längere Gliedmaßen)
+- Fokus auf Handlung, nicht Person
 
-### Wiederkehrende Motive
+### Fotografie
 
-| Konzept | Visuelles Motiv |
-|---------|-----------------|
-| KI/AI | Verbundene Nodes, Netzwerk |
-| Daten | Abstrakte Balken, Punkte |
-| Automatisierung | Zahnräder, Flows, Pfeile |
-| Mensch + Maschine | Überlappende Formen |
-| Tirol | Abstrahierte Bergsilhouette |
-| Wachstum | Aufsteigende Kurve, Pflanze |
-
----
-
-## 5. Iconografie
-
-### System: Tabler Icons (oder Custom)
-
-- Strichstärke: 1.5px
-- Stil: Rounded Line
-- Größen: 16px, 24px, 32px, 48px
-
-### Icon-Farben
-
-| Kontext | Farbe |
-|---------|-------|
-| Default | Charcoal |
-| Aktiv/Highlight | Bold Mint |
-| Deaktiviert | Warm Grey |
-| Auf dunklem Grund | White |
-
-### Kern-Icons (zu definieren)
-
-- Branchen (Produktion, Handel, Dienstleistung, etc.)
-- KI-Tools (Chat, Automatisierung, Analyse, etc.)
-- Metriken (Zeit, Geld, Qualität, etc.)
-- Navigation (Pfeil, Link, Download, etc.)
-
----
-
-## 6. Infografik-System
-
-### Chart-Palette
-
-```
-1. Primary:   #5ED9A6 (Bold Mint)
-2. Secondary: #4A90E2 (Mountain Blue)
-3. Tertiary:  #F59E0B (Amber)
-4. Neutral:   #E5E7EB (Grids)
-5. Text:      #2C3E50 (Labels)
-```
-
-### Chart-Typen & Regeln
-
-| Typ | Verwendung | Regeln |
-|-----|------------|--------|
-| Bar (horizontal) | Vergleiche | Max. 8 Balken, Labels links |
-| Bar (vertikal) | Zeitverläufe | X-Achse = Zeit |
-| Donut | Anteile | Max. 5 Segmente, kein 3D |
-| Line | Trends | Max. 3 Linien, 2px Stärke |
-| Big Number | Key Metrics | Zahl groß, Label klein |
-| Icon Array | Mengen | 10er-Blöcke, ein Icon = X |
-
-### Chart-Regeln
-
-- Keine 3D-Effekte
-- Immer Quellenangabe (8pt, Warm Grey)
-- Y-Achse startet bei 0 (außer begründet)
-- Max. 1 Highlight-Farbe pro Chart
-- Datenlabels direkt am Element (keine Legende wenn möglich)
-
-### Big Number Format
-
-```
-   73%
-  ──────
-  weniger Zeitaufwand
-```
-
-- Zahl: Work Sans 900, 64–96pt, Bold Mint
-- Linie: 2px, Charcoal, 60% Zahlenbreite
-- Label: Work Sans 400, 12–14pt, Charcoal
-
----
-
-## 7. Fotografie
-
-### Stil
-
+Falls echte Fotos verwendet werden:
 - Authentisch, keine Stock-Ästhetik
-- Natürliches Licht bevorzugt
-- Tirol-Bezug wo sinnvoll (Berge im Hintergrund)
-
-### Portrait-Richtlinien
-
-| Attribut | Spezifikation |
-|----------|---------------|
-| Hintergrund | Neutral (Sage Green oder Grau) |
-| Beleuchtung | Soft, keine harten Schatten |
-| Ausschnitt | Schulter aufwärts, Blick in Kamera |
-| Bearbeitung | Minimal, natürliche Hauttöne |
-
-### Workspace/Context Shots
-
+- Natürliches Licht
 - Echte Arbeitsumgebungen
-- Menschen bei der Arbeit (nicht gestellt)
-- Bildschirme lesbar oder bewusst unscharf
-- DSGVO: Einverständnis dokumentieren
-
-### Bildbearbeitung
-
-- Keine Filter
-- Subtile Mint-Tönung im Schatten (optional)
-- Kontrast: Leicht erhöht
-- Sättigung: Natürlich bis leicht reduziert
+- DSGVO-konform (Einverständnisse)
 
 ---
 
-## 8. Pull Quotes & Callouts
+## 5. Infografik-Prinzipien
 
-### Pull Quote
+### Daten-Visualisierung
 
-```
-┌─────────────────────────────────────────┐
-│ ▌                                       │
-│ ▌ "KI hat unsere Prozesszeit            │
-│ ▌  um 73% reduziert."                   │
-│                                         │
-│   — Maria H., Produktionsleitung        │
-│     Metallverarbeitung, Wattens         │
-└─────────────────────────────────────────┘
-```
+- **Klarheit vor Dekoration** — Daten müssen sofort lesbar sein
+- **Keine 3D-Charts** — Verfälscht Proportionen
+- **Quellenangabe immer** — Glaubwürdigkeit
+- **Farbhierarchie** — Mint (Primary) → Blue → Amber
 
-| Element | Spezifikation |
-|---------|---------------|
-| Linie links | 4px, Bold Mint |
-| Zitat | Work Sans 600, 18–24pt, Charcoal |
-| Attribution Name | Work Sans 500, 11pt, Charcoal |
-| Attribution Rolle | Work Sans 400, 10pt, Warm Grey |
+### Big Numbers
 
-### Callout Box
+Große Kennzahlen als visuelle Anker:
+- Übergroß und mutig setzen
+- Kurze, prägnante Beschriftung darunter
+- Bold Mint für Highlight-Zahlen
 
-```
-┌─────────────────────────────────────────┐
-│  i  INSIGHT                             │
-│                                         │
-│  73% der befragten Unternehmen          │
-│  nutzen bereits KI-Tools im Alltag.     │
-└─────────────────────────────────────────┘
-```
+### Chart-Empfehlungen
 
-| Element | Spezifikation |
-|---------|---------------|
-| Hintergrund | Sage Green (#E0EEE9) |
-| Border | None oder 1px Mint |
-| Radius | 8px |
-| Icon | 24px, Charcoal |
-| Label | Work Sans 600, 8pt, ALL CAPS, Warm Grey |
-| Text | Work Sans 400, 10pt, Charcoal |
+| Datentyp | Geeignet |
+|----------|----------|
+| Vergleiche | Horizontale Balken |
+| Anteile | Donut (max. 5 Segmente) |
+| Trends | Linienchart (max. 3 Linien) |
+| Mengen | Icon Arrays |
 
 ---
 
-## 9. Case Study Template
+## 6. Text-Elemente
 
-### Struktur
+### Zitate
 
-```
-┌──────────────────────────────────────────────────┐
-│ [BRANCHE]                    [TOOL] [TOOL] [TOOL]│
-├──────────────────────────────────────────────────┤
-│                                                  │
-│ HEADLINE DES USE CASE                            │
-│ Subheadline mit Kontext (optional)               │
-│                                                  │
-├────────────┬────────────┬────────────────────────┤
-│  PROBLEM   │   LÖSUNG   │       ERGEBNIS         │
-│            │            │                        │
-│  Text...   │   Text...  │   ┌────────────────┐   │
-│            │            │   │     +73%       │   │
-│            │            │   │   Zeitersparnis│   │
-│            │            │   └────────────────┘   │
-├────────────┴────────────┴────────────────────────┤
-│                                                  │
-│ Detailtext zum Use Case...                       │
-│                                                  │
-│ ┌──────────────────────────────────────────────┐ │
-│ │ "Zitat der Person..."                        │ │
-│ │ — Name, Rolle                                │ │
-│ └──────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────┘
-```
+Starke Aussagen verdienen Raum:
+- Visuell hervorheben (Größe, Position, Akzentfarbe)
+- Attribution mit Name, Rolle, Ort
+- Können ganze Seiten dominieren
 
-### Tags/Labels
+### Callouts / Insights
 
-| Typ | Style |
-|-----|-------|
-| Branche | Pill, Sage Green BG, Charcoal Text |
-| Tools | Pill, Mint BG (15% opacity), Mint Text |
-| Region | Pill, Grey BG, Warm Grey Text |
+Kurze Fakten oder Erkenntnisse:
+- Visuell vom Fließtext abgesetzt
+- Sage Green als Hintergrund möglich
+- Prägnant formuliert
+
+### Case Study Elemente
+
+Jeder Use Case enthält:
+- Headline (der Kern in einem Satz)
+- Problem → Lösung → Ergebnis
+- Tools/Technologien (als Tags)
+- Branche
+- Optional: Zitat, Metriken
 
 ---
 
-## 10. Cover Design
-
-### Elemente
-
-1. **KINN Logo** — oben links, Charcoal
-2. **Titel** — "KI Praxis Report Tirol 2026"
-3. **Hero Metric** — z.B. "50 Use Cases"
-4. **Illustration** — Abstraktes AI/Network Motiv
-5. **Tirol-Referenz** — Subtile Bergsilhouette
-
-### Proportionen
-
-```
-┌─────────────────────────────────────┐
-│ [LOGO]                              │
-│                                     │
-│                                     │
-│         [ ILLUSTRATION ]            │
-│                                     │
-│                                     │
-│   KI PRAXIS REPORT                  │
-│   TIROL 2026                        │
-│                                     │
-│   ┌─────────────────┐               │
-│   │   50 CASES      │               │
-│   │   verifiziert   │               │
-│   └─────────────────┘               │
-│                                     │
-│ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ (Berglinie)   │
-└─────────────────────────────────────┘
-```
-
----
-
-## 11. Do's & Don'ts
+## 7. Do's & Don'ts
 
 ### Do's
 
-- Weißraum großzügig einsetzen
-- Klare visuelle Hierarchie
-- Konsistente Abstände (8px-System)
-- Daten immer mit Quelle
-- Authentische Fotos & Zitate
+- Weißraum mutig einsetzen
+- Visuelle Überraschungen einbauen
+- Typografische Kontraste nutzen
+- Daten immer mit Quelle versehen
+- Konsistenz innerhalb eines Spreads
 
 ### Don'ts
 
 - Keine Emojis
-- Keine 3D-Charts
 - Keine Stock-Fotos
-- Keine Verläufe in Text
-- Keine mehr als 3 Fonts/Gewichte pro Seite
+- Keine 3D-Effekte in Charts
 - Keine überladenen Seiten
-- Keine Clip-Art oder generische Icons
+- Keine generischen Clip-Arts
+- Keine kitschigen Tirol-Klischees
 
 ---
 
-## 12. Dateiformat & Export
+## 8. Markenzeichen
+
+### KINN Logo
+
+- Font: Montserrat ExtraBold
+- Farbe: Charcoal (auf hell) oder White (auf dunkel)
+- Freiraum: Mindestens Höhe des "K" rundherum
+
+### Tirol-Bezug
+
+Der Report ist regional verankert, aber nicht provinziell:
+- Bergsilhouetten abstrahiert, nicht fotorealistisch
+- "Tirol" im Titel, nicht überbetont im Design
+- Qualität und Professionalität signalisieren
+
+---
+
+## 9. Technische Hinweise
 
 ### Print
 
-| Element | Format | Auflösung |
-|---------|--------|-----------|
-| Dokument | PDF/X-4 | — |
-| Bilder | TIFF/PSD | 300 dpi |
-| Vektoren | AI/EPS | — |
-| Farbraum | CMYK | ISO Coated v2 |
+- CMYK-Farbraum
+- Bilder: 300 dpi
+- Beschnitt einplanen
 
 ### Digital
 
-| Element | Format | Auflösung |
-|---------|--------|-----------|
-| Dokument | PDF (RGB) | — |
-| Bilder | JPG/PNG | 150 dpi / 2x |
-| Web | WebP | optimiert |
-| Farbraum | sRGB | — |
+- RGB-Farbraum (sRGB)
+- Bilder optimiert für Web
+- Interaktive Elemente möglich
 
 ---
 
-## 13. Anwendungsbeispiele
+## 10. Gestaltungsfreiheit
 
-### Seitenbeispiel: Data Spread
+Dieser Styleguide definiert die **Leitplanken**, nicht die Route.
 
-```
-┌───────────────────────────────────────────────────────────┐
-│                                                           │
-│   KI-ADOPTION IN TIROL                                    │
-│                                                           │
-│   ┌─────────────────────────────────────────────────────┐ │
-│   │                                                     │ │
-│   │   73%  ████████████████████████████░░░░░░░░░        │ │
-│   │        nutzen KI bereits                            │ │
-│   │                                                     │ │
-│   │   45%  █████████████████░░░░░░░░░░░░░░░░░░░░        │ │
-│   │        planen Ausbau                                │ │
-│   │                                                     │ │
-│   │   12%  █████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░        │ │
-│   │        keine Pläne                                  │ │
-│   │                                                     │ │
-│   └─────────────────────────────────────────────────────┘ │
-│                                                           │
-│   Quelle: KINN Umfrage 2025, n=127                        │
-│                                                           │
-└───────────────────────────────────────────────────────────┘
-```
+Erwünscht ist:
+- Experimentierfreude im Layout
+- Unerwartete visuelle Lösungen
+- Eigenständige Interpretation der Marke
+- Innovation innerhalb der Farbwelt und Typografie
 
-### Seitenbeispiel: Quote Page
-
-```
-┌───────────────────────────────────────────────────────────┐
-│                                                           │
-│                                                           │
-│                                                           │
-│                                                           │
-│         "Wir haben nicht gefragt,                         │
-│          ob KI kommt. Wir haben                           │
-│          gefragt, wie wir sie                             │
-│          nutzen."                                         │
-│                                                           │
-│         — Thomas M.                                       │
-│           Geschäftsführer, IT-Dienstleister               │
-│           Innsbruck                                       │
-│                                                           │
-│                                                           │
-│                                                           │
-│                                                           │
-└───────────────────────────────────────────────────────────┘
-```
+Der Report soll sich von typischen B2B-Reports abheben — durch Mut, Klarheit und visuelle Intelligenz.
 
 ---
 
-*Version 1.0 — Dezember 2025*
+*Version 1.1 — Dezember 2025*
 *KINN — KI Treff Innsbruck*
