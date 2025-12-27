@@ -20,7 +20,6 @@ Spotlights stellen KINN-Teilnehmer vor dem Event auf LinkedIn vor. Sie schaffen:
     post.md          # LinkedIn-Post Text
     kspot_{Name}.png        # Original (gitignored)
     kspot_{Name}_thumb.jpg  # Thumbnail 900px
-    kspot_{Name}_sm.jpg     # Social Media Version
     .gitignore       # Ignoriert *.png
 ```
 
@@ -51,9 +50,6 @@ cp spotlight/new/Name.png spotlight/{hash}/kspot_Name.png
 
 # Thumbnail (900px)
 sips -Z 900 spotlight/{hash}/kspot_Name.png --out spotlight/{hash}/kspot_Name_thumb.jpg -s format jpeg
-
-# Social Media Version (800px, optional)
-sips -Z 800 spotlight/{hash}/kspot_Name.png --out spotlight/{hash}/kspot_Name_sm.jpg -s format jpeg
 ```
 
 ### 4. content.json erstellen
