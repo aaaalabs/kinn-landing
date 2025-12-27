@@ -142,3 +142,4 @@ spotlight:{id} → {
 - `f768d7/` — Martin Hies
 - `82c026/` — Matteo Castellani
 - `192ca0/` — Steven Lahmann
+- `8d9a3e/` — Rafael Pauley (Enabler & Brückenbauer)
