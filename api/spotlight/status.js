@@ -44,7 +44,7 @@ export default async function handler(req, res) {
     }
 
     // All spotlights - check known IDs
-    const spotlightIds = ['b8211f', 'f768d7', '82c026', '192ca0'];
+    const spotlightIds = ['b8211f', 'f768d7', '82c026', '192ca0', 'cebbe2'];
     const results = [];
 
     for (const spotlightId of spotlightIds) {
