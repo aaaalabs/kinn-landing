@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     const submittedAt = new Date().toISOString();
 
     // 1. Send notification email
-    const adminEmail = process.env.RAUS_ADMIN_EMAIL || 'admin@libralab.ai';
+    const adminEmail = process.env.ADMIN_USERNAME || 'admin@libralab.ai';
     await resend.emails.send({
       from: 'KINN:RAUS <noreply@kinn.at>',
       to: adminEmail,

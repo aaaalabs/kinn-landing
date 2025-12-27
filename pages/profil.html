@@ -1622,20 +1622,32 @@
       }
     })();
 
-    // Admin shortcut: Click KINN logo to open admin dashboard (for admin@libralab.ai only)
-    const logoElement = document.querySelector('.logo');
-    if (window.userEmail === 'admin@libralab.ai') {
-      logoElement.style.cursor = 'pointer';
-      logoElement.style.transition = 'opacity 0.2s ease';
-      logoElement.addEventListener('mouseenter', () => logoElement.style.opacity = '0.7');
-      logoElement.addEventListener('mouseleave', () => logoElement.style.opacity = '1');
-    }
-    logoElement.addEventListener('click', (e) => {
-      if (window.userEmail === 'admin@libralab.ai') {
-        e.preventDefault();
-        window.open('/admin', '_blank');
+    // Admin shortcut: Click KINN logo to open admin dashboard (for admin only)
+    (async function setupAdminShortcut() {
+      try {
+        const configResponse = await fetch('/api/config');
+        const config = await configResponse.json();
+        const adminEmail = config.adminEmail;
+
+        const logoElement = document.querySelector('.logo');
+
+        if (window.userEmail === adminEmail) {
+          logoElement.style.cursor = 'pointer';
+          logoElement.style.transition = 'opacity 0.2s ease';
+          logoElement.addEventListener('mouseenter', () => logoElement.style.opacity = '0.7');
+          logoElement.addEventListener('mouseleave', () => logoElement.style.opacity = '1');
+        }
+
+        logoElement.addEventListener('click', (e) => {
+          if (window.userEmail === adminEmail) {
+            e.preventDefault();
+            window.open('/admin', '_blank');
+          }
+        });
+      } catch (error) {
+        console.error('[PROFILE] Failed to load admin config:', error);
       }
-    });
+    })();
 
     function handleHashChange() {
       const hash = window.location.hash.replace('#', '');
