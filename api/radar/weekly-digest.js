@@ -9,7 +9,7 @@ const kv = createClient({
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const ADMIN_EMAIL = 'admin@libralab.ai';
+const ADMIN_EMAIL = process.env.ADMIN_USERNAME || 'admin@libralab.ai';
 const PUSHBULLET_API_KEY = process.env.PUSHBULLET_API_KEY;
 
 /**

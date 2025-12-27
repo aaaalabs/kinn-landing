@@ -522,13 +522,10 @@
       <h2 style="margin-bottom: 1.5rem; font-weight: 400;">Admin Login</h2>
       <input type="password" id="password-input" placeholder="Passwort eingeben..."
              onkeypress="if(event.key === 'Enter') login()" />
-      <div style="margin: 1rem 0; display: flex; align-items: flex-start; gap: 0.5rem;">
-        <input type="checkbox" id="remember-me" checked style="margin-top: 2px;" />
-        <label for="remember-me" style="cursor: pointer; user-select: none;">
-          Angemeldet bleiben (7 Tage)
-        </label>
-      </div>
-      <button class="btn" onclick="login()">Einloggen</button>
+      <button class="btn" onclick="login()" style="margin-top: 1rem;">Einloggen</button>
+      <p style="margin-top: 0.75rem; font-size: 0.75rem; color: #999; font-weight: 300;">
+        Session wird 7 Tage gespeichert
+      </p>
       <div id="login-error" class="message error hidden" style="margin-top: 1rem;">
         Falsches Passwort
       </div>
@@ -1214,16 +1211,15 @@
 
     function login() {
       const password = document.getElementById('password-input').value;
-      const rememberMe = document.getElementById('remember-me').checked;
 
       if (!password) {
         showLoginError();
         return;
       }
 
-      // Store password and verify with first API call
+      // Store password and verify with first API call (always remember for 7 days)
       adminPassword = password;
-      saveAuthWithExpiry(password, rememberMe);
+      saveAuthWithExpiry(password, true);
 
       // Try to load data
       loadEvents().then(success => {
