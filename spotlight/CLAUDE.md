@@ -15,6 +15,7 @@ Spotlights stellen KINN-Teilnehmer vor dem Event auf LinkedIn vor. Sie schaffen:
 /spotlight/
   /new/              # Neue Bilder (nicht committed)
   /{hash}/           # Spotlight-Ordner (6-char MD5 vom Namen)
+    index.html       # Redirect-Page mit OG-Meta-Tags
     content.json     # Strukturierte Daten
     post.md          # LinkedIn-Post Text
     kspot_{Name}.png        # Original (gitignored)
@@ -122,9 +123,10 @@ spotlight:{id} → {
 }
 ```
 
-**Wichtig:** Bei neuem Spotlight müssen **zwei Stellen** aktualisiert werden:
-1. `api/spotlight/status.js` — ID zur `spotlightIds`-Liste hinzufügen
-2. `admin/index.html` — Neue Table-Row im Spotlights-Tab hinzufügen (hardcoded HTML)
+**Wichtig:** Bei neuem Spotlight müssen **drei Stellen** aktualisiert werden:
+1. `spotlight/{hash}/index.html` — Redirect-Page mit OG-Meta-Tags erstellen
+2. `api/spotlight/status.js` — ID zur `spotlightIds`-Liste hinzufügen
+3. `admin/index.html` — Neue Table-Row im Spotlights-Tab hinzufügen (hardcoded HTML)
 
 ## API Endpoints
 
