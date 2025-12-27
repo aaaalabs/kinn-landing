@@ -543,7 +543,6 @@
         <button class="tab" onclick="switchTab('radar')">Radar Events <span id="radar-pending-badge" class="badge" style="display:none;"></span></button>
         <button class="tab" onclick="switchTab('subscribers')">Teilnehmer</button>
         <button class="tab" onclick="switchTab('newsletter')">Newsletter</button>
-        <button class="tab" onclick="switchTab('tokenlinks')">Token Links</button>
         <button class="tab" onclick="switchTab('spotlights')">Spotlights</button>
         <button class="tab" onclick="switchTab('raus')">RAUS <span id="raus-pending-badge" class="badge" style="display:none;"></span></button>
         <button class="tab" onclick="logout()" style="margin-left: auto;">Logout</button>
@@ -632,100 +631,116 @@
 
       <!-- Subscribers Tab -->
       <div id="subscribers-tab" class="tab-content">
-        <h2 style="font-weight: 400; margin-bottom: 2rem;">Teilnehmer Liste</h2>
+        <h2 style="font-weight: 400; margin-bottom: 2rem;">Teilnehmer</h2>
 
-        <!-- Google Calendar Integration -->
-        <div class="card" style="border-left: 4px solid #5ED9A6; margin-bottom: 2rem;">
-          <h3 style="font-weight: 500; margin-bottom: 0.5rem;">📅 Google Calendar Invites (Empfohlen)</h3>
-          <p style="color: #666; margin-bottom: 1rem; font-size: 0.95rem;">
-            Professionelle Event-Einladungen mit echtem Google Calendar RSVP-Tracking.
-          </p>
-
-          <div style="background: #f9f9f9; padding: 1.25rem; border-radius: 8px; margin-bottom: 1rem;">
-            <p style="font-size: 0.875rem; color: #333; margin-bottom: 0.75rem; font-weight: 500;">Workflow:</p>
-            <ol style="font-size: 0.875rem; color: #666; line-height: 1.8; padding-left: 1.25rem; margin: 0;">
-              <li>Klick auf "Copy Subscribers (Notifications Enabled)"</li>
-              <li>Öffne <a href="https://calendar.google.com" target="_blank" style="color: #5ED9A6; text-decoration: underline;">Google Calendar</a></li>
-              <li>Create Event → Add Google Meet (automatisch)</li>
-              <li>Paste Emails ins "Add guests" Feld</li>
-              <li>Send Invites → Done! 🎉</li>
-            </ol>
+        <!-- Token Links Section - Collapsed by default -->
+        <details style="margin-bottom: 1.5rem; border: 1px solid #e0e0e0; border-radius: 12px; background: white;">
+          <summary style="padding: 1rem 1.25rem; cursor: pointer; font-weight: 500; display: flex; justify-content: space-between; align-items: center;">
+            <span>Token Links</span>
+            <span style="font-size: 0.75rem; color: #666; font-weight: 400;">Personalisierte Login-Links</span>
+          </summary>
+          <div style="padding: 0 1.25rem 1.25rem;">
+            <p style="color: #666; margin-bottom: 1rem; font-size: 0.9rem;">
+              Generiere personalisierte Login-Links für Event-Teilnehmer. Die Links führen direkt zur Profil-Seite.
+            </p>
+            <div id="tokenlinks-content" class="loading">Lade Subscriber...</div>
           </div>
+        </details>
 
-          <button class="btn" onclick="copySubscribersWithNotificationsEnabled()" style="margin-bottom: 0.75rem;">
-            📋 Copy Subscribers (Notifications Enabled)
-          </button>
-
-          <div id="googleCalendarCopyResult" style="margin-top: 0.75rem;"></div>
-
-          <!-- Notifications Disabled Warning -->
-          <div id="notificationsDisabledWarning" style="margin-top: 1rem; display: none;">
-            <div style="background: #fff3cd; color: #856404; padding: 1rem; border-radius: 8px; font-size: 0.875rem; border-left: 4px solid #ffc107;">
-              <p style="margin: 0 0 0.5rem 0; font-weight: 600;">⚠️ <span id="disabledCount">0</span> User haben Benachrichtigungen deaktiviert:</p>
-              <div id="disabledUsersList" style="max-height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; line-height: 1.6; color: #6c5d3f;"></div>
+        <!-- Google Calendar Integration - Collapsed by default -->
+        <details style="margin-bottom: 1.5rem; border: 1px solid #e0e0e0; border-radius: 12px; background: white;">
+          <summary style="padding: 1rem 1.25rem; cursor: pointer; font-weight: 500; display: flex; justify-content: space-between; align-items: center;">
+            <span>Google Calendar Invites</span>
+            <span style="font-size: 0.75rem; color: #666; font-weight: 400;">Event-Einladungen mit RSVP</span>
+          </summary>
+          <div style="padding: 0 1.25rem 1.25rem;">
+            <div style="background: #f9f9f9; padding: 1.25rem; border-radius: 8px; margin-bottom: 1rem;">
+              <p style="font-size: 0.875rem; color: #333; margin-bottom: 0.75rem; font-weight: 500;">Workflow:</p>
+              <ol style="font-size: 0.875rem; color: #666; line-height: 1.8; padding-left: 1.25rem; margin: 0;">
+                <li>Klick auf "Copy Subscribers (Notifications Enabled)"</li>
+                <li>Öffne <a href="https://calendar.google.com" target="_blank" style="color: #5ED9A6; text-decoration: underline;">Google Calendar</a></li>
+                <li>Create Event → Add Google Meet (automatisch)</li>
+                <li>Paste Emails ins "Add guests" Feld</li>
+                <li>Send Invites → Done!</li>
+              </ol>
             </div>
-          </div>
-        </div>
 
-        <!-- Invite Section - Enhanced -->
-        <div class="card" style="border-left: 4px solid #5ED9A6; margin-bottom: 2rem;">
-          <h3 style="font-weight: 500; margin-bottom: 0.5rem;">🚀 Persönliche Einladungen</h3>
-          <p style="color: #666; margin-bottom: 1.5rem; font-size: 0.95rem;">
-            Versende manuelle Einladungen mit personalisierten Nachrichten.
-          </p>
-
-          <!-- Template Selection -->
-          <div style="margin-bottom: 1rem;">
-            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Vorlage wählen</label>
-            <select id="inviteTemplate" onchange="loadInviteTemplate()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit; background: white;">
-              <option value="standard">Standard Einladung</option>
-              <option value="event-met">Bei Event getroffen</option>
-              <option value="bug-fix">Neu senden (Bug-Fix)</option>
-              <option value="vip">VIP Einladung</option>
-              <option value="custom">Eigene Nachricht</option>
-            </select>
-          </div>
-
-          <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-            <div style="flex: 1;">
-              <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Vorname *</label>
-              <input type="text" id="inviteName" placeholder="z.B. Martin" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit;">
-            </div>
-            <div style="flex: 2;">
-              <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Email *</label>
-              <input type="email" id="inviteEmail" placeholder="email@example.com" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit;">
-            </div>
-          </div>
-
-          <!-- Personal Message -->
-          <div style="margin-bottom: 1rem;">
-            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">
-              Persönliche Nachricht <span style="font-weight: 400; color: #999;">(optional)</span>
-            </label>
-            <textarea id="inviteMessage" placeholder="Füge eine persönliche Nachricht hinzu..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit; min-height: 100px; resize: vertical;"></textarea>
-            <div style="font-size: 0.75rem; color: #999; margin-top: 0.25rem;">
-              Die Nachricht wird vor dem Standard-Einladungstext eingefügt.
-            </div>
-          </div>
-
-          <div style="display: flex; gap: 1rem; align-items: center;">
-            <div style="flex: 1;">
-              <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Eingeladen von</label>
-              <input type="text" id="invitedBy" placeholder="Thomas" value="Thomas" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit;">
-            </div>
-            <button class="btn" onclick="sendInvite()" style="flex: 0 0 auto; margin-top: 1.5rem;">
-              📨 Einladung versenden
+            <button class="btn" onclick="copySubscribersWithNotificationsEnabled()" style="margin-bottom: 0.75rem;">
+              Copy Subscribers (Notifications Enabled)
             </button>
-          </div>
 
-          <div id="inviteResult" style="margin-top: 1rem;"></div>
+            <div id="googleCalendarCopyResult" style="margin-top: 0.75rem;"></div>
 
-          <!-- Recent Invites -->
-          <div id="recentInvites" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0; display: none;">
-            <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem; color: #666;">Kürzlich versendet</h4>
-            <div id="recentInvitesList" style="font-size: 0.875rem; color: #999;"></div>
+            <!-- Notifications Disabled Warning -->
+            <div id="notificationsDisabledWarning" style="margin-top: 1rem; display: none;">
+              <div style="background: #fff3cd; color: #856404; padding: 1rem; border-radius: 8px; font-size: 0.875rem; border-left: 4px solid #ffc107;">
+                <p style="margin: 0 0 0.5rem 0; font-weight: 600;"><span id="disabledCount">0</span> User haben Benachrichtigungen deaktiviert:</p>
+                <div id="disabledUsersList" style="max-height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; line-height: 1.6; color: #6c5d3f;"></div>
+              </div>
+            </div>
           </div>
-        </div>
+        </details>
+
+        <!-- Invite Section - Collapsed by default -->
+        <details style="margin-bottom: 1.5rem; border: 1px solid #e0e0e0; border-radius: 12px; background: white;">
+          <summary style="padding: 1rem 1.25rem; cursor: pointer; font-weight: 500; display: flex; justify-content: space-between; align-items: center;">
+            <span>Persönliche Einladungen</span>
+            <span style="font-size: 0.75rem; color: #666; font-weight: 400;">Manuelle Einladungen versenden</span>
+          </summary>
+          <div style="padding: 0 1.25rem 1.25rem;">
+            <!-- Template Selection -->
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Vorlage wählen</label>
+              <select id="inviteTemplate" onchange="loadInviteTemplate()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit; background: white;">
+                <option value="standard">Standard Einladung</option>
+                <option value="event-met">Bei Event getroffen</option>
+                <option value="bug-fix">Neu senden (Bug-Fix)</option>
+                <option value="vip">VIP Einladung</option>
+                <option value="custom">Eigene Nachricht</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+              <div style="flex: 1;">
+                <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Vorname *</label>
+                <input type="text" id="inviteName" placeholder="z.B. Martin" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit;">
+              </div>
+              <div style="flex: 2;">
+                <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Email *</label>
+                <input type="email" id="inviteEmail" placeholder="email@example.com" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit;">
+              </div>
+            </div>
+
+            <!-- Personal Message -->
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                Persönliche Nachricht <span style="font-weight: 400; color: #999;">(optional)</span>
+              </label>
+              <textarea id="inviteMessage" placeholder="Füge eine persönliche Nachricht hinzu..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit; min-height: 100px; resize: vertical;"></textarea>
+              <div style="font-size: 0.75rem; color: #999; margin-top: 0.25rem;">
+                Die Nachricht wird vor dem Standard-Einladungstext eingefügt.
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <div style="flex: 1;">
+                <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem;">Eingeladen von</label>
+                <input type="text" id="invitedBy" placeholder="Thomas" value="Thomas" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit;">
+              </div>
+              <button class="btn" onclick="sendInvite()" style="flex: 0 0 auto; margin-top: 1.5rem;">
+                Einladung versenden
+              </button>
+            </div>
+
+            <div id="inviteResult" style="margin-top: 1rem;"></div>
+
+            <!-- Recent Invites -->
+            <div id="recentInvites" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0; display: none;">
+              <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem; color: #666;">Kürzlich versendet</h4>
+              <div id="recentInvitesList" style="font-size: 0.875rem; color: #999;"></div>
+            </div>
+          </div>
+        </details>
 
         <div class="subscriber-count" id="subscriber-count">Lade...</div>
 
@@ -836,6 +851,23 @@
                 </td>
                 <td style="padding: 0.75rem;">
                   <a href="https://www.linkedin.com/in/steven-lahmann/" target="_blank" style="color: #0077b5; text-decoration: none;">Steven Lahmann</a>
+                </td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f0f0f0;">
+                <td style="padding: 0.75rem; font-family: monospace;">cebbe2</td>
+                <td style="padding: 0.75rem;">David Rettenbacher</td>
+                <td style="padding: 0.75rem;">
+                  <span id="spotlight-cebbe2-status" style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 500; background: #fff3cd; color: #856404;">Ausstehend</span>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <a href="https://kinn.at/spotlight/cebbe2" target="_blank" style="color: #5ED9A6; text-decoration: none; font-weight: 500;">kinn.at/spotlight/cebbe2</a>
+                  <button onclick="copyToClipboard('https://kinn.at/spotlight/cebbe2')" style="margin-left: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #f5f5f5; border: none; border-radius: 4px; cursor: pointer;">Copy</button>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <button id="spotlight-cebbe2-text-btn" onclick="copySpotlightText('cebbe2')" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; background: #5ED9A6; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Copy Post</button>
+                </td>
+                <td style="padding: 0.75rem;">
+                  <a href="https://www.linkedin.com/in/drettenbacher/" target="_blank" style="color: #0077b5; text-decoration: none;">David Rettenbacher</a>
                 </td>
               </tr>
             </tbody>

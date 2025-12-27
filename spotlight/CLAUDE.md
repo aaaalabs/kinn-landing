@@ -122,7 +122,9 @@ spotlight:{id} → {
 }
 ```
 
-**Wichtig:** Bei neuem Spotlight muss die ID in `api/spotlight/status.js` zur `spotlightIds`-Liste hinzugefügt werden.
+**Wichtig:** Bei neuem Spotlight müssen **zwei Stellen** aktualisiert werden:
+1. `api/spotlight/status.js` — ID zur `spotlightIds`-Liste hinzufügen
+2. `admin/index.html` — Neue Table-Row im Spotlights-Tab hinzufügen (hardcoded HTML)
 
 ## API Endpoints
 
