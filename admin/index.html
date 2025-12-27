@@ -754,17 +754,6 @@
         <div id="newsletter-content" class="loading">Lade Newsletter...</div>
       </div>
 
-      <!-- Token Links Tab -->
-      <div id="tokenlinks-tab" class="tab-content">
-        <h2 style="font-weight: 400; margin-bottom: 2rem;">Token Links</h2>
-        <p style="color: #666; margin-bottom: 2rem;">
-          Generiere personalisierte Login-Links für Event-Teilnehmer. Die Links führen direkt zur Profil-Seite,
-          wo sie ihre Meeting-Präferenzen eintragen können.
-        </p>
-
-        <div id="tokenlinks-content" class="loading">Lade Subscriber...</div>
-      </div>
-
       <!-- Spotlights Tab -->
       <div id="spotlights-tab" class="tab-content">
         <h2 style="font-weight: 400; margin-bottom: 2rem;">KINN'der Spotlights</h2>
@@ -1324,13 +1313,12 @@
       // Load data if needed
       if (tabName === 'subscribers') {
         loadSubscribers();
+        loadTokenLinksTab();
       } else if (tabName === 'dashboard') {
         loadDashboard();
         loadKinnEventsWidget();
       } else if (tabName === 'newsletter') {
         loadNewsletterTab();
-      } else if (tabName === 'tokenlinks') {
-        loadTokenLinksTab();
       } else if (tabName === 'radar') {
         loadRadarEvents();
         loadRadarMetrics();
