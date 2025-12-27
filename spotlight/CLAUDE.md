@@ -111,10 +111,25 @@ Standard-Set:
 
 Plus 2-3 themenspezifische (z.B. #ECommerce #Startups)
 
+## Redis Schema
+
+Spotlight-Status wird in Redis getrackt:
+
+```
+spotlight:{id} → {
+  status: "pending" | "approved",
+  approvedAt: ISO8601 | null
+}
+```
+
+**Wichtig:** Bei neuem Spotlight muss die ID in `api/spotlight/status.js` zur `spotlightIds`-Liste hinzugefügt werden.
+
 ## API Endpoints
 
-- `GET /api/spotlight/status` — Aktuelle Spotlights
-- `POST /api/spotlight/create` — Neuen Spotlight erstellen (Admin)
+- `GET /api/spotlight/status` — Alle Spotlight-Status aus Redis
+- `GET /api/spotlight/status?id={hash}` — Status eines Spotlights
+- `POST /api/spotlight/approve` — Spotlight freigeben (Admin)
+- `GET /api/spotlight/view?id={hash}` — Spotlight-Daten abrufen
 
 ## Beispiel-Spotlights
 
