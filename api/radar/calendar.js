@@ -8,7 +8,7 @@ const kv = createClient({
 // Source color mapping - distinct colors for each source
 const SOURCE_COLORS = {
   'KINN': '#5ED9A6',              // Mint (KINN brand)
-  'Manual': '#9333EA',            // Purple (manual URL imports)
+  'Weitere': '#9333EA',            // Purple (manual URL imports)
   'InnCubator': '#F59E0B',        // Orange
   'Startup.Tirol': '#3B82F6',     // Blue
   'AI Austria': '#8B5CF6',        // Purple-light

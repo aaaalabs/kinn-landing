@@ -137,7 +137,7 @@ async function storeManualEvent(event, sourceUrl) {
     registrationUrl: event.registrationUrl || sourceUrl,
     thumbnail: event.thumbnail || null,
     isFree: event.isFree !== false,
-    source: 'Manual',
+    source: 'Weitere',
     sourceUrl: sourceUrl,
   });
 

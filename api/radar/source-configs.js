@@ -4,7 +4,7 @@
 export const SOURCE_CONFIGS = {
   // ================== SPECIAL SOURCES ==================
 
-  'Manual': {
+  'Weitere': {
     url: null,  // No fixed URL - admin pastes any URL
     active: true,
     extraction: {
@@ -23,7 +23,7 @@ export const SOURCE_CONFIGS = {
       maxChars: 15000
     },
     color: '#9333EA',  // Purple - distinct from regular sources
-    label: 'Manuell'
+    label: 'Weitere'
   },
 
   // ================== KINN OWNED ==================
