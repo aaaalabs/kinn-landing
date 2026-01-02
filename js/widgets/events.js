@@ -54,7 +54,12 @@
         }
       });
 
-      kinnEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+      // Sort: available events first, then by date
+      kinnEvents.sort((a, b) => {
+        if (a.soldOut && !b.soldOut) return 1;  // Sold out → end
+        if (!a.soldOut && b.soldOut) return -1;
+        return new Date(a.date) - new Date(b.date);
+      });
 
       if (kinnEvents.length === 0) {
         container.innerHTML = '<div style="color: #9CA3AF; font-size: 0.875rem;">Keine kommenden KINN Events</div>';
@@ -76,11 +81,17 @@
               : `background: linear-gradient(135deg, #5ED9A6 0%, #3EB885 100%);`;
 
             const titleSize = event.title.length <= 12 ? '1.25rem' : event.title.length <= 20 ? '1rem' : '0.9375rem';
+            const isSoldOut = event.soldOut === true;
+            const cardOpacity = isSoldOut ? 'opacity: 0.6;' : '';
+            const soldOutBadge = isSoldOut
+              ? '<div style="position: absolute; top: 12px; left: 12px; background: #1a1a1a; color: #fff; font-size: 0.6875rem; font-weight: 600; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Ausgebucht</div>'
+              : '';
 
             return `
-              <a href="${event.detailUrl || '#'}" target="_blank" rel="noopener" style="text-decoration: none; display: block; flex-shrink: 0;">
+              <a href="${event.detailUrl || '#'}" target="_blank" rel="noopener" style="text-decoration: none; display: block; flex-shrink: 0; ${cardOpacity}">
                 <div style="width: 200px; position: relative; cursor: pointer; transition: transform 0.2s ease;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='translateY(0)'">
                   <div style="width: 200px; height: 200px; border-radius: 16px; ${bgStyle} position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                    ${soldOutBadge}
                     <div style="position: absolute; top: 0; right: 0; width: 80px; height: 80px; background: radial-gradient(circle at top right, rgba(0,0,0,0.55) 0%, transparent 70%);"></div>
                     <div style="position: absolute; top: 12px; right: 12px; color: white; opacity: 0.95;">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

@@ -34,7 +34,7 @@ function isAuthenticated(req) {
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
@@ -165,6 +165,31 @@ export default async function handler(req, res) {
     } catch (error) {
       logger.error('Error updating events:', error);
       return res.status(500).json({ error: 'Failed to update events' });
+    }
+
+  } else if (req.method === 'PUT') {
+    // Update single event field (e.g. soldOut)
+    const { eventId, soldOut } = req.body;
+
+    if (!eventId) {
+      return res.status(400).json({ error: 'eventId required' });
+    }
+
+    try {
+      // Update soldOut field
+      if (typeof soldOut === 'boolean') {
+        await kv.hset(`radar:event:${eventId}`, { soldOut: soldOut });
+        logger.info(`Set soldOut=${soldOut} for event ${eventId}`);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: soldOut ? 'Event als ausgebucht markiert' : 'Event wieder verfügbar'
+      });
+
+    } catch (error) {
+      logger.error('Error updating event:', error);
+      return res.status(500).json({ error: 'Failed to update event' });
     }
   }
 

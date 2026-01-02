@@ -125,7 +125,8 @@ export default async function handler(req, res) {
         source: event.source,
         sourceColor: getSourceColor(event.source),
         detailUrl: event.detailUrl || event.registrationUrl || null,
-        thumbnail: event.thumbnail || null
+        thumbnail: event.thumbnail || null,
+        soldOut: event.soldOut === true || event.soldOut === 'true'
       });
     });
 
