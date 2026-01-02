@@ -2587,6 +2587,7 @@
           <div style="display: flex; gap: 1rem; flex-wrap: wrap; padding-top: 0.5rem; border-top: 1px solid #eee;">
             ${event.detailUrl ? `<a href="${event.detailUrl}" target="_blank" class="btn" style="text-decoration: none;">Event-Seite</a>` : ''}
             ${event.registrationUrl ? `<a href="${event.registrationUrl}" target="_blank" class="btn btn-secondary" style="text-decoration: none;">Anmeldung</a>` : ''}
+            ${event.detailUrl || event.registrationUrl ? `<button onclick="enrichEvent('${event.id}')" id="enrich-btn-${event.id}" class="btn btn-secondary" style="background: #f3e8ff; border-color: #c084fc;">Daten ergänzen</button>` : ''}
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding-top: 0.5rem; border-top: 1px solid #eee; font-size: 0.75rem; color: #999;">
@@ -2646,6 +2647,49 @@
         console.error('Error toggling soldOut:', error);
         showMessage('Fehler beim Speichern', 'error');
         document.getElementById(`soldout-toggle-${eventId}`).checked = !isSoldOut;
+      }
+    }
+
+    async function enrichEvent(eventId) {
+      const btn = document.getElementById(`enrich-btn-${eventId}`);
+      if (!btn) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Lade...';
+
+      try {
+        const res = await fetch('/api/radar/enrich-event', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${adminPassword}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ eventId })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showMessage(data.error || 'Fehler', 'error');
+          return;
+        }
+
+        const updatedFields = Object.keys(data.updated || {});
+        if (updatedFields.length === 0) {
+          showMessage('Keine neuen Daten gefunden');
+        } else {
+          showMessage(`Aktualisiert: ${updatedFields.join(', ')}`);
+          // Refresh data and re-open modal
+          await loadRadarEvents();
+          showEventDetail(eventId);
+        }
+
+      } catch (error) {
+        console.error('Error enriching event:', error);
+        showMessage('Fehler beim Abrufen', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Daten ergänzen';
       }
     }
 
