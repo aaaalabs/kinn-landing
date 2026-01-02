@@ -2,6 +2,30 @@
 // Each source needs custom logic!
 
 export const SOURCE_CONFIGS = {
+  // ================== SPECIAL SOURCES ==================
+
+  'Manual': {
+    url: null,  // No fixed URL - admin pastes any URL
+    active: true,
+    extraction: {
+      method: 'manual-url',
+      instructions: `
+        Manual URL submissions from admin dashboard.
+        One-off event URLs that don't fit regular sources.
+
+        Common origins:
+        - LinkedIn event posts
+        - Meetup.com events
+        - Unknown event platforms
+        - Forwarded announcements
+      `,
+      autoApprove: false,  // Always requires review
+      maxChars: 15000
+    },
+    color: '#9333EA',  // Purple - distinct from regular sources
+    label: 'Manuell'
+  },
+
   // ================== KINN OWNED ==================
 
   'KINN': {

@@ -903,6 +903,23 @@
       <div id="radar-tab" class="tab-content">
         <h2 style="font-weight: 400; margin-bottom: 1rem;">Radar Events</h2>
 
+        <!-- Quick Add via URL -->
+        <div id="radar-quick-add" style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <span style="font-size: 1rem;">📎</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: #1F2937;">Quick Add via URL</span>
+          </div>
+          <div style="display: flex; gap: 0.75rem; align-items: stretch;">
+            <input type="url" id="radar-quick-add-url" placeholder="https://... (Event-Link einfügen)"
+                   style="flex: 1; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.875rem; font-family: inherit;">
+            <button id="radar-quick-add-btn" onclick="handleQuickAddUrl()"
+                    style="padding: 10px 20px; background: #5ED9A6; color: white; border: none; border-radius: 8px; font-weight: 500; font-size: 0.875rem; cursor: pointer; white-space: nowrap;">
+              Scrapen
+            </button>
+          </div>
+          <div id="radar-quick-add-status" style="margin-top: 0.75rem; font-size: 0.8rem; display: none;"></div>
+        </div>
+
         <!-- Metrics Bar -->
         <div id="radar-metrics-bar" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
           <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1rem; border-radius: 8px; text-align: center;">
@@ -2778,6 +2795,71 @@
         container.innerHTML = '<span style="color: #ef4444;">Fehler beim Laden</span>';
         console.error('Error loading source health:', error);
       }
+    }
+
+    // Quick Add via URL
+    async function handleQuickAddUrl() {
+      const urlInput = document.getElementById('radar-quick-add-url');
+      const statusEl = document.getElementById('radar-quick-add-status');
+      const btn = document.getElementById('radar-quick-add-btn');
+
+      const url = urlInput.value.trim();
+      if (!url) {
+        showQuickAddStatus('Bitte URL eingeben', 'error');
+        return;
+      }
+
+      try {
+        new URL(url);
+      } catch {
+        showQuickAddStatus('Ungültige URL', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Scrape...';
+      showQuickAddStatus('Seite wird analysiert...', 'loading');
+
+      try {
+        const res = await fetch('/api/radar/extract-url', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminPassword}`
+          },
+          body: JSON.stringify({ url })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showQuickAddStatus(`${data.error}${data.hint ? ' - ' + data.hint : ''}`, 'error');
+          return;
+        }
+
+        if (data.duplicate) {
+          showQuickAddStatus(`Event existiert bereits: "${data.event.title}"`, 'warning');
+        } else {
+          showQuickAddStatus(`Event extrahiert: "${data.event.title}" (${data.event.date}) - zur Review hinzugefügt`, 'success');
+          urlInput.value = '';
+          await loadRadarEvents();
+        }
+
+      } catch (error) {
+        showQuickAddStatus(`Fehler: ${error.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Scrapen';
+      }
+    }
+
+    function showQuickAddStatus(message, type) {
+      const statusEl = document.getElementById('radar-quick-add-status');
+      statusEl.style.display = 'block';
+      statusEl.textContent = message;
+      statusEl.style.color = type === 'error' ? '#ef4444' :
+                             type === 'success' ? '#10b981' :
+                             type === 'warning' ? '#f59e0b' : '#6B7280';
     }
 
     async function loadRadarEvents() {
