@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Use Case einreichen - KINN</title>
+  <meta name="description" content="Reiche deinen KI Use Case für den KI Praxis Report Tirol 2026 ein.">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/public/favicon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png">
+
+  <!-- Typography: Work Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Work Sans', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(180deg, #ffffff 0%, #fafcfb 100%);
+      color: #3A3A3A;
+      line-height: 1.618;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(94,217,166,0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(94,217,166,0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .container { max-width: 420px; width: 100%; }
+
+    .logo-link {
+      display: block;
+      width: 200px;
+      margin: 0 auto 2rem;
+      transition: transform 0.3s ease;
+    }
+    .logo-link:hover { transform: scale(1.02); }
+    .logo {
+      width: 100%;
+      display: block;
+      filter: drop-shadow(0 4px 16px rgba(0,0,0,0.06));
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    #rausWizardContent { padding: 1.5rem; }
+
+    /* CTA Button - shared with raus.js */
+    .cta-button {
+      font-family: 'Work Sans', sans-serif;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      background: #5ED9A6;
+      color: #000;
+      text-decoration: none;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+    .cta-button:hover {
+      background: #4EC995;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(94, 217, 166, 0.25);
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.75rem;
+      color: #ccc;
+    }
+    .footer a { color: #999; text-decoration: none; }
+    .footer a:hover { color: #6B6B6B; text-decoration: underline; }
+
+    @media (max-width: 640px) {
+      body { padding: 1.5rem; align-items: flex-start; padding-top: 3rem; }
+      .logo-link { width: 160px; margin-bottom: 1.5rem; }
+      #rausWizardContent { padding: 1.25rem; }
+    }
+  </style>
+
+  <!-- Vercel Web Analytics -->
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Logo -->
+    <a href="/" class="logo-link">
+      <svg class="logo" viewBox="0 0 931.35 308.55" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="495.04 20.27 569.04 153.27 569.04 20.27 654.04 20.27 654.04 288.27 572.54 288.27 498.04 159.27 498.04 288.27 416.04 288.27 416.04 20.27 495.04 20.27"/>
+        <path d="M682.04,20.27l78.89.11,73.11,133.89V20.27h81v268h-80l-72-130v130h-78.5c-.61,0-1.53-.8-2.5,0V20.27Z"/>
+        <polygon points="100.04 20.27 100.04 136.27 160.54 20.27 256.04 20.27 182.26 145.61 262.04 288.27 166.54 288.27 100.04 159.27 100.04 288.27 21.04 288.27 21.04 20.27 100.04 20.27"/>
+        <path d="M359.04,20.27v265.5c0,.31,1.37,1.42,1,2.5h-82V20.27h81Z"/>
+      </svg>
+    </a>
+
+    <!-- RAUS Widget renders here -->
+    <div class="card">
+      <div id="rausWizardContent"></div>
+    </div>
+
+    <div class="footer">
+      <a href="/">KINN</a> · <a href="/pages/privacy.html">Datenschutz</a>
+    </div>
+  </div>
+
+  <!-- Load RAUS widget and init in page mode -->
+  <script src="/js/widgets/raus.js"></script>
+  <script>
+    // Wait for raus.js to load, then initialize in page mode
+    function initPage() {
+      if (typeof initRAUSPageMode === 'function') {
+        initRAUSPageMode();
+      } else {
+        setTimeout(initPage, 50);
+      }
+    }
+    initPage();
+  </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+name: kinn-lade-newsletter
+version: 1.0.0
+description: >
+  KINN:LADE Newsletter-Erstellung für Tiroler KI-Community.
+  Trigger bei "Newsletter schreiben", "KINN:LADE", "Newsletter-Ausgabe",
+  "Email-Newsletter KINN", "Lade Newsletter".
+  Erzeugt Thought-Leadership-Newsletter mit persönlichem Ton, Storytelling,
+  starken Statistiken und Community-CTA.
+  Optimiert für 40%+ Open Rate durch bewährte Formate (Morning Brew, Hustle, SparkToro).
+
+author: Thomas Seiger / KINN
+created: 2026-01-03
+language: de
+
+triggers:
+  - "Newsletter schreiben"
+  - "KINN:LADE"
+  - "Newsletter-Ausgabe"
+  - "Email-Newsletter KINN"
+  - "Lade Newsletter"
+  - "nächste Ausgabe"
+  - "Newsletter erstellen"
+
+tags:
+  - newsletter
+  - email-marketing
+  - community
+  - kinn
+  - thought-leadership
+  - tirol
+  - kmu
+
+files:
+  - SKILL.md
+  - references/examples.md
+
+best_practices_sources:
+  - Morning Brew ($75M Newsletter)
+  - The Hustle (HubSpot Acquisition $27M)
+  - SparkToro (40-44% Open Rate, 3-3-3 Struktur)
+  - Women in Tech SEO (70% Open Rate)
+  - MIT Technology Review
+  - HubSpot Newsletter Guide
+  - Drip Storytelling Case Study (+22% Open Rate)
+
+key_metrics:
+  target_open_rate: "40-45%"
+  industry_average: "22%"
+  exceptional: "50%+"
+  
+content_ratio:
+  information: 60
+  entertainment_personality: 40
+
+rules:
+  - "90% Content, 10% Promotion"
+  - "Subject Line max 40 Zeichen"
+  - "Persönliche Formulierungen pflicht"
+  - "Storytelling-Einstieg"
+  - "KINN-Brücke in jeder Ausgabe"
+  - "Max 3 CTAs"
+  - "Mobile-first Design (600px)"
+  - "→ statt • für Listen"
+  - "Keine Buzzword-Rhetorik"

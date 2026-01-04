@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     const timestamp = new Date().toLocaleString('de-AT', { timeZone: 'Europe/Vienna' });
     const submittedAt = new Date().toISOString();
 
-    // 1. Send notification email
+    // 1. Send notification email to admin
     const adminEmail = process.env.ADMIN_USERNAME || 'admin@libralab.ai';
     await resend.emails.send({
       from: 'KINN:RAUS <noreply@kinn.at>',
@@ -46,7 +46,17 @@ export default async function handler(req, res) {
       html: buildEmailHtml({ extracted, transcript, region, visibility, inputMode, id, timestamp, userEmail })
     });
 
-    // 2. Persist to Redis for admin dashboard
+    // 2. Send confirmation email to submitter (if email provided)
+    if (userEmail) {
+      await resend.emails.send({
+        from: 'KINN <noreply@kinn.at>',
+        to: userEmail,
+        subject: 'Dein Use Case ist eingegangen',
+        html: buildConfirmationEmail({ headline: extracted.headline })
+      });
+    }
+
+    // 3. Persist to Redis for admin dashboard
     // Schema v1: Pipeline-ready with status tracking
     await redis.lpush('raus:submissions', JSON.stringify({
       v: 1,  // Schema version for future migrations
@@ -63,7 +73,7 @@ export default async function handler(req, res) {
       // reviewedBy, reviewedAt, verifiedAt, publishedAt, adminNotes
     }));
 
-    // 3. Increment total submissions counter (for teaser widget)
+    // 4. Increment total submissions counter (for teaser widget)
     await redis.incr('raus:stats:total');
 
     return res.status(200).json({ success: true, id });
@@ -144,6 +154,45 @@ function buildEmailHtml({ extracted, transcript, region, visibility, inputMode, 
 
   <div class="footer">
     ID: ${id}
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+function buildConfirmationEmail({ headline }) {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333; max-width: 500px; margin: 0 auto; padding: 20px; }
+    p { margin: 0 0 16px 0; }
+    .headline { font-weight: 600; color: #2C3E50; margin: 20px 0; padding: 16px; background: #f8f9fa; border-radius: 8px; }
+    .next { margin: 24px 0; }
+    .next strong { display: block; margin-bottom: 8px; color: #2C3E50; }
+    .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee; font-size: 13px; color: #999; }
+    a { color: #5ED9A6; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <p>Danke für deinen Beitrag zum KI Praxis Report Tirol 2026.</p>
+
+  <div class="next">
+    <strong>Was passiert jetzt?</strong>
+    Wir prüfen deinen Case und melden uns innerhalb von 1-2 Wochen bei dir – entweder mit Rückfragen oder mit der Bestätigung zur Veröffentlichung.
+  </div>
+
+  ${headline ? `
+  <div class="headline">${headline}</div>
+  ` : ''}
+
+  <p>Bei Fragen: <a href="mailto:thomas@kinn.at">thomas@kinn.at</a></p>
+
+  <div class="footer">
+    KINN · KI Netzwerk Tirol<br>
+    <a href="https://kinn.at">kinn.at</a>
   </div>
 </body>
 </html>

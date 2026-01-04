@@ -11,7 +11,8 @@ const rausIcons = {
   stop: '<svg class="icon" style="width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 5m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2z" fill="currentColor"/></svg>',
   sparkles: '<svg class="icon" style="width:24px;height:24px;stroke:currentColor;stroke-width:2;fill:none;" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6z"/></svg>',
   confetti: '<svg class="icon" style="width:64px;height:64px;stroke:currentColor;stroke-width:2;fill:none;" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 5h2"/><path d="M5 4v2"/><path d="M11.5 4l-.5 2"/><path d="M18 5h2"/><path d="M19 4v2"/><path d="M15 9l-1 1"/><path d="M18 13l2 -.5"/><path d="M18 19h2"/><path d="M19 18v2"/><path d="M14 16.518l-6.518 -6.518l-4.39 9.58a1 1 0 0 0 1.329 1.329l9.579 -4.39z"/></svg>',
-  alertTriangle: '<svg style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none;" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></svg>'
+  alertTriangle: '<svg style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none;" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></svg>',
+  copy: '<svg style="width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></svg>'
 };
 
 const RAUS_AI_PROMPT = `Beschreib meinen KI Use Case für den "KI Praxis Report Tirol 2026":
@@ -23,6 +24,10 @@ const RAUS_AI_PROMPT = `Beschreib meinen KI Use Case für den "KI Praxis Report 
 
 Antworte in 2-3 Sätzen pro Punkt.`;
 
+// Page mode flag - set window.rausPageMode = true before loading this script for standalone page
+// In page mode: email field is shown and required
+// In modal mode: email comes from window.userEmail (session)
+
 // State
 let rausState = {
   step: 'intro',
@@ -30,6 +35,8 @@ let rausState = {
   isRecording: false,
   recordingTime: 0,
   textInput: '',
+  email: '',
+  emailValid: false,
   transcript: null,
   extracted: null,
   error: null,
@@ -42,6 +49,16 @@ let rausMediaRecorder = null;
 let rausAudioChunks = [];
 let rausRecordingInterval = null;
 
+// Helper: validate email format
+function isValidRAUSEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// Helper: check if we're in page mode (standalone page, not modal)
+function isRAUSPageMode() {
+  return window.rausPageMode === true;
+}
+
 // Modal Functions
 function openRAUSModal() {
   rausState = {
@@ -50,6 +67,8 @@ function openRAUSModal() {
     isRecording: false,
     recordingTime: 0,
     textInput: '',
+    email: '',
+    emailValid: false,
     transcript: null,
     extracted: null,
     error: null,
@@ -173,6 +192,19 @@ async function processRAUSAudio(audioBlob) {
 }
 
 async function processRAUSTextFromIntro() {
+  // In page mode, validate email first
+  if (isRAUSPageMode() && !rausState.emailValid) {
+    const input = document.getElementById('rausEmailInput');
+    if (input) {
+      input.style.borderColor = '#ef4444';
+      input.style.animation = 'shake 0.3s ease';
+      input.focus();
+      setTimeout(() => { input.style.animation = ''; }, 300);
+    }
+    updateRAUSEmailField();
+    return;
+  }
+
   rausState.inputMode = 'text';
   await processRAUSText();
 }
@@ -251,6 +283,19 @@ function updateRAUSCharCount() {
   }
 }
 
+// Update email field styling without re-rendering
+function updateRAUSEmailField() {
+  const input = document.getElementById('rausEmailInput');
+  const hint = document.getElementById('rausEmailHint');
+  const label = input?.parentElement?.querySelector('label');
+  if (!input || !hint) return;
+
+  const invalid = rausState.email && !rausState.emailValid;
+  hint.textContent = invalid ? 'Bitte gültige Email eingeben' : 'Damit wir dich bei Rückfragen kontaktieren können';
+  hint.style.color = invalid ? '#ef4444' : '#999';
+  if (label) label.style.color = invalid ? '#ef4444' : '#999';
+}
+
 async function submitRAUSCase() {
   // Check privacy consent first
   if (!rausState.privacyConsent) {
@@ -289,6 +334,9 @@ async function submitRAUSCase() {
   rausState.region = document.getElementById('raus-select-region')?.value || 'tirol';
   rausState.visibility = document.getElementById('raus-select-visibility')?.value || 'full';
 
+  // Determine email: in page mode use state.email, otherwise use window.userEmail (session)
+  const submissionEmail = isRAUSPageMode() ? rausState.email : (typeof userEmail !== 'undefined' ? userEmail : null);
+
   try {
     const response = await fetch('/api/raus/submit', {
       method: 'POST',
@@ -299,7 +347,7 @@ async function submitRAUSCase() {
         region: rausState.region,
         visibility: rausState.visibility,
         inputMode: rausState.inputMode,
-        userEmail: typeof userEmail !== 'undefined' ? userEmail : null
+        userEmail: submissionEmail
       })
     });
 
@@ -318,13 +366,41 @@ async function submitRAUSCase() {
 
 // Renderers
 function renderRAUSIntro() {
+  const pageMode = isRAUSPageMode();
+  const emailInvalid = pageMode && rausState.email && !rausState.emailValid;
+
+  // Email field HTML - only shown in page mode
+  const emailFieldHTML = pageMode ? `
+    <div style="margin-bottom: 1rem;">
+      <label style="display: block; font-size: 0.75rem; font-weight: 600; color: ${emailInvalid ? '#ef4444' : '#999'}; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.375rem;">
+        Deine Email <span style="color: #ef4444;">*</span>
+      </label>
+      <input
+        type="email"
+        id="rausEmailInput"
+        placeholder="name@firma.at"
+        value="${rausState.email}"
+        oninput="rausState.email = this.value; rausState.emailValid = isValidRAUSEmail(this.value); updateRAUSEmailField();"
+        style="width: 100%; padding: 0.625rem 0.75rem; border: 1px solid ${emailInvalid ? '#ef4444' : 'rgba(0,0,0,0.12)'}; border-radius: 0.5rem; font-family: inherit; font-size: 0.875rem; color: #2C3E50; transition: border-color 0.2s ease, box-shadow 0.2s ease; outline: none;"
+        onfocus="this.style.borderColor='#5ED9A6'; this.style.boxShadow='0 0 0 3px rgba(94,217,166,0.15)';"
+        onblur="this.style.boxShadow='none'; if(!rausState.emailValid && rausState.email) this.style.borderColor='#ef4444'; else this.style.borderColor='rgba(0,0,0,0.12)';"
+      >
+      <div id="rausEmailHint" style="font-size: 0.75rem; color: ${emailInvalid ? '#ef4444' : '#999'}; margin-top: 0.375rem;">
+        ${emailInvalid ? 'Bitte gültige Email eingeben' : 'Damit wir dich bei Rückfragen kontaktieren können'}
+      </div>
+    </div>
+  ` : '';
+
   return `
     <div style="animation: fadeIn 0.3s ease-out;">
       <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.5rem;">KI Praxis Report Tirol 2026</div>
       <h1 style="font-size: 1.125rem; font-weight: 600; color: #2C3E50; margin-bottom: 0.5rem;">Teile deinen Use Case</h1>
       <p style="font-size: 0.875rem; color: #6B6B6B; margin-bottom: 1.25rem;">Frag deine KI und kopier die Antwort rein.</p>
 
-      <div class="raus-prompt-box" onclick="copyRAUSPrompt()" style="background: linear-gradient(135deg, rgba(94,217,166,0.08) 0%, rgba(94,217,166,0.02) 100%); border: 1px solid rgba(94,217,166,0.3); border-radius: 0.75rem; padding: 1rem; cursor: pointer; margin-bottom: 1rem; transition: all 0.2s;">
+      ${emailFieldHTML}
+
+      <div class="raus-prompt-box" onclick="copyRAUSPrompt()" style="background: linear-gradient(135deg, rgba(94,217,166,0.08) 0%, rgba(94,217,166,0.02) 100%); border: 1px solid rgba(94,217,166,0.3); border-radius: 0.75rem; padding: 1rem; cursor: pointer; margin-bottom: 1rem; transition: all 0.2s; position: relative;">
+        <span class="raus-copy-icon" style="position: absolute; top: 0.75rem; right: 0.75rem; color: #999; transition: color 0.2s;">${rausIcons.copy}</span>
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
           <span style="color: #5ED9A6;">${rausIcons.sparkles}</span>
           <span class="raus-prompt-text" style="font-weight: 600; color: #2C3E50; font-size: 0.875rem;">Prompt kopieren</span>
@@ -506,6 +582,14 @@ function renderRAUSReview() {
 }
 
 function renderRAUSSuccess() {
+  const pageMode = isRAUSPageMode();
+
+  // In page mode: show "Zur Startseite" link
+  // In modal mode: show "Fertig" button to close modal
+  const actionButton = pageMode
+    ? `<a href="/" class="cta-button" style="width: 100%; padding: 0.75rem 1.25rem; font-size: 0.875rem; border-radius: 0.5rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Zur Startseite</a>`
+    : `<button onclick="closeRAUSModal()" class="cta-button" style="width: 100%; padding: 0.75rem 1.25rem; font-size: 0.875rem; border-radius: 0.5rem;">Fertig</button>`;
+
   return `
     <div style="animation: fadeIn 0.3s ease-out; text-align: center; padding: 2rem 0;">
       <div style="color: #5ED9A6; margin-bottom: 1.5rem;">${rausIcons.confetti}</div>
@@ -513,7 +597,7 @@ function renderRAUSSuccess() {
       <p style="font-size: 0.875rem; color: #6B6B6B; margin: 1.25rem 0; line-height: 1.6;">
         Wir schauen uns deinen Case an und melden uns innerhalb von 1-2 Wochen.
       </p>
-      <button onclick="closeRAUSModal()" class="cta-button" style="width: 100%; padding: 0.75rem 1.25rem; font-size: 0.875rem; border-radius: 0.5rem;">Fertig</button>
+      ${actionButton}
     </div>
   `;
 }
@@ -645,7 +729,9 @@ function injectRAUSModal() {
     @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     .raus-prompt-box:hover { border-color: #5ED9A6; }
+    .raus-prompt-box:hover .raus-copy-icon { color: #5ED9A6; }
     .raus-prompt-box.copied { background: rgba(94,217,166,0.15); }
+    .raus-prompt-box.copied .raus-copy-icon { color: #5ED9A6; }
     .raus-char-indicator.good span:first-child { color: #059669; }
     .raus-stealth-input { cursor: text; transition: all 0.15s ease; }
     .raus-stealth-input:hover { background: rgba(0,0,0,0.02) !important; border-color: rgba(0,0,0,0.1) !important; }
@@ -661,6 +747,35 @@ if (document.readyState === 'loading') {
   injectRAUSModal();
 }
 
+// Initialize page mode (for standalone /usecase page)
+function initRAUSPageMode() {
+  window.rausPageMode = true;
+
+  // Reset state for fresh start
+  rausState = {
+    step: 'intro',
+    inputMode: null,
+    isRecording: false,
+    recordingTime: 0,
+    textInput: '',
+    email: '',
+    emailValid: false,
+    transcript: null,
+    extracted: null,
+    error: null,
+    processingStep: 0,
+    voiceConsent: false,
+    privacyConsent: false
+  };
+
+  // Don't inject the modal overlay in page mode
+  const existingModal = document.getElementById('rausModalOverlay');
+  if (existingModal) existingModal.remove();
+
+  // Render into the page container
+  renderRAUS();
+}
+
 // Expose functions to global scope for onclick handlers
 window.openRAUSModal = openRAUSModal;
 window.closeRAUSModal = closeRAUSModal;
@@ -671,7 +786,10 @@ window.processRAUSText = processRAUSText;
 window.submitRAUSCase = submitRAUSCase;
 window.copyRAUSPrompt = copyRAUSPrompt;
 window.updateRAUSCharCount = updateRAUSCharCount;
+window.updateRAUSEmailField = updateRAUSEmailField;
 window.makeRAUSEditable = makeRAUSEditable;
+window.isValidRAUSEmail = isValidRAUSEmail;
+window.initRAUSPageMode = initRAUSPageMode;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // RAUS TEASER WIDGET - "The Whisper"

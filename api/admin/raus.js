@@ -23,7 +23,7 @@ function getCorsHeaders(origin) {
   if (ALLOWED_ORIGINS.includes(origin)) {
     return {
       'Access-Control-Allow-Origin': origin,
-      'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Allow-Credentials': 'true'
     };
@@ -48,6 +48,8 @@ export default async function handler(req, res) {
     return handleGet(req, res);
   } else if (req.method === 'PUT') {
     return handlePut(req, res);
+  } else if (req.method === 'DELETE') {
+    return handleDelete(req, res);
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
@@ -142,5 +144,59 @@ async function handlePut(req, res) {
   } catch (error) {
     console.error('[RAUS Admin] Update error:', error);
     return res.status(500).json({ error: 'Failed to update submission' });
+  }
+}
+
+/**
+ * DELETE: Remove submission permanently
+ * Body: { id }
+ */
+async function handleDelete(req, res) {
+  try {
+    const { id } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: 'Missing id' });
+    }
+
+    // Get all submissions
+    const submissions = await redis.lrange('raus:submissions', 0, -1);
+    const parsed = submissions.map(s => typeof s === 'string' ? JSON.parse(s) : s);
+
+    // Find submission to delete
+    const index = parsed.findIndex(s => s.id === id);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    const deleted = parsed[index];
+
+    // Update counters before deletion
+    await redis.decr('raus:stats:total');
+    if (deleted.status === 'verified' || deleted.status === 'published') {
+      await redis.decr('raus:stats:verified');
+    }
+
+    // Remove from array
+    parsed.splice(index, 1);
+
+    // Replace entire list
+    await redis.del('raus:submissions');
+    if (parsed.length > 0) {
+      for (const s of [...parsed].reverse()) {
+        await redis.lpush('raus:submissions', JSON.stringify(s));
+      }
+    }
+
+    console.log(`[RAUS Admin] Deleted submission: ${id} (${deleted.extracted?.headline || 'no title'})`);
+
+    return res.status(200).json({
+      success: true,
+      deleted: { id, headline: deleted.extracted?.headline }
+    });
+
+  } catch (error) {
+    console.error('[RAUS Admin] Delete error:', error);
+    return res.status(500).json({ error: 'Failed to delete submission' });
   }
 }

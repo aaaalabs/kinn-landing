@@ -97,6 +97,9 @@ function generateICalFeed(events, defaults = {}) {
   // Add VTIMEZONE definition for Europe/Vienna
   ical += generateVTimezone(timezone);
 
+  // Add migration notice events (January 2026, every Monday)
+  ical += generateMigrationNotice(timestamp);
+
   // Add each event
   events.forEach(event => {
     ical += generateICalEvent(event, timestamp, defaults);
@@ -225,6 +228,36 @@ function formatICalDate(date) {
 
   // Return iCal format: YYYYMMDDTHHMMSS
   return `${obj.year}${obj.month}${obj.day}T${obj.hour}${obj.minute}${obj.second}`;
+}
+
+/**
+ * Generate migration notice events for January 2026
+ * Reminds users to switch to the new RADAR calendar
+ */
+function generateMigrationNotice(timestamp) {
+  const mondays = ['20260105', '20260112', '20260119', '20260126'];
+  let events = '';
+
+  mondays.forEach((date, i) => {
+    events +=
+      'BEGIN:VEVENT\r\n' +
+      `UID:kinn-migration-notice-${i}@kinn.at\r\n` +
+      `DTSTAMP:${timestamp}\r\n` +
+      `DTSTART;TZID=Europe/Vienna:${date}T090000\r\n` +
+      `DTEND;TZID=Europe/Vienna:${date}T093000\r\n` +
+      'SUMMARY:KINN Kalender ist umgezogen\r\n' +
+      'DESCRIPTION:Dieser Kalender wird nicht mehr aktualisiert.\\n\\n' +
+      'Alle KI Events in Tirol findest du jetzt im neuen KI Event Radar:\\n' +
+      'kinn.at -> "KI Event Radar Tirol" Widget -> Kalender-Icon\\n\\n' +
+      'Der neue Kalender enthaelt Events von allen Veranstaltern in Tirol.\r\n' +
+      'LOCATION:kinn.at\r\n' +
+      'URL:https://kinn.at\r\n' +
+      'STATUS:CONFIRMED\r\n' +
+      'TRANSP:TRANSPARENT\r\n' +
+      'END:VEVENT\r\n';
+  });
+
+  return events;
 }
 
 /**

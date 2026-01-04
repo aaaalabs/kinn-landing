@@ -3782,6 +3782,7 @@
               ${s.status === 'rejected' ? `
                 <button onclick="updateRAUSStatus('${s.id}', 'submitted')" style="padding: 0.5rem 1rem; background: white; border: 1px solid #e5e7eb; border-radius: 6px; color: #6B6B6B; font-size: 0.8125rem; cursor: pointer;">Zurücksetzen</button>
               ` : ''}
+              <button onclick="deleteRAUSSubmission('${s.id}')" style="padding: 0.5rem 1rem; background: white; border: 1px solid #FCA5A5; border-radius: 6px; color: #991B1B; font-size: 0.8125rem; cursor: pointer; margin-left: auto;">Löschen</button>
             </div>
           </div>
         </div>
@@ -3838,6 +3839,23 @@
       try {
         await updateRAUSStatus(id, 'rejected');
         await sendRAUSEmail(id, 'rejected');
+      } catch (error) {
+        showMessage('Fehler: ' + error.message, 'error');
+      }
+    }
+
+    async function deleteRAUSSubmission(id) {
+      const submission = rausSubmissions.find(s => s.id === id);
+      const title = submission?.extracted?.headline || id;
+
+      if (!confirm(`Case "${title}" wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden.`)) {
+        return;
+      }
+
+      try {
+        await apiCall('/raus', 'DELETE', { id });
+        showMessage('Case gelöscht', 'success');
+        loadRAUSPipeline();
       } catch (error) {
         showMessage('Fehler: ' + error.message, 'error');
       }
